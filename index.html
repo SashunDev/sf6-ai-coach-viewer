@@ -1,0 +1,223 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob:; img-src data: blob:; connect-src 'none'; font-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"><title>SF6 AI Coach — Match Review</title><style>
+:root{--bg:#080e1b;--surface:#10192b;--panel:#131e32;--panel2:#17243b;--stroke:#263650;--muted:#91a2ba;--ink:#f0f6ff;--accent:#d7fd8c;--cyan:#85c9de;--good:#a6e0b4;--warn:#f2ba87;--radius:19px}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(circle at 55% -10%,#253558 0,transparent 38%),var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;font-size:14px;line-height:1.56}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button{color:inherit}.layout{display:grid;grid-template-columns:78px minmax(0,1fr);min-height:100vh}.side{border-right:1px solid #253047;background:#0b1220;display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 0}.side-logo{background:var(--accent);color:#101d13;border-radius:18px;width:42px;height:42px;display:grid;place-items:center;font-weight:1000;letter-spacing:-2px;font-size:16px}.side-button{border:none;background:transparent;width:43px;height:43px;display:grid;place-items:center;border-radius:13px;font-size:21px;color:#63758c}.side-button.current{background:#283451;color:var(--accent)}.side-bottom{margin-top:auto;color:#708098;font-size:10px;transform:rotate(-90deg);white-space:nowrap;padding:20px 0}.main{max-width:1610px;width:100%;padding:26px 38px 42px;margin:0 auto}.topbar{display:flex;justify-content:space-between;align-items:center;padding-bottom:29px;border-bottom:1px solid #223149}.brandline{display:flex;align-items:center;gap:13px}.crumb{font-weight:850;font-size:12px;letter-spacing:.16em;color:var(--accent)}.crumb-sep{color:#57708a}.crumb-sub{color:#93a6bf;font-size:12px}.pill{border:1px solid var(--stroke);border-radius:100px;padding:8px 12px;color:#b2bfd0;font-size:11px;letter-spacing:.1em}.rightbar{display:flex;align-items:center;gap:10px}.match-header{display:flex;justify-content:flex-end;margin:14px 0 14px}.match-pill{min-width:270px;display:flex;gap:14px;align-items:center;justify-content:space-between;border:1px solid #34425b;background:#111c2f;padding:13px 20px;border-radius:17px}.match-pill .value{font-size:29px;font-weight:950;letter-spacing:-.08em}.match-pill .caption{font-size:10px;color:var(--muted);letter-spacing:.13em}.score-players{text-align:right;font-size:12px;color:#c3d2e3}.score-players strong{display:block;font-size:15px;color:white}.accent-line{display:inline-block;width:7px;height:7px;background:var(--accent);border-radius:50%;margin-right:6px}.summary-grid{display:grid;grid-template-columns:1.25fr 1fr 1fr 1fr;gap:12px;margin:0 0 22px}.metric{border:1px solid var(--stroke);background:#111b2d;border-radius:15px;padding:16px 18px;min-height:91px;display:flex;flex-direction:column;gap:5px}.metric .small{font-size:10px;color:var(--muted);letter-spacing:.13em}.metric .large{font-size:21px;font-weight:850;letter-spacing:-.04em}.metric .green{color:var(--accent)}.metric .mini{font-size:11px;color:#bccad9}.workarea{display:grid;grid-template-columns:minmax(0,1.58fr) minmax(330px,.92fr);gap:20px;align-items:start}.left-col,.right-col{display:flex;flex-direction:column;gap:20px;min-width:0}.panel{background:linear-gradient(160deg,#141e30,#0e1728);border:1px solid var(--stroke);border-radius:var(--radius);overflow:hidden}.panel-head{padding:19px 21px;display:flex;align-items:center;justify-content:space-between;gap:16px}.panel-head h2{font-size:15px;letter-spacing:-.02em;margin:0}.panel-head .secondary{color:#a5b6cd;font-size:11px}.green-dot{display:inline-block;border-radius:100%;width:7px;height:7px;background:var(--accent);margin-right:8px;box-shadow:0 0 10px #d7fd8c88}.player-frame{position:relative;aspect-ratio:16/9;overflow:hidden;background:#121a29}.match-video{width:100%;height:100%;display:none;object-fit:contain;background:#06080d;position:absolute;inset:0}.demo-visual{width:100%;height:100%;position:absolute;inset:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#2d4b66 1%,#1b2443 37%,#101724 73%)}.demo-visual::after{position:absolute;content:"";inset:0;background:linear-gradient(to top,rgba(9,13,25,.2),transparent 28%,rgba(9,15,32,.1));pointer-events:none}.stage-dots{position:absolute;inset:0;background-image:linear-gradient(#c0cafa08 1px,transparent 1px),linear-gradient(90deg,#c0cafa08 1px,transparent 1px);background-size:31px 31px;mask-image:linear-gradient(90deg,transparent,#000,transparent)}.stage-hud{position:absolute;left:5%;top:8%;right:5%;display:flex;align-items:flex-start;gap:14px;z-index:3}.hud-player{flex:1}.hud-player.alt{text-align:right}.hud-player span{font-size:10px;font-weight:950;letter-spacing:.1em}.hud-player small{font-size:9px;font-weight:400;color:#d4dfec8c}.health{height:7px;border:1px solid #ffffff50;border-radius:2px;background:#182236;overflow:hidden;margin-top:5px}.health i{display:block;background:#e5f5ae;width:89%;height:100%;transform-origin:left}.hud-player.alt i{background:#f2b7c5;width:63%;margin-left:auto}.hud-vs{font-size:27px;font-weight:1000;color:#eff4fc;line-height:1}.stage-art{position:absolute;inset:7% 0 0}.stage-ring{position:absolute;width:50%;aspect-ratio:1;border:42px solid #b1dbff09;border-radius:50%;left:24%;top:1%;box-shadow:0 0 90px #8fbaff17}.fighter-figures{position:absolute;inset:auto 0 1%;width:100%;height:87%;filter:drop-shadow(0 8px 20px #071124)}.is-playing .fighter-figures{animation:stageBreathe 1s infinite alternate ease-in-out}@keyframes stageBreathe{to{transform:translateY(4px)}}.stage-center{position:absolute;z-index:4;bottom:15%;width:100%;text-align:center;text-shadow:0 3px 18px #03101f}.stage-eyebrow{font-size:9px;letter-spacing:.4em;color:#e2fdba}.stage-main{font-size:clamp(18px,2.8vw,32px);letter-spacing:.26em;font-weight:950}.stage-sub{font-size:10px;color:#e1e7f2}.stage-bottom-left{position:absolute;bottom:6%;left:5%;z-index:4;color:#b4d0e8;font-size:9px;letter-spacing:.15em}.live-dot{display:inline-block;width:5px;height:5px;background:var(--accent);border-radius:50%;margin:0 5px}.player-controls{padding:20px 21px 17px}.timebar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.timer{font-variant-numeric:tabular-nums;font-weight:800;color:#fff;font-size:13px}.timer .faint{font-size:11px;color:#7f92ad}.video-mode{font-size:11px;color:#c3d0e0}.track{position:relative;margin:9px 0 19px;height:16px;display:flex;align-items:center}.track input{width:100%;appearance:none;-webkit-appearance:none;border:none;outline:none;height:5px;border-radius:8px;background:linear-gradient(90deg,var(--accent) var(--pct,17%),#334057 var(--pct,17%));cursor:pointer}.track input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #c9f99a26}.track input::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff}.markers{position:absolute;inset:0 8px;pointer-events:none}.marker{position:absolute;pointer-events:auto;border:2px solid #17243b;width:11px;height:11px;border-radius:50%;background:var(--accent);top:2.5px;transform:translateX(-50%);padding:0}.marker.review{background:#ffb48c}.marker.selected{box-shadow:0 0 0 4px #e6fdbc5c}.controlrow{display:flex;gap:7px;align-items:center;justify-content:space-between}.cluster{display:flex;gap:7px;align-items:center}.iconbtn,.textbtn{height:37px;border:1px solid #2f4058;background:#1a2840;border-radius:10px;color:#d8e3ef;display:inline-flex;justify-content:center;align-items:center;gap:7px;font-size:12px;padding:0 12px;white-space:nowrap}.iconbtn{min-width:40px;padding:0 10px;font-size:17px}.main-play{background:var(--accent);color:#0d1822;border:none;min-width:42px;font-weight:1000}.textbtn.on{color:#d7fd8c;border-color:#536b46;background:#243a35}.uploadrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 21px 18px;border-top:1px solid #26354b;background:#121d2e}.uploadinfo{font-size:11px;color:#a5b5ca;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.uploadinfo strong{color:#e7f0fb;display:block;font-weight:750;margin-bottom:2px}.uploadbtn{border-radius:10px;border:1px solid #5b6d75;background:transparent;color:#e6f5e1;font-size:11px;padding:9px 13px;white-space:nowrap}.scenes-panel{min-height:595px}.filterbar{padding:0 18px 14px;display:flex;gap:7px}.filter{border:1px solid #344157;background:#152139;color:#a6b6ca;border-radius:100px;padding:7px 13px;font-size:11px}.filter.active{background:var(--accent);color:#11220f;border-color:var(--accent);font-weight:900}.list-scroll{max-height:610px;overflow-y:auto;padding:0 11px 12px;scrollbar-color:#495771 #172035}.scene-card{width:100%;border:1px solid transparent;border-radius:13px;background:transparent;padding:14px 10px;text-align:left;display:grid;grid-template-columns:27px minmax(0,1fr) auto;gap:10px;transition:.15s}.scene-card+.scene-card{border-top-color:#28354a}.scene-card:hover{background:#1c2941}.scene-card.active{background:#25334b;border-color:#6a805c}.scene-no{font-size:10px;font-family:monospace;color:#667e98;padding-top:3px}.scene-main{display:block;min-width:0}.scene-top{display:flex;align-items:center;gap:8px}.scene-clock{font-size:12px;color:var(--accent);font-weight:850;font-variant-numeric:tabular-nums}.scene-round{font-size:9px;letter-spacing:.06em;color:#8497af}.scene-title{font-size:13px;display:block;margin:4px 0;color:#f2f7ff;line-height:1.45}.scene-caption{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:10px;line-height:1.65;color:#9aadc3}.scene-end{display:flex;flex-direction:column;align-items:end;justify-content:space-between}.scene-tag{border-radius:5px;font-size:9px;padding:2px 7px;white-space:nowrap;background:#27374b;color:#c0c9d7}.scene-tag.good,.tag.good{color:#d1f4b8;background:#355040}.scene-tag.review,.tag.review{color:#ffcaab;background:#493737}.scene-play{font-size:16px;color:#869db6}.insight-body{padding:0 21px 22px}.insight-titleline{display:flex;align-items:center;justify-content:space-between;gap:7px}.tag{display:inline-flex;font-size:10px;padding:5px 9px;border-radius:7px;line-height:1.2}.detail-id{font-size:10px;letter-spacing:.14em;color:#8395ae}.detail-title{font-size:23px;letter-spacing:-.04em;margin:14px 0 2px}.detail-time{font-size:12px;color:var(--accent);font-weight:800;margin-bottom:17px}.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.detail-cell{padding:14px 15px;border:1px solid #283955;background:#141f34;border-radius:12px}.detail-cell .number{display:block;color:var(--cyan);font-size:10px;font-weight:850;letter-spacing:.1em;margin-bottom:7px}.detail-cell.action{background:#1e352d;border-color:#405843}.detail-cell.action .number{color:var(--accent)}.detail-cell p{margin:0;font-size:12px;color:#cbd8e8;line-height:1.82}.overall{padding:19px 20px 21px}.overall h3{margin:0 0 12px;font-size:15px}.overall p{color:#c7d5e6;line-height:1.85;margin:0 0 15px;font-size:12px}.overall .theme{background:#233128;border:1px solid #4d6444;border-radius:12px;padding:13px 15px;font-size:12px;line-height:1.8;color:#e5f4d7}.theme strong{color:var(--accent);display:block;font-size:10px;letter-spacing:.08em;margin-bottom:3px}.footnote{font-size:11px;color:#8698b0;margin:20px 0}.toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,15px);background:#dfefcb;color:#1c2a1a;border-radius:100px;padding:10px 17px;max-width:min(92vw,520px);text-align:center;font-size:12px;font-weight:750;box-shadow:0 12px 40px #0007;opacity:0;pointer-events:none;transition:.2s;z-index:100}.toast.visible{opacity:1;transform:translate(-50%,0)}@media(max-width:1200px){.workarea{grid-template-columns:minmax(0,1.2fr) minmax(300px,1fr)}.main{padding:26px 24px 35px}.summary-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}}@media(max-width:950px){.layout{display:block}.side{display:none}.main{padding:18px 15px}.workarea{grid-template-columns:1fr}.match-pill{min-width:205px}.scenes-panel{min-height:0}.list-scroll{max-height:none}.detail-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:620px){.match-header{justify-content:stretch}.summary-grid{grid-template-columns:repeat(2,1fr)}.detail-grid{grid-template-columns:1fr}.controlrow{flex-wrap:wrap;gap:9px}.rightbar{display:none}.topbar{padding-bottom:18px}.uploadrow{flex-direction:column;align-items:start}.match-header .match-pill{width:100%}}
+
+/* Seek preview: follows the slider thumb on iPhone and desktop. */
+.track .seek-bubble{position:absolute;z-index:8;top:-30px;left:17%;transform:translateX(-50%);border-radius:7px;padding:5px 9px;font-size:11px;font-weight:850;font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.15;color:#112032;background:var(--accent);box-shadow:0 4px 12px #0005;pointer-events:none;opacity:0;transition:opacity .10s ease}
+.track.is-scrubbing .seek-bubble,.track:focus-within .seek-bubble{opacity:1}
+.timer #timeNow{font-variant-numeric:tabular-nums;display:inline-block;min-width:6ch}
+.track input{touch-action:none;cursor:pointer}
+.upload-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}.reportbtn{border-color:#395b62;color:#b6d6eb}.uploadinfo{min-width:0;white-space:normal}.uploadinfo strong,.uploadinfo span{white-space:normal;overflow-wrap:anywhere}@media(max-width:620px){.upload-actions{width:100%;justify-content:stretch}.upload-actions .uploadbtn{flex:1;min-width:145px}}</style></head><body>
+<div class="layout"><aside class="side"><div class="side-logo">S6</div><div class="side-button current" aria-label="レビュー">▤</div><div class="side-button" aria-label="分析">◎</div><div class="side-button" aria-label="設定">⌘</div><div class="side-bottom">SF6 / COACH LAB</div></aside>
+<main class="main">
+ <div class="topbar"><div class="brandline"><span class="crumb">SF6 / AI COACH</span><span class="crumb-sep">/</span><span class="crumb-sub">MATCH REVIEW</span></div><div class="rightbar"><span class="pill">LOCAL VIDEO · NO UPLOAD</span><span class="pill">RESPONSIVE REVIEW</span></div></div>
+ <div class="match-header"><div class="match-pill"><div><div class="caption">MATCH RESULT</div><div class="value"><span id="scoreSelf">2</span> <span style="color:#7b90aa;font-size:17px">—</span> <span id="scoreOpponent">1</span></div></div><div class="score-players"><strong><span class="accent-line"></span><span id="selfName">PLAYER 1</span></strong>vs <span id="oppName">PLAYER 2</span><br><span style="color:#9cafc6" id="styleName">DEMO / 架空データ</span></div></div></div>
+ <section class="summary-grid" aria-label="試合概要"><div class="metric"><div class="small">MAIN FOCUS</div><div class="large green" id="mainFocus">起き攻めの判断</div><div class="mini" id="mainFocusNote">行動を選ぶ時点から振り返る</div></div><div class="metric"><div class="small">IMPORTANT SCENES</div><div class="large"><span id="eventTotal">05</span> <span style="font-size:12px;color:#90a2ba">events</span></div><div class="mini" id="eventBreakdown">良いプレイ 3 ・振り返り 2</div></div><div class="metric"><div class="small">MATCH LENGTH</div><div class="large" id="matchDuration">02:10</div><div class="mini" id="durationCaption">デモ用タイムライン</div></div><div class="metric"><div class="small">ANALYSIS MODE</div><div class="large" id="analysisMode">STANDARD</div><div class="mini">観察 / 判断 / 次の行動</div></div></section>
+ <div class="workarea"><div class="left-col">
+  <section class="panel" id="viewer"><div class="panel-head"><h2><span class="green-dot"></span> MATCH PLAYER</h2><span class="secondary" id="videoMode">デモタイムライン</span></div><div class="player-frame">
+<div id="demoVisual" class="demo-visual" aria-label="オリジナルの抽象的な対戦画面。実際のゲーム映像ではありません">
+ <div class="stage-dots"></div>
+ <div class="stage-hud"><div class="hud-player"><span><span id="hudSelfName">PLAYER 1</span> <small>PLAYER 1</small></span><div class="health"><i></i></div></div><div class="hud-vs">Ⅲ</div><div class="hud-player alt"><span><span id="hudOppName">PLAYER 2</span> <small>PLAYER 2</small></span><div class="health"><i></i></div></div></div>
+ <div class="stage-art"><div class="stage-ring"></div>
+ <svg class="fighter-figures" viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
+  <defs><linearGradient id="bodyA" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#c2f47a"/><stop offset="1" stop-color="#477c8d"/></linearGradient><linearGradient id="bodyB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eac0f2"/><stop offset="1" stop-color="#ba648e"/></linearGradient></defs>
+  <g opacity=".18" stroke="#dfebff" stroke-width="1"><path d="M0 280H720 M0 290H720 M0 300H720 M360 180V310 M240 180L100 310 M480 180L620 310" fill="none"/></g>
+  <g fill="url(#bodyA)" stroke="#080e20" stroke-width="5" stroke-linejoin="round"><circle cx="252" cy="120" r="31"/><path d="M227 146L286 150L306 210L274 240L246 216L212 230L194 203Z"/><path d="M221 158L165 189L151 213L171 229L190 208L247 196Z"/><path d="M285 158L347 179L368 164L385 175L369 194L305 218Z"/><path d="M245 221L218 294L253 302L289 248Z"/><path d="M280 221L298 299L340 299L312 230Z"/></g>
+  <g fill="url(#bodyB)" stroke="#080e20" stroke-width="5" stroke-linejoin="round"><circle cx="505" cy="129" r="26"/><path d="M484 155L526 151L550 213L509 248L481 213L458 202Z"/><path d="M482 168L421 162L402 143L388 154L411 182L467 207Z"/><path d="M524 168L578 171L594 202L572 209L550 193L529 195Z"/><path d="M487 226L460 298L498 301L522 249Z"/><path d="M520 226L553 292L589 277L550 213Z"/></g>
+  <g opacity=".65"><path d="M372 148L399 174L379 187L354 161Z" fill="#ffdca3"/><circle cx="389" cy="161" r="30" fill="none" stroke="#ffdca3" stroke-width="2"/></g>
+ </svg></div>
+ <div class="stage-center"><div class="stage-eyebrow">ILLUSTRATIVE STAGE</div><div class="stage-main">MATCH REPLAY</div><div class="stage-sub">動画未選択・デモタイムラインで再生</div></div>
+ <div class="stage-bottom-left">SF6 / AI COACH <span class="live-dot"></span> DEMO</div>
+</div>
+<video id="matchVideo" class="match-video" playsinline webkit-playsinline preload="metadata"></video>
+</div>
+  <div class="player-controls"><div class="timebar"><div class="timer"><span id="timeNow">00:15.0</span> <span class="faint">/ <span id="timeEnd">02:10</span></span></div><span class="video-mode" id="sceneReadout">R1 / 対空を成功させた場面</span></div><div class="track"><input id="seek" type="range" min="0" max="130" value="15" step="0.05" aria-label="動画の再生位置"><span id="seekBubble" class="seek-bubble" aria-hidden="true">00:15.0</span><div class="markers" id="markers"></div></div>
+   <div class="controlrow"><div class="cluster"><button class="iconbtn main-play" data-play aria-label="再生と停止"><span id="playIcon">▶</span></button><button class="iconbtn" data-jump="-5" title="5秒戻る" aria-label="5秒戻る">↶</button><button class="iconbtn" data-jump="5" title="5秒進む" aria-label="5秒進む">↷</button><span id="playLabel" style="font-size:11px;color:#a7b7cd;margin-left:5px">再生</span></div><div class="cluster"><button id="clipMode" class="textbtn on" aria-pressed="true">▣ 区間再生</button><button id="loopMode" class="textbtn" aria-pressed="false">↻ リピート</button><button id="speedButton" class="textbtn">速度 <span id="speedLabel">1.0×</span></button></div></div></div>
+  <div class="uploadrow"><div class="uploadinfo"><strong id="localName">動画未選択 · 操作可能なデモが再生されます</strong><span id="fileStatus">動画を選ぶと実映像に切り替わります。ファイルは外部送信されません。</span></div><div class="upload-actions"><button class="uploadbtn" data-select-file>＋ 端末内の動画を選択</button><button class="uploadbtn reportbtn" id="selectReport">レポートJSONを読込</button></div><input id="fileInput" type="file" accept="video/*,.mp4,.mov,.webm" style="display:none" aria-label="動画を選択"><input id="reportInput" type="file" accept="application/json,.json" style="display:none" aria-label="Chatで生成したレポートJSONを選択"></div></section>
+  <section class="panel" id="insight"><div class="panel-head"><h2>この場面をどう見るか</h2><span class="detail-id" id="detailId">E01</span></div><div class="insight-body"><div class="insight-titleline"><span class="tag good" id="detailTag">良いプレイ</span><span style="color:#8a9cb3;font-size:10px">OBSERVATION → ACTION</span></div><h3 class="detail-title" id="detailTitle">対空を成功させた場面</h3><div class="detail-time" id="detailTime">R1 · 00:15–00:19</div><div class="detail-grid"><div class="detail-cell"><span class="number">01 / 観察できたこと</span><p id="detailObserved"></p></div><div class="detail-cell"><span class="number">02 / 評価・留保</span><p id="detailJudgment"></p></div><div class="detail-cell action"><span class="number">03 / 次に選ぶ行動</span><p id="detailAction"></p></div><div class="detail-cell"><span class="number">04 / 成功の確認条件</span><p id="detailSuccess"></p></div></div></div></section>
+ </div><div class="right-col">
+  <section class="panel scenes-panel" id="moments"><div class="panel-head"><h2>重要シーン</h2><span class="secondary" id="filterCount">05 / 05</span></div><div class="filterbar"><button class="filter active" data-filter="all" aria-pressed="true">すべて</button><button class="filter" data-filter="good" aria-pressed="false">✓ 良かった点</button><button class="filter" data-filter="review" aria-pressed="false">↗ 振り返り</button></div><div class="list-scroll" id="sceneList"></div></section>
+  <section class="panel overall" id="summary"><h3>今回の振り返り <span style="color:var(--accent);float:right;font-size:11px">COACH NOTE</span></h3><p><span id="coachSummary">これは架空のデモ用レポートです。実際の試合データは公開せず、JSONを端末で読み込んでください。</span></p><div class="theme"><strong>NEXT MATCH · PRIMARY THEME</strong><span id="primaryTheme">相手の反応を見てから、次の起き攻めで一度様子見を選ぶ。</span></div></section>
+ </div></div><div class="footnote"><span id="reviewFootnote">公開用サンプルは架空データです。動画とレポートJSONは選択した端末で処理し、このビューアから送信しません。</span></div>
+</main></div><div class="toast" id="toast" role="status" aria-live="polite"></div><script id="coach-report-data" type="application/json">{"schemaVersion":1,"match":{"self":"PLAYER 1","opponent":"PLAYER 2","scoreSelf":2,"scoreOpponent":1,"style":"DEMO / 架空データ","durationSec":130,"analysisMode":"STANDARD","mainFocus":"起き攻めの判断","mainFocusNote":"行動を選ぶ時点から振り返る"},"coaching":{"summary":"これは架空のデモ用レポートです。実際の試合データは公開せず、Chatで生成したJSONを端末内で読み込んでください。","primaryTheme":"相手の反応を見てから、次の起き攻めで一度様子見を選ぶ。","secondaryTheme":null},"events":[{"id":"E01","round":"ROUND 01","start":15,"end":19,"category":"good","tag":"良いプレイ","title":"対空を成功させた場面","short":"相手のジャンプに反応して攻撃が命中。","observed":"相手がジャンプし、こちらの攻撃が空中で命中した。","judgment":"画面から確認できる範囲では対空が成功した。具体的な技名・性能はこの架空デモでは特定しない。","action":"次もジャンプを見てから、操作可能な状態で反応する。","success":"ジャンプへの反応を再現できるかを確認する。"},{"id":"E02","round":"ROUND 01","start":42,"end":46,"category":"review","tag":"判断","title":"起き攻めの打撃を選んだ場面","short":"相手の切り返しに被弾した例。","observed":"相手の起き上がりに打撃を選択し、相手の切り返しで被弾した。","judgment":"被弾だけで確定ミスとは扱わない。実行可能性・判断時点を確認する必要がある。","action":"次の類似状況では、攻める前に様子見も候補に入れる。","success":"同じ状況で選択肢を意識して選べたかを確認する。"},{"id":"E03","round":"ROUND 02","start":73,"end":78,"category":"good","tag":"良いプレイ","title":"相手の空振りを咎める","short":"相手の空振り後に反撃した例。","observed":"相手の攻撃が空振り、その後こちらの攻撃が命中した。","judgment":"相手の動作終了に合わせた良い判断の候補。確定反撃のフレーム数は未検証。","action":"届く距離で相手の空振りを確認する。","success":"似た距離で反撃を再現できたかを確認する。"},{"id":"E04","round":"ROUND 03","start":94,"end":98,"category":"review","tag":"コンボ","title":"締めの攻撃が届かなかった","short":"コンボ継続に失敗した例。","observed":"連続攻撃の最後の一撃が相手に届かなかった。","judgment":"ルート選択・距離・入力のどれが原因かは追加根拠が必要。","action":"同じ始動で距離に合った締めを選ぶ。","success":"次回同じ機会で締めの攻撃を当てられたか。"},{"id":"E05","round":"ROUND 03","start":115,"end":121,"category":"good","tag":"勝ち筋","title":"起き攻めから攻撃が命中","short":"相手の起き上がりに打撃を当てた例。","observed":"起き上がりに合わせた打撃が命中し、続けて攻撃を当てた。","judgment":"成立した起き攻めの成功例として残す。具体的な技名は未確認。","action":"相手の起き上がり時の距離・位置を意識する。","success":"類似場面で同じ有効な選択を再現できたか。"}],"meta":{"example":true,"source":"完全に架空の画面表示例。実際のユーザーの試合・記録を含まない。"}}</script>
+<script>
+(()=>{
+'use strict';
+let report=JSON.parse(document.getElementById('coach-report-data').textContent);
+let events=report.events;
+let DEMO_DURATION=report.match.durationSec;
+const $=(sel)=>document.querySelector(sel);
+const $$=(sel)=>Array.from(document.querySelectorAll(sel));
+const video=$('#matchVideo');
+function renderReportMeta(){
+ const m=report.match,c=report.coaching;
+ const values={scoreSelf:m.scoreSelf,scoreOpponent:m.scoreOpponent,selfName:m.self,oppName:m.opponent,hudSelfName:m.self,hudOppName:m.opponent,styleName:m.style,mainFocus:m.mainFocus,mainFocusNote:m.mainFocusNote,eventTotal:String(events.length).padStart(2,'0'),eventBreakdown:`良いプレイ ${events.filter(e=>e.category==='good').length} ・振り返り ${events.filter(e=>e.category==='review').length}`,matchDuration:fmt(m.durationSec),durationCaption:report.meta?.example?'デモ用タイムライン':'動画相対時刻',analysisMode:m.analysisMode,hudSelfName:m.self,hudOppName:m.opponent,coachSummary:c.summary,primaryTheme:c.primaryTheme,reviewFootnote:report.meta?.example?'サンプルデータで動作を試せます。動画は同梱・送信されません。実動画を選択すると端末内で再生されます。':'このレポートに元動画は含まれません。再生するときは、この端末の動画を選択してください。'};
+ Object.entries(values).forEach(([id,val])=>safeText(document.getElementById(id),val));
+}
+
+const state={selected:0,category:'all',current:Math.min(events[0].start,DEMO_DURATION),duration:DEMO_DURATION,playing:false,clipMode:true,loop:false,speed:1,fileUrl:null,hasVideo:false,scrubbing:false,pendingSeek:null};
+const fmt=(v)=>{v=Math.max(0,Math.floor(Number(v)||0));return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')};
+const fmtTenths=(v)=>{const tenths=Math.max(0,Math.round((Number(v)||0)*10));const minutes=Math.floor(tenths/600),seconds=Math.floor((tenths%600)/10),dec=tenths%10;return String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0')+'.'+dec};
+const selected=()=>events[state.selected];
+const safeText=(el,str)=>{if(el)el.textContent=str};
+const toast=(message)=>{const e=$('#toast');if(!e)return;e.textContent=message;e.classList.add('visible');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('visible'),3100)};
+function drawCards(){
+ const box=$('#sceneList');if(!box)return;box.innerHTML='';
+ let seen=0;
+ events.forEach((e,i)=>{
+  if(state.category!=='all'&&e.category!==state.category)return;
+  seen++;
+  const b=document.createElement('button');b.type='button';b.className='scene-card'+(i===state.selected?' active':'');b.dataset.index=i;
+  const type=e.category==='good'?'good':'review';
+  b.innerHTML=`<span class="scene-no"></span><span class="scene-main"><span class="scene-top"><span class="scene-clock"></span><span class="scene-round"></span></span><strong class="scene-title"></strong><span class="scene-caption"></span></span><span class="scene-end"><span class="scene-tag ${type}"></span><span class="scene-play" aria-hidden="true">↗</span></span>`;
+  b.querySelector('.scene-no').textContent=e.id; b.querySelector('.scene-clock').textContent=`${fmt(e.start)}–${fmt(e.end)}`; b.querySelector('.scene-round').textContent=e.round.replace('ROUND ','R'); b.querySelector('.scene-tag').textContent=e.tag; b.querySelector('.scene-title').textContent=e.title;b.querySelector('.scene-caption').textContent=e.short;
+  b.setAttribute('aria-label',`${fmt(e.start)} から再生、${e.title}`);
+  b.addEventListener('click',()=>{choose(i,true);if(window.matchMedia('(max-width: 760px)').matches)document.querySelector('#viewer')?.scrollIntoView({behavior:'smooth',block:'start'});});box.appendChild(b);
+ });
+ safeText($('#filterCount'),String(seen).padStart(2,'0')+' / '+String(events.length).padStart(2,'0'));
+}
+function drawMarks(){const el=$('#markers');if(!el)return;el.innerHTML='';events.forEach((e,i)=>{
+ const p=e.start/state.duration*100;if(p>100)return;
+ const b=document.createElement('button');b.className='marker'+(i===state.selected?' selected':'')+(e.category==='review'?' review':'');b.type='button';b.style.left=`${p}%`;b.title=`${fmt(e.start)} ${e.title}`;b.setAttribute('aria-label',`${fmt(e.start)} ${e.title}を再生`);b.addEventListener('click',()=>choose(i,true));el.appendChild(b);
+});}
+function drawDetails(){const e=selected();safeText($('#detailTag'),e.tag);safeText($('#detailTitle'),e.title);safeText($('#detailTime'),`${e.round.replace('ROUND ','R')} · ${fmt(e.start)}–${fmt(e.end)}`);safeText($('#detailObserved'),e.observed);safeText($('#detailJudgment'),e.judgment);safeText($('#detailAction'),e.action);safeText($('#detailSuccess'),e.success);safeText($('#detailId'),e.id);safeText($('#detailShort'),e.short);
+ const tag=$('#detailTag');if(tag){tag.classList.remove('good','review');tag.classList.add(e.category)}
+ drawCards();drawMarks();}
+function refresh(){
+ safeText($('#timeNow'),fmtTenths(state.current));safeText($('#timeEnd'),fmt(state.duration));
+ safeText($('#videoMode'),state.hasVideo?'ローカル動画を再生中':'デモタイムライン');
+ const range=$('#seek');if(range){range.max=state.duration;range.value=Math.min(state.current,state.duration);range.style.setProperty('--pct',(Math.min(state.current/state.duration*100,100))+'%');range.setAttribute('aria-valuetext',fmtTenths(state.current));const bubble=$('#seekBubble');if(bubble){bubble.textContent=fmtTenths(state.current);bubble.style.left=Math.max(5,Math.min(95,state.current/state.duration*100))+'%'}}
+ const progress=$('#miniProgress');if(progress)progress.style.width=(Math.min(state.current/state.duration*100,100))+'%';
+ const playing=state.playing;
+ safeText($('#playIcon'),playing?'❚❚':'▶');safeText($('#playLabel'),playing?'一時停止':'再生');
+ const big=$('#bigPlay');if(big)big.innerText=playing?'❚❚':'▶';
+ const scene=$('#demoVisual');if(scene)scene.classList.toggle('is-playing',playing);
+ const clip=$('#clipMode');if(clip){clip.classList.toggle('on',state.clipMode);clip.setAttribute('aria-pressed',String(state.clipMode))}
+ const loop=$('#loopMode');if(loop){loop.classList.toggle('on',state.loop);loop.setAttribute('aria-pressed',String(state.loop))}
+ safeText($('#speedLabel'),state.speed.toFixed(1)+'×');
+ const readout=$('#sceneReadout');if(readout)safeText(readout,`${selected().round.replace('ROUND ','R')} / ${selected().title}`);
+}
+function pause(){state.playing=false;if(state.hasVideo&&video)video.pause();refresh()}
+function play(){
+ if(state.clipMode&&state.current>=Math.min(selected().end,state.duration)-.05)seekTo(selected().start);
+ if(state.current>=state.duration-.1)seekTo(state.clipMode?selected().start:0);
+ if(state.hasVideo&&video){const p=video.play();if(p&&typeof p.catch==='function')p.catch(()=>{state.playing=false;refresh();toast('この動画形式は再生できないか、再生が制限されています。')});}
+ state.playing=true;refresh();
+}
+function playPause(){state.playing?pause():play()}
+function seekTo(sec){
+ const cap=Math.min(state.duration,Math.max(0,Number(sec)||0));state.current=cap;
+ if(state.hasVideo&&video&&video.readyState>0){
+  // A seek can finish asynchronously; keep the requested time visible until it catches up.
+  state.pendingSeek=cap;
+  try{video.currentTime=cap}catch(e){state.pendingSeek=null}
+ }
+ refresh();
+}
+function choose(index,autoplay){state.selected=index;drawDetails();seekTo(selected().start);if(autoplay){if(state.hasVideo&&selected().start>=state.duration){pause();toast('この動画は選択したシーンの時刻より短いため、再生できません。');return}play()}else refresh();}
+function reachedClipEnd(){if(state.loop&&state.clipMode){seekTo(selected().start);if(state.hasVideo&&video){video.play().catch(()=>pause())}}else{pause();if(!state.loop)toast('選択したシーンを再生しました')}}
+function setVideoFile(file){
+ if(!file)return;
+ if(state.fileUrl)URL.revokeObjectURL(state.fileUrl);
+ pause();state.fileUrl=URL.createObjectURL(file);state.hasVideo=true;
+ const placeholder=$('#demoVisual');if(placeholder)placeholder.style.display='none';if(video){video.style.display='block';video.src=state.fileUrl;video.playbackRate=state.speed;video.load();}
+ const cleanName=file.name.length>28?file.name.slice(0,25)+'…':file.name;
+ safeText($('#localName'),cleanName);safeText($('#fileStatus'),'読み込み中…');
+ toast('端末内の動画を読み込みました。アップロードはしていません。');
+}
+if(video){
+ video.addEventListener('loadedmetadata',()=>{
+  state.duration=Number.isFinite(video.duration)&&video.duration>0?video.duration:DEMO_DURATION;
+  const diff=Math.abs(state.duration-DEMO_DURATION);
+  const mismatch=diff>Math.max(2,DEMO_DURATION*.02);
+  safeText($('#fileStatus'),mismatch?'注意：レポートの動画長と選択ファイルが一致しません。正しい元動画か確認してください。':'ローカル読み込み済み（端末内だけで再生）');
+  state.pendingSeek=null;seekTo(Math.min(selected().start,state.duration));drawMarks();refresh();
+  if(mismatch)toast('動画の長さがレポートと異なります。間違ったファイルの可能性があります。');
+  if(state.duration<selected().start)toast('選択したシーンの時刻より短い動画です。別のファイルを選んでください。');
+ });
+   video.addEventListener('timeupdate',()=>{
+   if(!state.hasVideo||state.scrubbing)return;
+   if(state.pendingSeek!==null&&Math.abs(video.currentTime-state.pendingSeek)>.25)return;
+   state.pendingSeek=null;
+   state.current=video.currentTime;
+   if(state.playing&&state.clipMode&&state.current>=Math.min(selected().end,state.duration)-.08){reachedClipEnd();return}
+   refresh();
+  });
+  video.addEventListener('seeked',()=>{
+   if(!state.hasVideo||state.scrubbing)return;
+   if(state.pendingSeek!==null&&Math.abs(video.currentTime-state.pendingSeek)>.25)return;
+   state.pendingSeek=null;state.current=video.currentTime;refresh();
+  });
+ video.addEventListener('play',()=>{state.playing=true;refresh()});
+ video.addEventListener('pause',()=>{state.playing=false;refresh()});
+ video.addEventListener('ended',()=>{state.playing=false;refresh()});
+ video.addEventListener('error',()=>{if(!state.hasVideo)return;state.playing=false;safeText($('#fileStatus'),'再生できない形式');toast('動画が再生できません。別の形式のMP4をお試しください。');refresh()});
+}
+let last=performance.now();setInterval(()=>{const now=performance.now(),delta=Math.min((now-last)/1000,.35);last=now;if(!state.playing||state.hasVideo)return;state.current=Math.min(state.duration,state.current+delta*state.speed);if(state.clipMode&&state.current>=Math.min(selected().end,state.duration)){reachedClipEnd();return}if(state.current>=state.duration){pause();return}refresh()},80);
+$$('[data-filter]').forEach(el=>el.addEventListener('click',()=>{state.category=el.dataset.filter;$$('[data-filter]').forEach(c=>{c.classList.toggle('active',c===el);c.setAttribute('aria-pressed',String(c===el))});drawCards()}));
+$$('[data-jump]').forEach(el=>el.addEventListener('click',()=>{seekTo(state.current+Number(el.dataset.jump));if(state.clipMode&&(state.current<selected().start||state.current>selected().end))state.clipMode=false;refresh()}));
+$$('[data-play]').forEach(el=>el.addEventListener('click',playPause));
+$('#clipMode')?.addEventListener('click',()=>{state.clipMode=!state.clipMode;if(state.clipMode){seekTo(selected().start);pause();toast('選択場面の区間再生がオンになりました')}else toast('試合全体を再生します');refresh()});
+$('#loopMode')?.addEventListener('click',()=>{state.loop=!state.loop;toast(state.loop?'区間リピート：オン':'区間リピート：オフ');refresh()});
+$('#speedButton')?.addEventListener('click',()=>{const seq=[.5,1,1.5,2];state.speed=seq[(seq.indexOf(state.speed)+1)%seq.length];if(state.hasVideo&&video)video.playbackRate=state.speed;refresh()});
+const seekBar=$('#seek');
+const finishScrub=()=>{if(!state.scrubbing)return;state.scrubbing=false;seekBar?.closest('.track')?.classList.remove('is-scrubbing');if(seekBar)seekTo(Number(seekBar.value));};
+seekBar?.addEventListener('pointerdown',()=>{state.scrubbing=true;seekBar.closest('.track')?.classList.add('is-scrubbing')});
+window.addEventListener('pointerup',finishScrub);
+window.addEventListener('pointercancel',finishScrub);
+seekBar?.addEventListener('input',e=>{state.clipMode=false;seekTo(Number(e.target.value))});
+seekBar?.addEventListener('change',e=>{state.clipMode=false;seekTo(Number(e.target.value));finishScrub()});
+$('#fileInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)setVideoFile(f)});
+$$('[data-select-file]').forEach(b=>b.addEventListener('click',()=>$('#fileInput')?.click()));
+$$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const el=document.querySelector(b.dataset.go);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});$$('[data-go]').forEach(x=>x.classList.toggle('active',x===b))}));
+document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement?.tagName))return;if(e.key===' '){e.preventDefault();playPause()}if(e.key==='ArrowRight'){e.preventDefault();seekTo(state.current+5)}if(e.key==='ArrowLeft'){e.preventDefault();seekTo(state.current-5)}});
+window.addEventListener('pagehide',()=>{if(state.fileUrl)URL.revokeObjectURL(state.fileUrl)});
+
+// Reports are text-only files read locally. This page makes no network requests.
+function verifyReport(data){
+ const fail=m=>{throw Error(m)};
+ const obj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
+ const txt=(x,max)=>typeof x==='string'&&x.trim().length>0&&x.length<=max;
+ if(!obj(data)||data.schemaVersion!==1||!obj(data.match)||!obj(data.coaching)||!Array.isArray(data.events))fail('レポート形式が異なります（schemaVersion=1が必要です）。');
+ const m=data.match,c=data.coaching;
+ if(!txt(m.self,60)||!txt(m.opponent,60)||!txt(m.mainFocus,140)||!txt(m.analysisMode,40)||!txt(m.style,70)||typeof m.mainFocusNote!=='string')fail('試合情報が不正です。');
+ if(!Number.isFinite(m.durationSec)||m.durationSec<=0||m.durationSec>86400)fail('動画の長さが不正です。');
+ if(!Number.isInteger(m.scoreSelf)||!Number.isInteger(m.scoreOpponent)||m.scoreSelf<0||m.scoreOpponent<0||m.scoreSelf>9||m.scoreOpponent>9)fail('スコアが不正です。');
+ if(!txt(c.summary,2200)||!txt(c.primaryTheme,1200)||!(c.secondaryTheme==null||typeof c.secondaryTheme==='string'))fail('コーチング情報が不正です。');
+ if(data.events.length<1||data.events.length>40)fail('重要場面数が範囲外です。');
+ const seen=new Set();let prev=-1;
+ data.events.forEach((e,i)=>{
+  if(!obj(e)||!txt(e.id,20)||seen.has(e.id))fail('場面IDが不正または重複しています。');seen.add(e.id);
+  if(!/^ROUND [0-9]{2}$/.test(e.round)||!['good','review'].includes(e.category))fail('ラウンドか分類が不正です。');
+  if(!Number.isFinite(e.start)||!Number.isFinite(e.end)||e.start<0||e.start>=e.end||e.end>m.durationSec||e.start<prev)fail('場面の開始・終了時刻に矛盾があります。');
+  prev=e.start;
+  for(const [k,max] of Object.entries({tag:30,title:110,short:280,observed:900,judgment:1000,action:900,success:900}))if(!txt(e[k],max))fail('場面'+(i+1)+'の説明が不正です。');
+ });
+ return data;
+}
+function applyReport(data){
+ verifyReport(data);
+ pause();
+ report=data;events=report.events;DEMO_DURATION=report.match.durationSec;
+ state.selected=0;state.category='all';$$('[data-filter]').forEach(b=>{b.classList.toggle('active',b.dataset.filter==='all');b.setAttribute('aria-pressed',String(b.dataset.filter==='all'));});state.current=events[0].start;state.duration=DEMO_DURATION;state.clipMode=true;state.loop=false;state.pendingSeek=null;state.scrubbing=false;
+ // Never silently pair a new report with a video belonging to another match.
+ if(state.fileUrl){URL.revokeObjectURL(state.fileUrl);state.fileUrl=null;}
+ state.hasVideo=false;
+ if(video){video.pause();video.removeAttribute('src');video.load();video.style.display='none';}
+ const placeholder=$('#demoVisual');if(placeholder)placeholder.style.display='block';
+ safeText($('#localName'),'元動画は未選択です');safeText($('#fileStatus'),'新しいレポートを読み込みました。対応する元動画を選択してください。');
+ renderReportMeta();drawDetails();refresh();
+}
+$('#selectReport')?.addEventListener('click',()=>$('#reportInput')?.click());
+$('#reportInput')?.addEventListener('change',async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ try{
+  if(f.size>1024*1024)throw Error('JSONが1MBを超えています。');
+  const raw=await f.text();const data=JSON.parse(raw);applyReport(data);
+  toast('レポートを読み込みました。対応する動画を選択できます。');
+ }catch(err){toast('レポートを読み込めません：'+(err?.message||'不明なエラー'));}
+ e.target.value='';
+});
+
+renderReportMeta();choose(0,false);refresh();
+})();
+</script></body></html>
