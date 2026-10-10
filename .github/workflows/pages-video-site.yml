@@ -54,9 +54,9 @@ jobs:
           path: _site
 
   deploy:
-    # First rollout: verify actual builder and artifacts on push before publishing.
-    # After formal review, enable push + scheduled deployment.
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
+    # Keep the public Pages site in sync with main and the dedicated Release.
+    # Manual runs may preview without deployment by setting deploy=false.
+    if: github.event_name != 'workflow_dispatch' || inputs.deploy == true
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
