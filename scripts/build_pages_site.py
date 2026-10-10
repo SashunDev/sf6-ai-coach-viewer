@@ -22,7 +22,7 @@ REPO = "SashunDev/sf6-ai-coach-viewer"
 RELEASE_TAG = "sf6-ai-coach-media"
 MEDIA_BUDGET = 800_000_000
 MAX_AGE_DAYS = 14
-NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I)
+NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I | re.ASCII)
 SITE_FILES = (
     "index.html", "demo.html", "release-smoke.html", "video-diagnostics.html",
     "pages-video-smoke.html", "pages-integration-smoke.html",
