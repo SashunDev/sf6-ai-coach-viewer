@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>SF6 AI Coach｜動画再生の診断</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif}
+body{background:#0b1424;color:#e9f0ff;margin:0;padding:20px;line-height:1.6}
+main{max-width:680px;margin:0 auto}
+h1{font-size:21px;margin-top:10px}h2{font-size:16px}
+small,p{color:#bac7d9}
+video{display:block;width:100%;background:#000;border:1px solid #394763;border-radius:14px;min-height:170px}
+section{border:1px solid #2e3d55;background:#121e32;border-radius:14px;margin:16px 0;padding:15px}
+button,a.action{display:inline-block;background:#d9fc95;color:#132018;border:0;border-radius:9px;padding:10px 14px;font-weight:700;text-decoration:none;cursor:pointer;margin:4px}
+a.action.secondary{background:#2d3b52;color:#ecf0fb}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#d9fc95;font-size:12px;line-height:1.7}
+</style></head><body><main>
+<small>SF6 AI COACH / 再生環境診断</small>
+<h1>GitHub Releases動画の再生確認</h1>
+<p>これは合成した16秒のテスト映像です。個人の動画やレポートは読み込みません。本番ビューアは変更していません。</p>
+<section><h2>1. 動画を画面内で再生</h2>
+<video id="video" controls playsinline preload="metadata" width="320" height="180" aria-label="合成テスト動画"></video>
+<button id="try">再生を試す</button>
+<p id="status">準備中</p>
+</section>
+<section>
+<h2>2. 動画のURLを直接開く</h2>
+<a class="action secondary" href="https://github.com/SashunDev/sf6-ai-coach-viewer/releases/download/sf6-ai-coach-media/sf6-coach-synthetic-smoke-16s.mp4" target="_blank" rel="noopener noreferrer">GitHubの動画URLを開く</a>
+<p>動画が再生されるか、ファイルのダウンロードになるか確認してください。</p>
+</section>
+<section><h2>3. 診断結果</h2><pre id="log" aria-live="polite"></pre>
+<button id="copy">診断結果をコピー</button>
+<p>診断には動画読み込みの状態とブラウザーの情報のみを使用します。サーバーには送信しません。</p>
+</section>
+<script>
+(()=>{'use strict';
+ const src='https://github.com/SashunDev/sf6-ai-coach-viewer/releases/download/sf6-ai-coach-media/sf6-coach-synthetic-smoke-16s.mp4';
+ const video=document.querySelector('#video'),log=document.querySelector('#log'),status=document.querySelector('#status');
+ const entries=[];
+ function record(str){entries.push(new Date().toLocaleTimeString('ja-JP')+' '+str);log.textContent=entries.join('\n');}
+ const descError=()=>video.error?'MediaError.code='+video.error.code+' (1=ABORTED,2=NETWORK,3=DECODE,4=SRC_NOT_SUPPORTED)':'MediaError=null';
+ record('URL origin: '+location.origin);
+ record('UserAgent: '+navigator.userAgent);
+ record('MP4 codec support: '+video.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
+ for(const type of ['loadstart','loadedmetadata','canplay','playing','waiting','stalled','suspend','error']){
+  video.addEventListener(type,()=>{
+   record(type+' readyState='+video.readyState+' networkState='+video.networkState+' '+descError());
+   if(type==='error'){status.textContent='画面内再生に失敗しました。上の診断結果を送ってください。'}
+   if(type==='loadedmetadata'){status.textContent='動画メタデータを取得しました。長さ='+video.duration.toFixed(1)+'秒'}
+   if(type==='playing'){status.textContent='動画を画面内で再生中'}
+  });
+ }
+ video.src=src;
+ video.load();
+ document.querySelector('#try').onclick=async()=>{
+  record('user clicked play');try{await video.play();record('video.play(): resolved');}
+  catch(e){record('video.play(): rejected '+e.name+' '+e.message);status.textContent='再生を開始できませんでした。'}
+ };
+ document.querySelector('#copy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(log.textContent);status.textContent='診断結果をコピーしました';}
+  catch(e){status.textContent='コピーできません。診断結果をスクリーンショットしてください。'}
+ };
+})();
+</script></main></body></html>
