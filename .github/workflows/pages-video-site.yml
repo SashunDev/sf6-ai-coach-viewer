@@ -1,0 +1,69 @@
+name: SF6 AI Coach Pages video site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'demo.html'
+      - 'release-smoke.html'
+      - 'video-diagnostics.html'
+      - 'pages-video-smoke.html'
+      - 'pages-integration-smoke.html'
+      - 'scripts/build_pages_site.py'
+      - 'tests/test_pages_build.py'
+      - '.github/workflows/pages-video-site.yml'
+  schedule:
+    - cron: '42 0,6,12,18 * * *'
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Publish validated Pages site with recent MP4s'
+        type: boolean
+        required: true
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sf6-coach-pages-live-site
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Pages mirror selector and security boundaries
+        run: |
+          python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
+          python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
+      - name: Build with only eligible public MP4s
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/build_pages_site.py --out _site
+      - name: Upload verified Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    # First rollout: verify actual builder and artifacts on push before publishing.
+    # After formal review, enable push + scheduled deployment.
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
