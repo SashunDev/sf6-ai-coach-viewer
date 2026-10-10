@@ -69,7 +69,8 @@ jobs:
         with:
           path: _site
   deploy:
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true
+    # Archived PoC: use pages-video-site.yml for all future deployments.
+    if: false
     needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
