@@ -31,6 +31,15 @@ jobs:
               --latest=false
           fi
 
+      - name: Install FFmpeg only when missing
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
+          fi
+          ffmpeg -version | head -n 1
+
       - name: Create a synthetic, non-gameplay H264/AAC test video
         run: |
           set -euo pipefail
