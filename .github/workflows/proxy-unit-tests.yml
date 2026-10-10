@@ -1,0 +1,23 @@
+name: SF6 Worker video proxy unit tests
+
+on:
+  push:
+    paths:
+      - 'workers/**'
+      - '.github/workflows/proxy-unit-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test stream proxy without network calls
+        run: node --test workers/worker.test.mjs
