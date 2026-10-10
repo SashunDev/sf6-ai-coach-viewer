@@ -218,6 +218,54 @@ $('#reportInput')?.addEventListener('change',async e=>{
  e.target.value='';
 });
 
+// Optional direct link: #r=z.<base64url-of-zlib-deflate-JSON>.
+// The fragment never goes to the HTTP server; no extra web requests are made.
+// Manual JSON import is intentionally retained as a fallback.
+async function decodeLinkReportFragment(){
+ const hash=window.location.hash;
+ if(!hash.startsWith('#r='))return;
+ try{
+  const token=hash.slice(3);
+  if(token.length>12000)throw Error('URLが長すぎます。JSONファイル読込をご利用ください。');
+  const m=/^(z|j)\.([A-Za-z0-9_-]+)$/.exec(token);
+  if(!m)throw Error('レポートURLの形式が不正です。');
+  const encoded=m[2];
+  const padded=encoded.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-encoded.length%4)%4);
+  const binary=atob(padded);
+  const packed=Uint8Array.from(binary,c=>c.charCodeAt(0));
+  let unpacked;
+  if(m[1]==='z'){
+   if(typeof DecompressionStream!=='function')throw Error('このブラウザーはURLの圧縮形式に対応していません。JSON読込をご利用ください。');
+   const reader=new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate')).getReader();
+   const chunks=[];let total=0;
+   try{
+    while(true){
+     const {value,done}=await reader.read();if(done)break;
+     total+=value.byteLength;
+     if(total>1024*1024)throw Error('展開後のレポートが1MBを超えています。');
+     chunks.push(value);
+    }
+   }catch(e){await reader.cancel().catch(()=>{});throw e;}
+   unpacked=new Uint8Array(total);
+   let offset=0;for(const chunk of chunks){unpacked.set(chunk,offset);offset+=chunk.byteLength;}
+  }else{
+   if(packed.byteLength>1024*1024)throw Error('レポートが1MBを超えています。');
+   unpacked=packed;
+  }
+  const raw=new TextDecoder('utf-8',{fatal:true}).decode(unpacked);
+  const newReport=JSON.parse(raw);
+  // applyReport calls verifyReport before modifying state.
+  applyReport(newReport);
+  toast('リンクからレポートを自動表示しました。元動画を選択してください。');
+ }catch(err){
+  const message=String(err?.message||'URLを解析できません').slice(0,130);
+  safeText($('#fileStatus'),'URL読込に失敗しました。JSONファイルを選択できます。');
+  toast('URL読込エラー：'+message);
+ }
+}
+
 renderReportMeta();choose(0,false);refresh();
+void decodeLinkReportFragment();
+window.addEventListener('hashchange',()=>void decodeLinkReportFragment());
 })();
 </script></body></html>
