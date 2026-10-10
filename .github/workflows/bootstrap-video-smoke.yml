@@ -1,0 +1,59 @@
+name: SF6 Coach test video bootstrap
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap-video-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sf6-ai-coach-video-bootstrap
+  cancel-in-progress: false
+
+jobs:
+  bootstrap:
+    if: github.repository == 'SashunDev/sf6-ai-coach-viewer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Ensure dedicated video Release exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+              --target main --title "SF6 AI Coach Temporary Videos" \
+              --notes "PUBLIC, TEMPORARY VIDEO MEDIA ONLY. Retention: 14 days; 2,000 MB cap; trim to 1,800 MB. JSON is not stored here." \
+              --latest=false
+          fi
+
+      - name: Create a synthetic, non-gameplay H264/AAC test video
+        run: |
+          set -euo pipefail
+          ffmpeg -hide_banner -loglevel error -nostdin -y \
+            -f lavfi -i 'testsrc2=size=320x180:rate=24' \
+            -f lavfi -i 'sine=frequency=440:sample_rate=44100' \
+            -t 16 -c:v libx264 -preset veryfast -crf 33 \
+            -pix_fmt yuv420p -c:a aac -b:a 48k \
+            -movflags +faststart /tmp/sf6-coach-synthetic-smoke-16s.mp4
+          ffprobe -v error -show_entries format=duration \
+            -of default=noprint_wrappers=1 /tmp/sf6-coach-synthetic-smoke-16s.mp4
+
+      - name: Upload a single synthetic sample if absent
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing="$(gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$existing" | grep -Fxq sf6-coach-synthetic-smoke-16s.mp4; then
+            echo "Synthetic sample is already present. Keeping existing asset."
+          else
+            gh release upload sf6-ai-coach-media /tmp/sf6-coach-synthetic-smoke-16s.mp4 \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+            --json url,assets --jq '{url: .url, assets: [.assets[] | {name: .name, size: .size, url: .url}]}'
