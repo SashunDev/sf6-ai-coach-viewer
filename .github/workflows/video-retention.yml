@@ -1,0 +1,54 @@
+name: SF6 AI Coach video retention
+
+on:
+  schedule:
+    - cron: '17 * * * *'  # Hourly; GitHub may delay or suspend schedules after inactivity.
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview only (do not delete videos)'
+        type: boolean
+        required: true
+        default: true
+      initialize_release:
+        description: 'Create the dedicated public media Release if missing'
+        type: boolean
+        required: true
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sf6-ai-coach-video-retention
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run retention unit tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Create dedicated Release (manual request only)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.initialize_release == true }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" --target main \
+              --title "SF6 AI Coach Temporary Videos" \
+              --notes "Public temporary videos; delete after 14 days, or oldest-first when over 2000 MB until <= 1800 MB. Do not upload sensitive video." \
+              --latest=false
+          fi
+      - name: Clean up dedicated Release video assets
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == true }}
+        run: |
+          if [ "$DRY_RUN" = "true" ]; then
+            python3 scripts/cleanup_release_videos.py --dry-run
+          else
+            python3 scripts/cleanup_release_videos.py
+          fi
