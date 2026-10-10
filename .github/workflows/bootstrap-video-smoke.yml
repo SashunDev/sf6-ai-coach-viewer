@@ -52,6 +52,15 @@ jobs:
           ffprobe -v error -show_entries format=duration \
             -of default=noprint_wrappers=1 /tmp/sf6-coach-synthetic-smoke-16s.mp4
 
+      - uses: actions/checkout@v4
+      - name: Dry-run real Release retention check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -v
+          python3 scripts/cleanup_release_videos.py --dry-run
+
       - name: Upload a single synthetic sample if absent
         env:
           GH_TOKEN: ${{ github.token }}
