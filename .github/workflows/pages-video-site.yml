@@ -12,6 +12,7 @@ on:
       - 'pages-integration-smoke.html'
       - 'scripts/build_pages_site.py'
       - 'tests/test_pages_build.py'
+      - 'tests/test_viewer_pages.cjs'
       - '.github/workflows/pages-video-site.yml'
   schedule:
     - cron: '42 0,6,12,18 * * *'
@@ -40,6 +41,7 @@ jobs:
         run: |
           python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
           python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
+          node --test tests/test_viewer_pages.cjs
       - name: Build with only eligible public MP4s
         env:
           GITHUB_TOKEN: ${{ github.token }}
