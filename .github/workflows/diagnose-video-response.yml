@@ -1,0 +1,46 @@
+name: Diagnose Release video HTTP headers
+on:
+  push:
+    paths:
+      - '.github/workflows/diagnose-video-response.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  headers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Inspect GitHub Release response headers (sanitized)
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://github.com/SashunDev/sf6-ai-coach-viewer/releases/download/sf6-ai-coach-media/sf6-coach-synthetic-smoke-16s.mp4"
+          for kind in normal range; do
+            echo "==== $kind ===="
+            if [ "$kind" = range ]; then
+              curl -sS -L --max-redirs 10 --max-time 45 \
+                -H "Range: bytes=0-1023" -D /tmp/headers -o /dev/null \
+                -w 'HTTP=%{http_code} MIME=%{content_type} BYTES=%{size_download}\n' "$url"
+            else
+              curl -sS -L --max-redirs 10 --max-time 45 \
+                -D /tmp/headers -o /dev/null \
+                -w 'HTTP=%{http_code} MIME=%{content_type} BYTES=%{size_download}\n' "$url"
+            fi
+            python3 - <<'PY'
+          from pathlib import Path
+          data = Path('/tmp/headers').read_text(errors='replace')
+          blocks=[b for b in data.replace('\r','').split('\n\n') if b.strip()]
+          print("response_blocks:",len(blocks))
+          for index, block in enumerate(blocks):
+              lines = block.splitlines()
+              if not lines: continue
+              print("hop:",index,"status:",lines[0][:100])
+              for line in lines[1:]:
+                  key=line.split(':',1)[0].lower()
+                  if key in ('content-type','content-disposition','accept-ranges','content-range','content-length','access-control-allow-origin','cache-control'):
+                      print(" ",line[:300])
+          PY
+          done
