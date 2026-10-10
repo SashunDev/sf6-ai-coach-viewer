@@ -1,0 +1,15 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+<title>SF6 AI Coach / Pages MP4 再生検証</title><style>body{font-family:system-ui;background:#0c1424;color:#eaf2ff;margin:20px auto;padding:0 16px;max-width:720px;line-height:1.6}video{width:100%;background:black}button{background:#d7fd8c;color:#182516;border:0;border-radius:8px;padding:12px;margin:4px}pre{white-space:pre-wrap}</style></head>
+<body><h1>GitHub Pages MP4再生テスト</h1><p>合成16秒動画。実際の対戦動画や個人情報は使用しません。</p><video id="v" controls playsinline preload="metadata" src="./media/sf6-coach-synthetic-smoke-16s.mp4"></video>
+<p><button id="play">再生</button><button id="seek">9秒に移動</button><button id="loop">9～14秒をループ</button><button id="stop">停止</button></p><pre id="log"></pre>
+<script>
+const v=document.querySelector('#v'),log=document.querySelector('#log');let repeat=false;
+function write(s){log.textContent+=s+'\n'}
+write('H264: '+v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
+for(const ev of ['loadedmetadata','seeked','playing','error'])v.addEventListener(ev,()=>write(ev+' time='+v.currentTime.toFixed(1)+' error='+(v.error?.code??'none')));
+v.addEventListener('timeupdate',()=>{if(repeat&&v.currentTime>=14){v.currentTime=9;void v.play().catch(e=>write(e.name))}});
+document.querySelector('#play').onclick=()=>void v.play().catch(e=>write(e.name));
+document.querySelector('#seek').onclick=()=>{repeat=false;v.currentTime=9};
+document.querySelector('#loop').onclick=()=>{repeat=true;v.currentTime=9;void v.play().catch(e=>write(e.name))};
+document.querySelector('#stop').onclick=()=>{repeat=false;v.pause()};
+</script></body></html>
