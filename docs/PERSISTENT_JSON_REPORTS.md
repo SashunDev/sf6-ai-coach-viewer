@@ -7,7 +7,7 @@
 - GitHub Pagesは動画を新しい順に最大800MB、JSONは**全件**を最大50MB／2,000件／1件1MBまで公開配備。JSON枠を超えたら**配備をFAILにし、元の公開サイトを維持**。JSONを勝手に古い順で捨てない。
 - Notion Coaching Sessions／Memoryがプレイヤーの分析記録の正本。公開JSONは特定試合の表示用データであり、Notionに代わる記憶ではない。
 - **公開レポートには戦績・対戦相手・弱点・観察記録が含まれ、URLを知らない人も公開リポジトリとPagesから取得できる**。公開不可の内容や機密情報は含めない。
-- 2026-10-11：合成MP4単体・旧形式の統合ビューアはiPhone Safari実機でユーザーPASS。**新しい短縮 `#id=` リンクのiPhone実機検証は未実施**。実リプレイ動画を使うE2Eは未実施。
+- 2026-10-11：合成MP4単体・旧形式の統合ビューアはiPhone Safari実機でユーザーPASS。**新しい短縮 `#id=` リンクも同日のユーザー統合テストOK報告を受け実機PASS**。実リプレイ動画を使うE2Eは未実施。
 
 ## 使い方：ChatGPTのコーチングJSONを保存する
 
@@ -30,7 +30,7 @@
 - Pagesの合成JSON：HTTP 200、`Content-Type: application/json; charset=utf-8`。GitHub ReleaseのJSONとSHA-256完全一致。
 - Pagesの合成MP4：HTTP 200、`Content-Type: video/mp4`。
 - Pages自動更新：[Run #38097254001](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/38097254001)：**build/deploy PASS**。
-- ただし、短縮URLの**iPhone Safari画面操作**と実リプレイ動画を使うE2Eは未確認。
+- **iPhone Safari画面操作**：短縮URL `#id=sf6-coach-synthetic-smoke-16s` について2026-10-11にユーザーが統合テストOKと報告（実機Gate PASS）。**実リプレイ動画を使うE2Eは未確認**。
 
 ## 合成スモーク試験
 
