@@ -1,0 +1,71 @@
+name: SF6 Single ZIP importer QA
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ingest_match_package.py'
+      - 'tests/test_ingest_match_package.py'
+      - '.github/workflows/auto-publish-match-package.yml'
+      - '.github/workflows/auto-publish-package-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/ingest_match_package.py'
+      - 'tests/test_ingest_match_package.py'
+      - '.github/workflows/auto-publish-match-package.yml'
+      - '.github/workflows/auto-publish-package-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate ZIP safety, id pairing, cleanup, no accidental publication
+        run: |
+          python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
+          python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
+      - name: End-to-end synthetic ZIP preflight with real H.264 (no network upload)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          mkdir -p /tmp/sf6-package-ci
+          ffmpeg -hide_banner -loglevel error -y \
+            -f lavfi -i 'color=c=black:s=320x180:r=15' -t 2 \
+            -an -c:v libx264 -pix_fmt yuv420p \
+            /tmp/sf6-package-ci/synthetic-ci.mp4
+          python3 - <<'PY'
+          import json, zipfile
+          from pathlib import Path
+          folder=Path('/tmp/sf6-package-ci')
+          match='synthetic-ci'
+          data={
+            'schemaVersion':1,
+            'match':{'id':match,'self':'Alex','opponent':'Terry',
+                     'scoreSelf':1,'scoreOpponent':2,'style':'Classic',
+                     'durationSec':2.0,'analysisMode':'Review',
+                     'mainFocus':'Synthetic QA','mainFocusNote':'Not gameplay'},
+            'coaching':{'summary':'Synthetic test only','primaryTheme':'QA','secondaryTheme':None},
+            'events':[{'id':'evt1','round':'ROUND 01','start':.2,'end':1.5,
+                       'category':'good','tag':'QA','title':'Synthetic',
+                       'short':'No real gameplay','observed':'Synthetic',
+                       'judgment':'Fixture','action':'N/A','success':'Pass'}],
+          }
+          (folder/(match+'.json')).write_text(json.dumps(data),encoding='utf8')
+          archive=folder/('sf6-coach-package-'+match+'.zip')
+          with zipfile.ZipFile(archive,'w') as z:
+            z.write(folder/(match+'.json'),arcname=match+'.json')
+            z.write(folder/(match+'.mp4'),arcname=match+'.mp4')
+          PY
+          python3 scripts/ingest_match_package.py \
+            --zip /tmp/sf6-package-ci/sf6-coach-package-synthetic-ci.zip

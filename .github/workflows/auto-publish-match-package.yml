@@ -1,0 +1,51 @@
+name: SF6 AI Coach single-ZIP auto-publisher
+
+on:
+  release:
+    types: [edited]
+  schedule:
+    # Edited release should import quickly; scheduled retry covers UI event delays.
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: sf6-single-zip-publication
+  cancel-in-progress: false
+
+jobs:
+  import-public-match:
+    if: >-
+      github.repository == 'SashunDev/sf6-ai-coach-viewer' &&
+      (github.event_name != 'release' ||
+       github.event.release.tag_name == 'sf6-ai-coach-media')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main  # Release events otherwise check out the older release tag.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate ZIP import safety without public mutation
+        run: |
+          python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
+          python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
+      - name: Ensure H.264/AAC and duration can be inspected
+        run: |
+          set -euo pipefail
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          command -v ffprobe
+      - name: Import approved public staging ZIP, deploy Pages, verify both assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ingest_match_package.py --auto --apply
