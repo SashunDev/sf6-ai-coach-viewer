@@ -1,0 +1,65 @@
+name: SF6 Coach persistent JSON smoke bootstrap
+on:
+  push:
+    paths:
+      - '.github/workflows/bootstrap-json-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: sf6-coach-json-smoke-bootstrap
+  cancel-in-progress: false
+jobs:
+  bootstrap:
+    if: github.repository == 'SashunDev/sf6-ai-coach-viewer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create safe synthetic report from the existing smoke fixture
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/sf6-coach-json-smoke
+          python3 - <<'PY'
+          import base64,json,re,sys,zlib
+          from pathlib import Path
+          src=Path('release-smoke.html').read_text(encoding='utf-8')
+          token=re.search(r'href="\./#r=z\.([A-Za-z0-9_-]+)',src)
+          if not token:
+              raise ValueError('Original synthetic coaching report token missing')
+          packed=base64.urlsafe_b64decode(token.group(1)+'='*(-len(token.group(1))%4))
+          raw=zlib.decompress(packed)
+          if len(raw)>1_048_576:
+              raise ValueError('Synthetic report unexpectedly large')
+          report=json.loads(raw)
+          report['match']['id']='sf6-coach-synthetic-smoke-16s'
+          sys.path.insert(0,'scripts')
+          from create_coaching_link import validate_report
+          validate_report(report)
+          output=Path('/tmp/sf6-coach-json-smoke/sf6-coach-synthetic-smoke-16s.json')
+          output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          print('PASS: synthetic coaching JSON validated:',output.stat().st_size,'bytes')
+          PY
+      - name: Upload only if missing (no overwrite)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          existing="$(gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$existing" | grep -Fxq sf6-coach-synthetic-smoke-16s.json; then
+            echo 'Synthetic JSON already exists; will not overwrite.'
+          else
+            gh release upload sf6-ai-coach-media \
+              /tmp/sf6-coach-json-smoke/sf6-coach-synthetic-smoke-16s.json \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[] | select(.name=="sf6-coach-synthetic-smoke-16s.json") | {name,size}'
+      - name: Trigger live Pages mirror for new JSON asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run pages-video-site.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            --field deploy=true
