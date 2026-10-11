@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlsplit
 import zlib
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
-from create_coaching_link import VIEWER, MEDIA, make_link, validate_report
+from create_coaching_link import VIEWER, MEDIA, make_link, make_id_link, validate_report
 
 def report():
     return {"schemaVersion":1,
@@ -22,6 +22,17 @@ def report():
                    "success":"次回も実戦で確認"}]}
 
 class LinkTests(unittest.TestCase):
+    def test_short_url_only_uses_safe_match_id(self):
+        self.assertEqual(make_id_link("match-001"), VIEWER+"#id=match-001")
+        self.assertEqual(make_id_link("sf6-coach-synthetic-smoke-16s"),
+                         VIEWER+"#id=sf6-coach-synthetic-smoke-16s")
+
+    def test_short_id_rejects_unsafe_input(self):
+        for name in ("../oops", "match.001", "match/a", "bad%20name",
+                     "bad name", "あ", "", "x"*81):
+            with self.subTest(name=name), self.assertRaises(ValueError):
+                make_id_link(name)
+
     def test_roundtrip_compressed_unicode(self):
         url=make_link(report())
         self.assertTrue(url.startswith(VIEWER+"#r=z."))
