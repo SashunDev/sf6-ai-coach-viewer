@@ -1,0 +1,95 @@
+name: SF6 one-attachment Dropbox replay publish (PoC)
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    paths:
+      - 'scripts/ingest_dropbox_issue.py'
+      - 'tests/test_ingest_dropbox_issue.py'
+      - '.github/workflows/dropbox-issue-ingress.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/ingest_dropbox_issue.py'
+      - 'tests/test_ingest_dropbox_issue.py'
+      - '.github/workflows/dropbox-issue-ingress.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sf6-single-zip-publication
+  cancel-in-progress: false
+
+jobs:
+  safety-tests:
+    if: github.event_name != 'issues'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ensure issue and download validation fail closed
+        run: |
+          python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
+          python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
+          python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
+
+  publish-approved-match:
+    if: >-
+      github.event_name == 'issues' &&
+      github.repository == 'SashunDev/sf6-ai-coach-viewer' &&
+      github.event.issue.user.login == 'SashunDev' &&
+      startsWith(github.event.issue.title, 'SF6-PUBLISH ')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+      actions: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify Python ingress and Release validation first
+        run: |
+          python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
+          python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
+          python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
+      - name: Ensure H264 inspector is available
+        run: |
+          set -euo pipefail
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          command -v ffprobe
+      - name: Download source once, validate SHA and publish verified replay
+        id: public-link
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$(python3 scripts/ingest_dropbox_issue.py --event "$GITHUB_EVENT_PATH" --apply)"
+          link="${output#VERIFIED SF6 PUBLIC REPLAY: }"
+          case "$link" in
+            https://sashundev.github.io/sf6-ai-coach-viewer/#id=*) ;;
+            *) echo "::error::No fully verified Pages URL"; exit 1;;
+          esac
+          echo "link=$link" >> "$GITHUB_OUTPUT"
+      - name: Record verified Pages link (not temporary source URL)
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MATCH_ISSUE: ${{ github.event.issue.number }}
+          VERIFIED_LINK: ${{ steps.public-link.outputs.link }}
+        run: |
+          gh issue comment "$MATCH_ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "VERIFIED: video + JSON public SHA-256 matched GitHub Pages: $VERIFIED_LINK. iPhone Safari real-device playback still requires user check."
