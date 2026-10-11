@@ -1,0 +1,59 @@
+name: SF6 Coach public short-link delivery smoke
+on:
+  push:
+    paths:
+      - '.github/workflows/verify-public-json-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Verify real GitHub Pages JSON response and MP4
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/sf6-smoke
+          gh release download sf6-ai-coach-media \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern sf6-coach-synthetic-smoke-16s.json \
+            --dir /tmp/sf6-smoke
+          python3 - <<'PY'
+          import hashlib,json,time
+          from pathlib import Path
+          from urllib.request import Request,urlopen
+          from urllib.error import URLError
+          stem="sf6-coach-synthetic-smoke-16s"
+          root="https://sashundev.github.io/sf6-ai-coach-viewer/"
+          url=root+"reports/"+stem+".json"
+          response=None
+          for attempt in range(7):
+              try:
+                  response=urlopen(Request(url,headers={"User-Agent":"SF6-Coach-Pages-Delivery-Check"}),timeout=20)
+                  if response.status!=200:
+                      raise ValueError("HTTP "+str(response.status))
+                  break
+              except (URLError,ValueError) as e:
+                  if attempt==6: raise
+                  time.sleep(3)
+          with response:
+              mime=response.headers.get("Content-Type","").lower()
+              body=response.read(1_048_577)
+          assert "application/json" in mime or "text/plain" in mime, "Unexpected JSON MIME: "+mime
+          assert len(body)<=1_048_576
+          sample=json.loads(body)
+          assert sample["schemaVersion"]==1
+          assert sample["match"]["id"]==stem
+          source=Path("/tmp/sf6-smoke/"+stem+".json").read_bytes()
+          assert hashlib.sha256(body).digest()==hashlib.sha256(source).digest(), "Pages JSON differs from Release"
+          video_url=root+"media/"+stem+".mp4"
+          with urlopen(Request(video_url,method="HEAD"),timeout=20) as response:
+              assert response.status==200, response.status
+              video_type=response.headers.get("Content-Type","").lower()
+              assert "video/mp4" in video_type, "Unexpected MP4 MIME: "+video_type
+          print("PASS: public Pages JSON HTTP 200, MIME",mime,"SHA256 matches Release, video MIME",video_type)
+          print("New short URL: "+root+"#id="+stem)
+          PY
