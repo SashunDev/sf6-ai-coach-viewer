@@ -35,7 +35,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned sealed-box crypto
-        run: python3 -m pip install --only-binary=:all: PyNaCl==1.6.2
+        run: 'python3 -m pip install --only-binary=:all: PyNaCl==1.6.2'
       - name: Ensure issue and download validation fail closed
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
@@ -62,7 +62,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pinned sealed-box crypto
-        run: python3 -m pip install --only-binary=:all: PyNaCl==1.6.2
+        run: 'python3 -m pip install --only-binary=:all: PyNaCl==1.6.2'
       - name: Verify Python ingress and Release validation first
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
