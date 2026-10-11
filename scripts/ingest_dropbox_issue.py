@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
-"""GitHub Actions PoC: publish a user-approved SF6 replay from a Dropbox temp URL.
+"""GitHub Actions: publish approved SF6 replay using sealed Dropbox URL transport.
 
-Trigger: an owner-created GitHub issue with exact match ID, byte size, SHA256,
-Dropbox content hash and base64url-encoded SINGLE-USE download URL.
-URL is encoded solely to prevent automatic link unfurling; it is NOT encrypted.
-Therefore use this ingress ONLY for gameplay content already approved as PUBLIC.
-No MP4/JSON bytes or decoded download URL are committed or logged.
+Owner-created issue carries only public metadata and PyNaCl sealed-box ciphertext;
+private decryption key must be present in GitHub Actions secret. The old base64
+plaintext URL schema is NOT supported and there is no insecure fallback.
 """
 from __future__ import annotations
 
 import argparse
-import base64
 import hashlib
+import os
+import re
 import json
 from pathlib import Path
-import re
 import sys
 import tempfile
 from urllib.parse import urlsplit
@@ -22,10 +20,11 @@ from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.error import HTTPError, URLError
 
 from create_coaching_link import MATCH_ID
+from dropbox_ingress_crypto import decrypt_url
 from ingest_match_package import MAX_ARCHIVE_BYTES, extract_package
 from publish_match import PAGES, REPO, get_release_and_assets, publish
 
-BODY_FIELDS = {"schemaVersion", "matchId", "encodedUrl", "size", "sha256", "dropboxHash"}
+BODY_FIELDS = {"schemaVersion", "matchId", "sealedUrl", "size", "sha256", "dropboxHash"}
 LOWER_SHA256 = re.compile(r"^[a-f0-9]{64}$", re.ASCII)
 DROPBOX_BLOCK_SIZE = 4 * 1024 * 1024
 USER_AGENT = "SF6-AI-Coach-Public-Replay-Ingress/1"
@@ -60,7 +59,7 @@ class DropboxOnlyRedirect(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def parse_issue(event: dict) -> tuple[str, str, int, str, str]:
+def parse_issue(event: dict, private_key_b64: str) -> tuple[str, str, int, str, str]:
     issue = event.get("issue")
     repo = event.get("repository")
     if not isinstance(issue, dict) or not isinstance(repo, dict):
@@ -72,7 +71,7 @@ def parse_issue(event: dict) -> tuple[str, str, int, str, str]:
     if not isinstance(raw, str) or len(raw) > 7000:
         raise ValueError("Invalid issue body")
     payload = json.loads(raw)
-    if not isinstance(payload, dict) or set(payload) != BODY_FIELDS or payload["schemaVersion"] != 1:
+    if not isinstance(payload, dict) or set(payload) != BODY_FIELDS or type(payload["schemaVersion"]) is not int or payload["schemaVersion"] != 2:
         raise ValueError("Invalid publish schema")
     match_id = payload["matchId"]
     if not isinstance(match_id, str) or not MATCH_ID.fullmatch(match_id):
@@ -85,15 +84,10 @@ def parse_issue(event: dict) -> tuple[str, str, int, str, str]:
     sha, dropbox_sha = payload["sha256"], payload["dropboxHash"]
     if any(not isinstance(x, str) or not LOWER_SHA256.fullmatch(x) for x in (sha, dropbox_sha)):
         raise ValueError("Invalid digests")
-    encoded = payload["encodedUrl"]
-    if not isinstance(encoded, str) or not re.fullmatch(r"[A-Za-z0-9_-]{50,5500}", encoded):
-        raise ValueError("Invalid encoded download URL")
-    try:
-        url = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
-    except (ValueError, UnicodeDecodeError) as exc:
-        raise ValueError("Invalid encoded URL bytes") from exc
+    # A private key is compulsory; no base64 URL fallback is allowed.
+    url = decrypt_url(payload["sealedUrl"], private_key_b64)
     if not allowed_url(url):
-        raise ValueError("Only HTTPS Dropbox one-time download URLs are allowed")
+        raise ValueError("Decrypted URL is not an allowed HTTPS Dropbox one-time URL")
     return match_id, url, n, sha, dropbox_sha
 
 
@@ -129,8 +123,8 @@ def download_and_validate(url: str, expected_size: int, sha: str,
         raise ValueError("Public source integrity mismatch")
 
 
-def run(event: dict, *, apply: bool) -> str:
-    match_id, url, size, sha, dropbox_hash = parse_issue(event)
+def run(event: dict, *, apply: bool, private_key_b64: str) -> str:
+    match_id, url, size, sha, dropbox_hash = parse_issue(event, private_key_b64)
     with tempfile.TemporaryDirectory(prefix="sf6-dropbox-ingress-") as d:
         root = Path(d)
         archive = root / ("sf6-coach-package-" + match_id + ".zip")
@@ -164,7 +158,8 @@ def main(argv=None) -> int:
     args = p.parse_args(argv)
     try:
         event = json.loads(args.event.read_text(encoding="utf-8"))
-        output = run(event, apply=args.apply)
+        output = run(event, apply=args.apply,
+                     private_key_b64=os.environ.get("SF6_DROPBOX_INGRESS_PRIVATE_KEY_B64", ""))
         # No URLs other than the final publicly approved Pages short link.
         print("VERIFIED SF6 PUBLIC REPLAY:", output)
         return 0
