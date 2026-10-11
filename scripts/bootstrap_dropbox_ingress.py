@@ -55,17 +55,27 @@ def main(argv=None) -> int:
         )
         if response.returncode == 0:
             raise RuntimeError("Ingress public key already exists; refusing replacement")
-        # Confirm missing path through a status code; other errors must not be mistaken for 404.
-        status = gh("api", "-i", f"repos/{REPO}/contents/{PUBLIC_PATH}")
-        # Unreachable if 404 is propagated as nonzero; see strict check below.
-        raise RuntimeError("Unable to establish public key initial state")
+        # Accept ONLY a confirmed absent file, not network or permission errors.
+        if not ("HTTP 404" in response.stderr or "404 Not Found" in response.stderr):
+            raise RuntimeError("Cannot confirm public key is absent")
+        private_key = PrivateKey.generate()
+        private_b64 = base64.b64encode(private_key.encode()).decode("ascii")
+        public_b64 = base64.b64encode(private_key.public_key.encode()).decode("ascii")
+        # The private key is sent via stdin to gh; never printed, saved, or committed.
+        gh("secret", "set", SECRET, "-R", REPO, stdin=private_b64 + "\n")
+        public_content = base64.b64encode((public_b64 + "\n").encode("ascii")).decode("ascii")
+        gh("api", "-X", "PUT", f"repos/{REPO}/contents/{PUBLIC_PATH}",
+           "-f", "message=chore: initialize SF6 sealed Dropbox ingress public key",
+           "-f", "branch=main", "-f", "content=" + public_content)
+        print("PASS: private ingress key installed as GitHub Actions secret.")
+        print("Public key committed to", PUBLIC_PATH, "for use by ChatGPT.")
+        return 0
     except RuntimeError as exc:
-        # The key is never generated until the initial state is verified.
-        if str(exc) != "Unable to establish public key initial state":
-            print("SETUP FAILED:", str(exc), file=sys.stderr)
-            return 1
-        print("SETUP FAILED: verify public-key path with gh api; no key generated", file=sys.stderr)
+        print("SETUP FAILED:", str(exc), file=sys.stderr)
+        print("If only the secret was created, delete that secret from GitHub settings before retrying.",
+              file=sys.stderr)
         return 1
+
 
 
 if __name__ == "__main__":
