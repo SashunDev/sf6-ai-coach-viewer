@@ -1,0 +1,33 @@
+name: SF6 Single ZIP importer QA
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/ingest_match_package.py'
+      - 'tests/test_ingest_match_package.py'
+      - '.github/workflows/auto-publish-match-package.yml'
+      - '.github/workflows/auto-publish-package-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/ingest_match_package.py'
+      - 'tests/test_ingest_match_package.py'
+      - '.github/workflows/auto-publish-match-package.yml'
+      - '.github/workflows/auto-publish-package-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate ZIP safety, id pairing, cleanup, no accidental publication
+        run: |
+          python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
+          python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
