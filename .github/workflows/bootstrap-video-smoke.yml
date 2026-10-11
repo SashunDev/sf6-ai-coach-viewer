@@ -53,6 +53,8 @@ jobs:
             -of default=noprint_wrappers=1 /tmp/sf6-coach-synthetic-smoke-16s.mp4
 
       - uses: actions/checkout@v4
+      - name: Install pinned sealed-box dependency for full test suite
+        run: 'python3 -m pip install --only-binary=:all: PyNaCl==1.6.2'
       - name: Dry-run real Release retention check
         env:
           GITHUB_TOKEN: ${{ github.token }}
