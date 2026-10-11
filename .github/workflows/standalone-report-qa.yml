@@ -1,0 +1,75 @@
+name: P4 Standalone viewer QA
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/build_standalone_report.py'
+      - 'tests/test_standalone_report.py'
+      - '.github/workflows/standalone-report-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/build_standalone_report.py'
+      - 'tests/test_standalone_report.py'
+      - '.github/workflows/standalone-report-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test report integrity, canonical layout and JavaScript
+        run: python3 -m unittest discover -s tests -p 'test_standalone_report.py' -v
+      - name: H.264/MP4 real codec and embedded HTML smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            echo 'ffmpeg absent: unit and canonical-template QA passed; skip real codec smoke'
+            exit 0
+          fi
+          mkdir -p /tmp/sf6-p4
+          ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'color=c=black:s=320x180:r=15' -t 2 -an -c:v libx264 -pix_fmt yuv420p /tmp/sf6-p4/synthetic-qa.mp4
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/sf6-p4/synthetic-qa.json')
+          report={
+            'schemaVersion':1,
+            'match':{'id':'synthetic-qa','self':'Alex','opponent':'Terry','scoreSelf':1,'scoreOpponent':2,
+                     'style':'Classic','durationSec':2.0,'analysisMode':'Review',
+                     'mainFocus':'QA only','mainFocusNote':'Synthetic visual only'},
+            'coaching':{'summary':'Synthetic CI fixture','primaryTheme':'QA','secondaryTheme':None},
+            'events':[{'id':'E01','round':'ROUND 01','start':.2,'end':1.5,'category':'good',
+                       'tag':'PASS','title':'Synthetic','short':'CI fixture','observed':'Synthetic',
+                       'judgment':'No gameplay','action':'N/A','success':'Generated',
+                      }],
+          }
+          p.write_text(json.dumps(report),encoding='utf-8')
+          PY
+          python3 scripts/build_standalone_report.py \
+            --report /tmp/sf6-p4/synthetic-qa.json \
+            --video /tmp/sf6-p4/synthetic-qa.mp4 \
+            --out /tmp/sf6-p4/synthetic-qa.html
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+          html=Path('/tmp/sf6-p4/synthetic-qa.html').read_text(encoding='utf-8')
+          embedded=html.split('<script id="embedded-video" type="text/plain">',1)[1].split('</script>',1)[0]
+          assert base64.b64decode(embedded)==Path('/tmp/sf6-p4/synthetic-qa.mp4').read_bytes()
+          report=html.split('<script id="coach-report-data" type="application/json">',1)[1].split('</script>',1)[0]
+          assert json.loads(report)['match']['id']=='synthetic-qa'
+          assert 'void loadEmbeddedMatch();' in html
+          print('PASS: actual H.264 MP4 + JSON embedded with canonical layout')
+          PY
