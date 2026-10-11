@@ -73,6 +73,12 @@ class StandaloneTest(unittest.TestCase):
             with self.assertRaises(ValueError):app.validate_report(data)
         data=fixture();data['match']['scoreSelf']=True
         with self.assertRaises(ValueError):app.validate_report(data)
+        data=fixture();data['match']['mainFocus']='a'*141
+        with self.assertRaises(ValueError):app.validate_report(data)
+        data=fixture();data['coaching']['summary']='x'*2201
+        with self.assertRaises(ValueError):app.validate_report(data)
+        data=fixture();data['events'][0]['title']='x'*111
+        with self.assertRaises(ValueError):app.validate_report(data)
         data=fixture();data['events'].append(copy.deepcopy(data['events'][0]))
         with self.assertRaises(ValueError):app.validate_report(data)
 
