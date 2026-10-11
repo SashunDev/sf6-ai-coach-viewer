@@ -25,6 +25,10 @@ MAX_JSON = 1024 * 1024
 MAX_VIDEO = 250 * 1024 * 1024
 
 
+def valid_text(value: object, maximum: int) -> bool:
+    return isinstance(value, str) and bool(value.strip()) and len(value) <= maximum
+
+
 def validate_report(data: object) -> dict:
     if not isinstance(data, dict) or type(data.get("schemaVersion")) is not int or data["schemaVersion"] != 1:
         raise ValueError("schemaVersion=1 required")
@@ -34,9 +38,10 @@ def validate_report(data: object) -> dict:
     ident = match.get("id")
     if not isinstance(ident, str) or not MATCH_ID.fullmatch(ident):
         raise ValueError("Valid ASCII match.id required for video pairing")
-    for field in ("self", "opponent", "mainFocus", "analysisMode", "style"):
-        if not isinstance(match.get(field), str) or not match[field].strip():
-            raise ValueError("Missing match." + field)
+    for field, limit in (("self", 60), ("opponent", 60), ("mainFocus", 140),
+                         ("analysisMode", 40), ("style", 70)):
+        if not valid_text(match.get(field), limit):
+            raise ValueError("Invalid match." + field)
     if not isinstance(match.get("mainFocusNote"), str):
         raise ValueError("Invalid match.mainFocusNote")
     for field in ("scoreSelf", "scoreOpponent"):
@@ -45,15 +50,15 @@ def validate_report(data: object) -> dict:
     duration = match.get("durationSec")
     if type(duration) not in (int, float) or not 0 < duration <= 86400:
         raise ValueError("Invalid video duration")
-    for field in ("summary", "primaryTheme"):
-        if not isinstance(coach.get(field), str) or not coach[field].strip():
+    for field, limit in (("summary", 2200), ("primaryTheme", 1200)):
+        if not valid_text(coach.get(field), limit):
             raise ValueError("Invalid coaching." + field)
     if coach.get("secondaryTheme") is not None and not isinstance(coach["secondaryTheme"], str):
         raise ValueError("Invalid secondaryTheme")
     seen = set()
     prev = -1.0
     for event in events:
-        if not isinstance(event, dict) or not isinstance(event.get("id"), str) or not 0 < len(event["id"]) <= 20 or event["id"] in seen:
+        if not isinstance(event, dict) or not valid_text(event.get("id"), 20) or event["id"] in seen:
             raise ValueError("Invalid/duplicate event id")
         seen.add(event["id"])
         if not isinstance(event.get("round"), str) or not re.fullmatch(r"ROUND [0-9]{2}", event["round"]):
@@ -64,8 +69,9 @@ def validate_report(data: object) -> dict:
         if type(start) not in (int, float) or type(end) not in (int, float) or not 0 <= start < end <= duration or start < prev:
             raise ValueError("Invalid event timestamps")
         prev = start
-        for field in ("tag", "title", "short", "observed", "judgment", "action", "success"):
-            if not isinstance(event.get(field), str) or not event[field].strip():
+        for field, limit in (("tag", 30), ("title", 110), ("short", 280),
+                             ("observed", 900), ("judgment", 1000), ("action", 900), ("success", 900)):
+            if not valid_text(event.get(field), limit):
                 raise ValueError("Invalid event." + field)
     return data
 
