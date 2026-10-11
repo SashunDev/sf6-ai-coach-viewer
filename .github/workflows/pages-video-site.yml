@@ -17,6 +17,8 @@ on:
       - 'scripts/publish_coaching_report.py'
       - 'tests/test_publish_report.py'
       - 'tests/test_viewer_pages.cjs'
+      - 'scripts/verify_public_match.py'
+      - 'tests/test_verify_public_match.py'
       - '.github/workflows/pages-video-site.yml'
   schedule:
     - cron: '42 0,6,12,18 * * *'
@@ -27,6 +29,11 @@ on:
         type: boolean
         required: true
         default: true
+      verify_match_id:
+        description: 'Optional: verify this published match MP4+JSON (leave empty for routine deploy)'
+        type: string
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -47,6 +54,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_coaching_link.py' -v
           python3 -m unittest discover -s tests -p 'test_publish_report.py' -v
           python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
+          python3 -m unittest discover -s tests -p 'test_verify_public_match.py' -v
           node --test tests/test_viewer_pages.cjs
       - name: Build with only eligible public MP4s
         env:
@@ -75,3 +83,54 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  verify-match:
+    # Manual flow for already-uploaded Release assets, including mobile Safari use.
+    # Never print a verified short link until BOTH hosted files match Release bytes.
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == true && inputs.verify_match_id != ''
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate requested match ID before file operations
+        env:
+          MATCH_ID: ${{ inputs.verify_match_id }}
+        run: |
+          python3 - <<'PY'
+          import os, re
+          value = os.environ.get('MATCH_ID', '')
+          if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,79}', value, re.ASCII):
+              raise SystemExit('Invalid match ID')
+          print('MATCH ID ACCEPTED:', value)
+          PY
+      - name: Fetch exact same-ID Release MP4 and JSON
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MATCH_ID: ${{ inputs.verify_match_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/sf6-release-match
+          gh release download sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+            --pattern "${MATCH_ID}.json" --pattern "${MATCH_ID}.mp4" \
+            --dir /tmp/sf6-release-match
+          test -s "/tmp/sf6-release-match/${MATCH_ID}.json"
+          test -s "/tmp/sf6-release-match/${MATCH_ID}.mp4"
+      - name: Install ffprobe when runner omits FFmpeg
+        run: |
+          set -euo pipefail
+          if ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          command -v ffprobe
+      - name: Independently verify live Pages MP4 and JSON SHA-256
+        env:
+          MATCH_ID: ${{ inputs.verify_match_id }}
+        run: |
+          set -euo pipefail
+          python3 scripts/verify_public_match.py --match-id "$MATCH_ID" \
+            --report-file "/tmp/sf6-release-match/${MATCH_ID}.json" \
+            --video-file "/tmp/sf6-release-match/${MATCH_ID}.mp4"
