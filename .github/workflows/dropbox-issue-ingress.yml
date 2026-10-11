@@ -39,6 +39,7 @@ jobs:
       - name: Ensure issue and download validation fail closed
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
+          python3 -m unittest discover -s tests -p 'test_bootstrap_dropbox_ingress.py' -v
           python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
           python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
 
@@ -66,6 +67,7 @@ jobs:
       - name: Verify Python ingress and Release validation first
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
+          python3 -m unittest discover -s tests -p 'test_bootstrap_dropbox_ingress.py' -v
           python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
           python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
       - name: Ensure H264 inspector is available
