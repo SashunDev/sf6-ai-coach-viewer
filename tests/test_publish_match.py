@@ -197,6 +197,69 @@ class PublisherTest(unittest.TestCase):
                 pub.publish(self.report,self.video,apply=True,resume=False,
                              replace_report=False,backup_dir=None,wait_sec=60)
 
+    def test_resume_reuses_identical_existing_video_only(self):
+        mocks=self.prereqs([asset("match-01.mp4",self.video.stat().st_size,1)])
+        uploads=[]
+        def mocked_gh(*args,**kwargs):
+            if args[:2]==("release","download"):
+                (Path(args[-1])/"match-01.mp4").write_bytes(self.video.read_bytes())
+            elif args[:2]==("release","upload"):
+                uploads.append(Path(args[3]).name)
+            return "ok"
+        with mocks[0],mocks[1],mocks[2],patch.object(pub,"get_run_ids",return_value=set()),\
+             patch.object(pub,"run_gh",side_effect=mocked_gh),\
+             patch.object(pub,"start_pages_and_wait",return_value=124),\
+             patch.object(pub,"wait_pages"):
+            self.assertEqual(pub.publish(self.report,self.video,apply=True,resume=True,
+                             replace_report=False,backup_dir=None,wait_sec=60),
+                             pub.PAGES+"#id=match-01")
+        self.assertEqual(uploads,["match-01.json"])
+
+    def test_resume_rejects_changed_video_before_any_write(self):
+        mocks=self.prereqs([asset("match-01.mp4",self.video.stat().st_size,1)])
+        uploads=[]
+        def mocked_gh(*args,**kwargs):
+            if args[:2]==("release","download"):
+                (Path(args[-1])/"match-01.mp4").write_bytes(b"different")
+            elif args[:2]==("release","upload"):
+                uploads.append(args)
+            return "ok"
+        with mocks[0],mocks[1],mocks[2],patch.object(pub,"run_gh",side_effect=mocked_gh):
+            with self.assertRaisesRegex(ValueError,"differs"):
+                pub.publish(self.report,self.video,apply=True,resume=True,
+                            replace_report=False,backup_dir=None,wait_sec=60)
+        self.assertFalse(uploads)
+
+    def test_explicit_report_correction_saves_backup_before_clobber(self):
+        data=[asset("match-01.mp4",self.video.stat().st_size,1),
+              asset("match-01.json",500,2)]
+        mocks=self.prereqs(data)
+        original=b'{"old":"report"}'
+        commands=[]
+        def mocked_gh(*args,**kwargs):
+            if args[:2]==("release","download"):
+                name=args[args.index("--pattern")+1]
+                content=self.video.read_bytes() if name.endswith(".mp4") else original
+                (Path(args[-1])/name).write_bytes(content)
+            elif args[:2]==("release","upload"):
+                commands.append(args)
+            return "ok"
+        backup=self.root/"backups"
+        with mocks[0],mocks[1],mocks[2],patch.object(pub,"get_run_ids",return_value=set()),\
+             patch.object(pub,"run_gh",side_effect=mocked_gh),\
+             patch.object(pub,"start_pages_and_wait",return_value=125),\
+             patch.object(pub,"wait_pages"):
+            link=pub.publish(self.report,self.video,apply=True,resume=False,
+                     replace_report=True,backup_dir=backup,wait_sec=60)
+        self.assertEqual(link,pub.PAGES+"#id=match-01")
+        copies=list(backup.glob("match-01.json.*.bak"))
+        self.assertEqual(len(copies),1)
+        self.assertEqual(copies[0].read_bytes(),original)
+        self.assertEqual(len(commands),1)
+        self.assertTrue(commands[0][3].endswith(".json"))
+        self.assertIn("--clobber",commands[0])
+
+
     def test_concurrent_workflows_are_not_misattributed(self):
         with patch.object(pub,"run_gh",return_value=""),\
              patch.object(pub,"gh_json",return_value=[
