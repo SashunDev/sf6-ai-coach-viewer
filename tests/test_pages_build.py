@@ -8,7 +8,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from build_pages_site import (
     Asset, MEDIA_BUDGET, MAX_AGE_DAYS, SITE_FILES, build,
-    parse_asset, select_assets
+    parse_asset, select_assets, parse_report_asset, select_reports,
+    REPORT_TOTAL_BUDGET, REPORT_MAX_BYTES
 )
 
 NOW = datetime(2026, 10, 11, tzinfo=timezone.utc)
@@ -119,6 +120,68 @@ class PagesMirrorTests(TestCase):
             with self.subTest(changes=changes):
                 with self.assertRaises((ValueError,TypeError)):
                     parse_asset({**raw(),**changes})
+
+    def test_report_json_asset_is_distinct_from_video(self):
+        data = raw(name="match-001.json", size=23, age=999)
+        self.assertIsNone(parse_asset(data))
+        parsed = parse_report_asset(data)
+        self.assertEqual(parsed.name, "match-001.json")
+        self.assertEqual(select_reports([parsed]), [parsed])
+
+    def test_report_video_age_does_not_expire_json(self):
+        report = Asset(2, "match-002.json", 170, NOW - timedelta(days=900))
+        self.assertEqual(select_reports([report]), [report])
+
+    def test_report_budget_exact_boundary(self):
+        data = Asset(1, "match-001.json", REPORT_MAX_BYTES, NOW)
+        self.assertEqual(select_reports([data]), [data])
+
+    def test_report_size_over_limit_refuses_asset(self):
+        with self.assertRaises(ValueError):
+            parse_report_asset(raw(name="match-001.json", size=REPORT_MAX_BYTES + 1))
+
+    def test_report_cannot_exceed_total_pages_budget(self):
+        reports = [Asset(i+1, f"match-{i}.json", REPORT_MAX_BYTES, NOW)
+                   for i in range(REPORT_TOTAL_BUDGET // REPORT_MAX_BYTES + 1)]
+        with self.assertRaises(ValueError):
+            select_reports(reports)
+
+    def test_report_name_safety(self):
+        for name in ["a/b.json", "../report.json", "a.json%3F", ".private.json",
+                     "Match.Report.json", "Klip.json", "bad name.json", "bad.mp4"]:
+            with self.subTest(name=name):
+                self.assertIsNone(parse_report_asset(raw(name=name)))
+
+    def test_duplicate_reports_refused(self):
+        with self.assertRaises(ValueError):
+            select_reports([Asset(1,"match-A.json",100,NOW),
+                            Asset(2,"match-a.json",100,NOW)])
+
+    def test_report_is_copied_even_without_video(self):
+        import json
+        sample = {
+          "schemaVersion":1,
+          "match":{"id":"match-001","self":"アレックス","opponent":"リュウ","style":"クラシック",
+                   "analysisMode":"動画連動レポート","scoreSelf":1,"scoreOpponent":0,
+                   "mainFocus":"判断","mainFocusNote":"検証","durationSec":16},
+          "coaching":{"summary":"観察","primaryTheme":"判断","secondaryTheme":None},
+          "events":[{"id":"E01","round":"ROUND 01","start":2.0,"end":3.0,
+                     "category":"good","tag":"良いプレイ","title":"成功",
+                     "short":"確認","observed":"行動","judgment":"判断","action":"次回",
+                     "success":"条件"}]
+        }
+        raw_json = json.dumps(sample,ensure_ascii=False).encode("utf-8")
+        with tempfile.TemporaryDirectory() as base:
+            root=Path(base)
+            for page in SITE_FILES:
+                (root/page).write_text("original",encoding="utf-8")
+            asset=Asset(1,"match-001.json",len(raw_json),NOW)
+            def fake_download(argv,**kwargs):
+                (Path(argv[argv.index("--dir")+1])/"match-001.json").write_bytes(raw_json)
+            with patch("build_pages_site.subprocess.run",side_effect=fake_download):
+                build(root/"pub",root,[],"token",[asset])
+            self.assertEqual((root/"pub/reports/match-001.json").read_bytes(),raw_json)
+            self.assertEqual(list((root/"pub/media").iterdir()),[])
 
 
 if __name__ == "__main__":
