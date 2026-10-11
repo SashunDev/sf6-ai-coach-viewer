@@ -110,7 +110,10 @@ class IngressTests(unittest.TestCase):
                     "https://dl.dropboxusercontent.com:1234/cd/get?a=2",
                     "https://dl.dropboxusercontent.com/cd/get?a=2#fragment"):
             self.assertFalse(app.allowed_url(url))
-            obj=event(sealedUrl=encrypt_url(url,PUBLIC_B64))
+            # Keep URL length in encryption API's admissible range while
+            # preserving each invalid scheme/host/fragment property.
+            candidate = url + ("x" * max(0, 40 - len(url)))
+            obj=event(sealedUrl=encrypt_url(candidate,PUBLIC_B64))
             with self.assertRaises(ValueError):
                 app.parse_issue(obj,PRIVATE_B64)
 
