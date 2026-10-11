@@ -3,7 +3,7 @@
 ## 2026-10-11 現在の結果
 
 - PagesへのMP4単体再生（16秒の合成動画）：iPhone Safari実機で再生・9秒シーク・9〜14秒の区間リピートがPASS（ユーザー確認済み）。
-- コーチング結果 `#r=...` とPages動画 `&v=...` の連動機能：実装・公開済み。**新しい統合リンクのiPhone実機動作は未確認**。
+- 従来の `#r=...&v=...` 連動はiPhone Safari実機でユーザーがPASS済み。新規 `#id=<試合ID>` は本体実装・Actions配備済み、iPhone実機の追加確認待ち。
 - [本番デプロイ成功ログ](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/38090879101)：build SUCCESS / deploy SUCCESS。
 - Python mirror 18 tests、JavaScript URL allowlist 12 tests、Release retention 11 tests = **計41件PASS**。
 - GitHub Pages試験リンク：[pages-integration-smoke.html](https://sashundev.github.io/sf6-ai-coach-viewer/pages-integration-smoke.html)
@@ -16,7 +16,7 @@
 | GitHub Releases（公開元動画） | 2,000MBを超えたら古い順で1,800MB以下へ削減 |
 | GitHub Releases保存期限 | 作成後14日 |
 | GitHub Pages（再生用MP4） | **合計800MB以下**、14日以内のMP4のみ、新しい順に選択 |
-| JSON | 動画保存・削除対象外。レポート本文はURLフラグメントに保持 |
+| JSON | 公開GitHub Releasesへ非期限付き保存。Pagesに全件ミラー（最大50MB／2,000件／1件1MB） |
 | 動画配備頻度 | 通常4回/日（UTC 00:42, 06:42, 12:42, 18:42）、main更新時、手動 |
 | 外部有料サービス | 不使用 |
 
@@ -30,6 +30,10 @@ GitHub Actionsのスケジュールは遅延・停止する場合があり、動
 - 動画1本が800MBを超える、または選別済み動画との合計が800MBを超えるもの
 
 ここで扱う800MBは配信先の公開容量であり、Releasesに保持できる2,000MBという元動画の上限とは別。Pagesに載らない動画はビューアでローカル動画選択を使う。**全保存動画の自動再生は保証しない**。
+
+## 最新の短縮URLとJSON継続保存
+- **新正規方式**：`#id=<試合ID>`。同じIDの `.json` と `.mp4` を専用公開Releaseへ保存し、Pagesへコピー。動画は14日削除、JSONは削除しない。既存の `#r=...` 形式も引き続き使用可能。
+- [JSON登録・短縮URLの運用手順](PERSISTENT_JSON_REPORTS.md) を優先する。
 
 ## URL連動
 
@@ -62,7 +66,11 @@ ChatGPTに添付した動画からReleaseへ自動アップロードする機能
 - CI/本番ミラーの生成が失敗した場合、deployは動かず**直前のPages版を保持**する。
 - 必要時には[Pages Settings](https://github.com/SashunDev/sf6-ai-coach-viewer/settings/pages)から公開元を `Deploy from a branch` → `main` / `/(root)` へ変更すれば、HTMLのみの旧配信方式へ戻せる。その場合MP4と統合リンクは使えなくなる。
 
-## 次の実機Gate
+## 次の実機Gate（短縮ID方式）
+- [合成レポートの短縮URL](https://sashundev.github.io/sf6-ai-coach-viewer/#id=sf6-coach-synthetic-smoke-16s) をiPhone Safariで開き、JSON読込・動画再生・場面シーク・ループを確認する。
+- 合成動画を使う従来方式のiPhone単体／統合動作はユーザー確認済み。新形式・実戦動画は別Gateで確認する。
+
+## 旧形式の実機Gate（履歴）
 
 **iPhone Safariで** [統合テストリンク](https://sashundev.github.io/sf6-ai-coach-viewer/pages-integration-smoke.html) を開き、以下を確認する。
 
