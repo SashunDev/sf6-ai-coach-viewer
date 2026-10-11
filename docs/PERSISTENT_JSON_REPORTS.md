@@ -25,6 +25,13 @@
 
 > `workflow_dispatch` 入力欄に貼り付けるレポート文字列は、公開レポートを生成するためのデータです。GitHub Actionsの実行履歴やReleasesから閲覧され得るため、秘密情報を入れないでください。**試合IDの重複**は初期状態でアップロード拒否とする。訂正時の `replace_existing` は事前バックアップ機能ではないため、必要ならNotionの正本・生成したJSONを手元に保持する。
 
+## 公開HTTP検証（2026-10-11）
+- [GitHub Actions実行 #38097505781](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/38097505781)：**PASS**。
+- Pagesの合成JSON：HTTP 200、`Content-Type: application/json; charset=utf-8`。GitHub ReleaseのJSONとSHA-256完全一致。
+- Pagesの合成MP4：HTTP 200、`Content-Type: video/mp4`。
+- Pages自動更新：[Run #38097254001](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/38097254001)：**build/deploy PASS**。
+- ただし、短縮URLの**iPhone Safari画面操作**と実リプレイ動画を使うE2Eは未確認。
+
 ## 合成スモーク試験
 
 - 対戦内容・コーチング事実は架空。動画は16秒の非ゲーム合成MP4で、元映像データは不要。
