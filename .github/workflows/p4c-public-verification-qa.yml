@@ -1,0 +1,31 @@
+name: P4-C Public Pair Verification QA
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/verify_public_match.py'
+      - 'tests/test_verify_public_match.py'
+      - '.github/workflows/pages-video-site.yml'
+      - '.github/workflows/p4c-public-verification-qa.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/verify_public_match.py'
+      - 'tests/test_verify_public_match.py'
+      - '.github/workflows/pages-video-site.yml'
+      - '.github/workflows/p4c-public-verification-qa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate pairing and verification failure handling (mock HTTP)
+        run: python3 -m unittest discover -s tests -p 'test_verify_public_match.py' -v
