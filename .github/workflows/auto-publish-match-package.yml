@@ -26,6 +26,8 @@ jobs:
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main  # Release events otherwise check out the older release tag.
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
