@@ -1,0 +1,69 @@
+name: SF6 Coach publish permanent JSON report
+on:
+  workflow_dispatch:
+    inputs:
+      match_id:
+        description: 'Safe unique match ID, e.g. match-20261011-001'
+        type: string
+        required: true
+      report_token:
+        description: 'Paste z.<base64url> from a validated coaching URL'
+        type: string
+        required: true
+      replace_existing:
+        description: 'Explicitly replace this report with a correction'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: sf6-coach-report-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.repository == 'SashunDev/sf6-ai-coach-viewer'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate report before publication
+        env:
+          REPORT_ID: ${{ inputs.match_id }}
+          REPORT_TOKEN: ${{ inputs.report_token }}
+        run: |
+          set -euo pipefail
+          python3 -m unittest discover -s tests -p 'test_publish_report.py' -v
+          mkdir -p /tmp/sf6-coach-report
+          python3 scripts/publish_coaching_report.py \
+            --match-id "$REPORT_ID" --token "$REPORT_TOKEN" \
+            --output-dir /tmp/sf6-coach-report
+      - name: Upload or explicitly replace public JSON asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_ID: ${{ inputs.match_id }}
+          REPLACE_EXISTING: ${{ inputs.replace_existing }}
+        run: |
+          set -euo pipefail
+          asset="$REPORT_ID.json"
+          existing="$(gh release view sf6-ai-coach-media --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$existing" | grep -Fxq "$asset"; then
+            if [ "$REPLACE_EXISTING" != "true" ]; then
+              echo "::error::Match ID already exists. Enable replace_existing to correct this report."
+              exit 1
+            fi
+            gh release upload sf6-ai-coach-media "/tmp/sf6-coach-report/$asset" \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release upload sf6-ai-coach-media "/tmp/sf6-coach-report/$asset" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+          echo "Public JSON report uploaded: $asset"
+      - name: Trigger live Pages mirror
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run pages-video-site.yml --repo "$GITHUB_REPOSITORY" --ref main \
+            --field deploy=true
