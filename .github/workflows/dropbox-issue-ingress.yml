@@ -39,10 +39,8 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
           python3 -m unittest discover -s tests -p 'test_ingest_match_package.py' -v
           python3 -m unittest discover -s tests -p 'test_publish_match.py' -v
-      - name: Check captured publisher output with prior log lines
-        shell: bash
-        run: |
-          output=
+
+  publish-approved-match:
     if: >-
       github.event_name == 'issues' &&
       github.repository == 'SashunDev/sf6-ai-coach-viewer' &&
@@ -82,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           output="$(python3 scripts/ingest_dropbox_issue.py --event "$GITHUB_EVENT_PATH" --apply)"
-          link="$(printf '%s\n' "$output" | tail -n 1 | sed 's/^VERIFIED SF6 PUBLIC REPLAY: //')"
+          link="$(printf '%s\\n' \"$output\" | tail -n 1 | sed 's/^VERIFIED SF6 PUBLIC REPLAY: //')"
           case "$link" in
             https://sashundev.github.io/sf6-ai-coach-viewer/#id=*) ;;
             *) echo "::error::No fully verified Pages URL"; exit 1;;
