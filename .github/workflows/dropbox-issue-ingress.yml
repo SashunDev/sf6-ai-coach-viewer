@@ -1,4 +1,4 @@
-name: SF6 one-attachment Dropbox replay publish (PoC)
+name: SF6 one-attachment encrypted Dropbox replay publish
 
 on:
   issues:
@@ -34,6 +34,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install pinned sealed-box crypto
+        run: python3 -m pip install --only-binary=:all: PyNaCl==1.6.2
       - name: Ensure issue and download validation fail closed
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
@@ -59,6 +61,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install pinned sealed-box crypto
+        run: python3 -m pip install --only-binary=:all: PyNaCl==1.6.2
       - name: Verify Python ingress and Release validation first
         run: |
           python3 -m unittest discover -s tests -p 'test_ingest_dropbox_issue.py' -v
@@ -76,9 +80,14 @@ jobs:
         id: public-link
         env:
           GH_TOKEN: ${{ github.token }}
+          SF6_DROPBOX_INGRESS_PRIVATE_KEY_B64: ${{ secrets.SF6_DROPBOX_INGRESS_PRIVATE_KEY_B64 }}
         shell: bash
         run: |
           set -euo pipefail
+          if test -z "$SF6_DROPBOX_INGRESS_PRIVATE_KEY_B64"; then
+            echo "::error::One-time ingress private-key secret not configured."
+            exit 1
+          fi
           output="$(python3 scripts/ingest_dropbox_issue.py --event "$GITHUB_EVENT_PATH" --apply)"
           link="$(printf '%s\n' "$output" | tail -n 1 | sed 's/^VERIFIED SF6 PUBLIC REPLAY: //')"
           case "$link" in
@@ -95,6 +104,19 @@ jobs:
         run: |
           gh issue comment "$MATCH_ISSUE" --repo "$GITHUB_REPOSITORY" \
             --body "VERIFIED: video + JSON public SHA-256 matched GitHub Pages: $VERIFIED_LINK. iPhone Safari real-device playback still requires user check."
+
+      - name: Redact ciphertext and close completed publish issue
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MATCH_ISSUE: ${{ github.event.issue.number }}
+          VERIFIED_LINK: ${{ steps.public-link.outputs.link }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh issue edit "$MATCH_ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "Published and verified SF6 gameplay replay. Short link: $VERIFIED_LINK. Temporary encrypted source removed from current issue body. GitHub edit history may persist."
+          gh issue close "$MATCH_ISSUE" --repo "$GITHUB_REPOSITORY" --reason completed
 
   verify-existing-match:
     # Proof rerun that requires NO Dropbox link and NO second video upload.
