@@ -54,7 +54,8 @@ test('Reject HTTP, port, excessive length and non-string',()=>{
 test('CSP permits same-origin media only',()=>{
  assert.ok(html.includes("media-src 'self' blob:;"));
  assert.ok(!html.includes("media-src blob: https://github.com"));
- assert.ok(html.includes("connect-src 'none'"));
+ assert.ok(html.includes("connect-src 'self'"));
+ assert.ok(!html.includes("connect-src *"));
 });
 test('Original file chooser is retained',()=>{
  assert.ok(html.includes('setVideoFile(file)'));
@@ -73,4 +74,26 @@ test('Synthetic one-tap report links to Pages MP4',()=>{
  assert.ok(smoke.includes('location.replace("./#r=z.'));
  assert.ok(smoke.includes('sashundev.github.io%2Fsf6-ai-coach-viewer%2Fmedia%2Fsf6-coach-synthetic-smoke-16s.mp4'));
  assert.ok(!smoke.includes('github.com%2FSashunDev%2Fsf6-ai-coach-viewer%2Freleases'));
+});
+
+test('Short ID links fetch only sanitized same-origin reports',()=>{
+ assert.ok(html.includes("async function decodeStoredReportIdFragment()"));
+ assert.ok(html.includes("/^#id=[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/"));
+ assert.ok(html.includes("fetch('./reports/'+matchId+'.json'"));
+ assert.ok(html.includes("credentials:'omit',redirect:'error'"));
+ assert.ok(html.includes("new TextEncoder().encode(raw).byteLength>1024*1024"));
+});
+test('Short ID links refuse reports that declare another match ID',()=>{
+ assert.ok(html.includes("result?.match?.id!=null&&result.match.id!==matchId"));
+ assert.ok(html.includes("if(window.location.hash!==expectedHash)return"));
+});
+test('Short ID link retains report after video expiration',()=>{
+ assert.ok(html.includes("setRemoteVideo('https://sashundev.github.io/sf6-ai-coach-viewer/media/'+matchId+'.mp4')"));
+ assert.ok(html.includes("state.hasVideo=false;state.videoSource=null;state.playing=false"));
+ assert.ok(html.includes("端末内の動画を選択してください"));
+});
+test('Previous compressed / raw URL modes stay supported',()=>{
+ assert.ok(html.includes("function loadReportFromHash()"));
+ assert.ok(html.includes("return decodeLinkReportFragment()"));
+ assert.ok(html.includes("void loadReportFromHash()"));
 });
