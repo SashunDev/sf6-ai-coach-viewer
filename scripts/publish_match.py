@@ -312,7 +312,19 @@ def publish(report: Path, video: Path, *, apply: bool, resume: bool,
                 args.append("--clobber")
             run_gh(*args, timeout=180)
     run_id = start_pages_and_wait(before, wait_sec=wait_sec)
-    wait_pages(report, video, match_id, wait_sec=min(180, wait_sec))
+    try:
+        wait_pages(report, video, match_id, wait_sec=min(180, wait_sec))
+    except RuntimeError:
+        # A missing/over-budget/expired MP4 must not masquerade as full E2E PASS.
+        # If only JSON is already live, provide its direct address as a fallback.
+        try:
+            url = PAGES + "reports/" + match_id + ".json"
+            verify_public(url, report, "application/json", REPORT_MAX_BYTES)
+        except (RuntimeError, OSError, URLError, HTTPError, TimeoutError):
+            pass
+        else:
+            print("REPORT ONLY; VIDEO NOT VERIFIED: " + url, file=sys.stderr)
+        raise
     try:
         if correct_release_notes(release):
             print("Release description corrected: JSON persists, video expires after 14 days")
