@@ -3,7 +3,7 @@
 ## 2026-10-11 現在の結果
 
 - PagesへのMP4単体再生（16秒の合成動画）：iPhone Safari実機で再生・9秒シーク・9〜14秒の区間リピートがPASS（ユーザー確認済み）。
-- 従来の `#r=...&v=...` 連動はiPhone Safari実機でユーザーがPASS済み。新規 `#id=<試合ID>` は本体実装・Actions配備済み、iPhone実機の追加確認待ち。
+- 従来の `#r=...&v=...` 連動はiPhone Safari実機でユーザーがPASS済み。新規 `#id=<試合ID>` 方式も2026-10-11のユーザー統合テスト報告によりiPhone実機PASS。実リプレイE2Eは未実施。
 - [本番デプロイ成功ログ](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/38090879101)：build SUCCESS / deploy SUCCESS。
 - Python mirror 18 tests、JavaScript URL allowlist 12 tests、Release retention 11 tests = **計41件PASS**。
 - GitHub Pages試験リンク：[pages-integration-smoke.html](https://sashundev.github.io/sf6-ai-coach-viewer/pages-integration-smoke.html)
@@ -66,9 +66,10 @@ ChatGPTに添付した動画からReleaseへ自動アップロードする機能
 - CI/本番ミラーの生成が失敗した場合、deployは動かず**直前のPages版を保持**する。
 - 必要時には[Pages Settings](https://github.com/SashunDev/sf6-ai-coach-viewer/settings/pages)から公開元を `Deploy from a branch` → `main` / `/(root)` へ変更すれば、HTMLのみの旧配信方式へ戻せる。その場合MP4と統合リンクは使えなくなる。
 
-## 次の実機Gate（短縮ID方式）
-- [合成レポートの短縮URL](https://sashundev.github.io/sf6-ai-coach-viewer/#id=sf6-coach-synthetic-smoke-16s) をiPhone Safariで開き、JSON読込・動画再生・場面シーク・ループを確認する。
-- 合成動画を使う従来方式のiPhone単体／統合動作はユーザー確認済み。新形式・実戦動画は別Gateで確認する。
+## 短縮ID方式の実機Gate（PASS / 2026-10-11）
+- [合成レポートの短縮URL](https://sashundev.github.io/sf6-ai-coach-viewer/#id=sf6-coach-synthetic-smoke-16s) に対し、iPhoneからユーザーが統合テストOKと報告。JSON読込・動画再生・場面シーク・区間ループの統合確認をPASSとする（ユーザー報告に基づく）。
+- 旧 `#r=...&v=...` 形式の実機Gateと、新 `#id=` 形式の合成データGateはともにPASS。
+- **次の別Gate：実際のSF6リプレイとコーチングJSONを用いるE2E**。未実施であり、合成データのPASSから実データの動作保証やコーチング精度改善を推定しない。
 
 ## 旧形式の実機Gate（履歴）
 
