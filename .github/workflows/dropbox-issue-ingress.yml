@@ -80,23 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           output="$(python3 scripts/ingest_dropbox_issue.py --event "$GITHUB_EVENT_PATH" --apply)"
-          last_line="${output##*
-          case "$link" in
-            https://sashundev.github.io/sf6-ai-coach-viewer/#id=*) ;;
-            *) echo "::error::No fully verified Pages URL"; exit 1;;
-          esac
-          echo "link=$link" >> "$GITHUB_OUTPUT"
-      - name: Record verified Pages link (not temporary source URL)
-        if: success()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          MATCH_ISSUE: ${{ github.event.issue.number }}
-          VERIFIED_LINK: ${{ steps.public-link.outputs.link }}
-        run: |
-          gh issue comment "$MATCH_ISSUE" --repo "$GITHUB_REPOSITORY" \
-            --body "VERIFIED: video + JSON public SHA-256 matched GitHub Pages: $VERIFIED_LINK. iPhone Safari real-device playback still requires user check."
-\n'}"
-          link="${last_line#VERIFIED SF6 PUBLIC REPLAY: }"
+          link="$(printf '%s\n' "$output" | tail -n 1 | sed 's/^VERIFIED SF6 PUBLIC REPLAY: //')"
           case "$link" in
             https://sashundev.github.io/sf6-ai-coach-viewer/#id=*) ;;
             *) echo "::error::No fully verified Pages URL"; exit 1;;
