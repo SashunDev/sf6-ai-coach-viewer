@@ -36,9 +36,11 @@ jobs:
         run: |
           set -euo pipefail
           if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
-            echo 'ffmpeg absent: unit and canonical-template QA passed; skip real codec smoke'
-            exit 0
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
           fi
+          command -v ffmpeg
+          command -v ffprobe
           mkdir -p /tmp/sf6-p4
           ffmpeg -hide_banner -loglevel error -y -f lavfi -i 'color=c=black:s=320x180:r=15' -t 2 -an -c:v libx264 -pix_fmt yuv420p /tmp/sf6-p4/synthetic-qa.mp4
           python3 - <<'PY'
