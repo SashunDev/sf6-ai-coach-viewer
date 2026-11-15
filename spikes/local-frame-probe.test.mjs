@@ -70,8 +70,10 @@ test("iOS Quick Look script-blocking and file-load failures are diagnosable",()=
 
 test("rapid tap frame controls suppress double tap zoom without disabling page pinch zoom",()=>{
  const html=readFileSync(new URL("./local-frame-probe.html",import.meta.url),"utf8");
- assert.match(html,/button\\{[^}]*touch-action:manipulation[^}]*\\}/);
- assert.doesNotMatch(html,/user-scalable\\s*=\\s*no|maximum-scale\\s*=\\s*1|touch-action:none/);
- assert.match(html,/id="prev"/);
- assert.match(html,/id="next"/);
+ assert.ok(html.includes("cursor:pointer;touch-action:manipulation;"));
+ assert.ok(!html.includes("user-scalable=no"));
+ assert.ok(!html.includes("maximum-scale=1"));
+ assert.ok(!html.includes("touch-action:none"));
+ assert.ok(html.includes('id="prev"'));
+ assert.ok(html.includes('id="next"'));
 });
