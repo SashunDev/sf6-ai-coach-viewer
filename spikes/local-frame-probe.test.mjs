@@ -42,7 +42,7 @@ test("classification does not equate currentTime seek with proven one-frame step
 });
 test("standalone local probe JS syntax and privacy restrictions",()=>{
  const html=readFileSync(new URL("./local-frame-probe.html",import.meta.url),"utf8");
- const script=html.match(/<script type="module">([\s\S]*?)<\/script>/)?.[1];
+ const script=html.split('<script type="module">')[1]?.split('</script>')[0] || "";
  assert.ok(script,"missing local probe module");
  const r=spawnSync(process.execPath,["--check","--input-type=module"],{input:script,encoding:"utf8"});
  assert.equal(r.status,0,r.stderr);
