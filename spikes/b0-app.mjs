@@ -6,6 +6,7 @@ const state={token:null,items:[],mock:false,epoch:0,controller:null,client:null}
 const setStatus=text=>{el("status").textContent=text;};
 el("runtime").textContent="JavaScript起動確認済み。モック一覧を試せます。";
 function wipe(reason="一覧・接続情報を消去しました。"){
+ document.dispatchEvent(new Event("sf6:b2-reset"));
  state.epoch++;
  if(state.controller)state.controller.abort();
  state.controller=null;state.client=null;state.token=null;state.items=[];state.mock=false;
@@ -42,6 +43,11 @@ function render(){
    a.href="https://www.youtube.com/watch?v="+v.id;
    a.target="_blank";a.rel="noopener noreferrer";
    card.append(a);
+   const b2=document.createElement("button");
+   b2.type="button";b2.className="b2-action";
+   b2.textContent="公式プレイヤーで細かい時刻移動を試す（検証）";
+   b2.addEventListener("click",()=>document.dispatchEvent(new CustomEvent("sf6:b2-open",{detail:{id:v.id}})));
+   card.append(b2);
   }
   root.append(card);
  }
