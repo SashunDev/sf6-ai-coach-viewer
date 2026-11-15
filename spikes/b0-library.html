@@ -33,7 +33,7 @@ a{color:#b7dfff}#status{min-height:2rem;white-space:pre-wrap}
 <p>Googleの読み取り専用APIで、<strong>自分のYouTubeチャンネルにアップロードした限定公開動画</strong>をサムネイル・題名・投稿日付きで一覧化できるか試します。</p>
 <section class="card">
 <h2>1. まず安全なデモで画面確認</h2>
-<p>モック2件だけを表示します。Googleへの通信や本物の動画IDの取得は行いません。</p>
+<p>モック2件だけを表示します。本人のYouTube APIや認可は使用しません。ただしページ表示時、Google公式の認証用JavaScriptをGoogleから読み込みます。</p>
 <div class="row"><button id="demo" type="button">モック一覧を表示（認証不要）</button><button id="clear" type="button">一覧・接続を消去</button></div>
 <p id="runtime" class="warn" role="status">JavaScript未起動。この画面が変わらない場合はSafariで開いてください。</p>
 </section>
