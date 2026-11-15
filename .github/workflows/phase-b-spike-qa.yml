@@ -1,0 +1,26 @@
+name: Phase B B0-B1 spike static QA
+on:
+  pull_request:
+    paths:
+      - "spikes/phase-b-*"
+      - "spikes/PHASE_B_B0_B1.md"
+      - ".github/workflows/phase-b-spike-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test library filtering, URL safety and seek calculations
+        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs
+      - name: Parse source modules
+        run: |
+          node --check spikes/phase-b-probe-core.mjs
+          node --check spikes/phase-b-probe-core.test.mjs
+          node --check spikes/phase-b-html-static.test.mjs
