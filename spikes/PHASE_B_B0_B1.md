@@ -112,3 +112,24 @@ YouTube公式\`seekTo\`は、未バッファ位置では直前キーフレーム
 - https://developers.google.com/youtube/data/getting-started
 - https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification
 - https://developers.google.com/youtube/terms/developer-policies
+
+
+## iPhoneオフラインHTML実機報告（2026-11-15 / 最新）
+
+**ユーザー実測：** 先にダウンロードした単一HTMLで動画ファイルを選択したが読み込まれず、コマ送り操作はできなかった。B1 `BLOCKED_AT_VIDEO_LOAD`、コマ送り自体の可否は`NOT REACHED`であり、`FRAME_STEP_FAIL`とは異なる。
+
+**原因は未確定。最有力の仮説はiPhoneのファイルプレビュー（Quick Look）ではHTML内JavaScriptを実行できないこと。** 独立したiOS 27実機調査にも同様の事例がある。HTMLの実行元アプリ・実動画形式・JavaScript実行状態・コンソールを今回は取得していないため、プレビュー制限、動画コーデック、ファイル提供元、実装エラーを断定しない。公式Apple Quick Lookは基本的なファイル内容をプレビューするための仕組みであって、フル機能のWebブラウザではない。
+
+**対応済み（コードのみ）**
+- `spikes/local-frame-probe.html`: 初期表示に「JavaScript未起動」を明記。scriptが初期化されたら「起動確認済み」に切替。
+- file change の受付状態・MIME type・サイズ・`loadedmetadata`・`canplay`・`MediaError.code`を区別して表示。動画ファイルなのにMIMEタイプが空文字列でも拡張子で判定し読み込みを試す。動画はローカルblobで保持しネット送信禁止を継続。
+- `spikes/local-frame-probe.test.mjs`: 診断状態の存在を確認。GitHub CIのローカル合成動画テストは更新後に正常終了。これはiPhone動作の証明ではない。
+
+**運用変更（重要）**
+- **前回と同じオフラインHTMLの再試行をユーザーに依頼しない。** 端末内HTMLプレビューはiPhoneの検証用ホストとして不適切な可能性が高い。
+- 次のB1実機テストはSafariで開いた、きちんとしたHTTPSの専用検証URLを用いる。端末内MP4を任意に選択する。公開リポジトリ/CIへ動画そのものをアップロードしない。
+- 本番GitHub Pagesの構成を書き換えず、まず別の無料HTTPS検証環境（専用Pagesリポジトリ等）の実現性と利用条件をレビューする。任意の第三者HTMLビューワーへテスト動画やGoogle OAuthトークンを渡す運用は採らない。
+- **B0**の本人YouTube限定公開一覧取得の認証は、B1の動画読み込みと切り分けて保持。Google OAuth WebクライアントのJavaScript origin登録が必要。別承認なしで本番やOAuthを操作しない。
+
+技術根拠：[Apple Quick Look](https://developer.apple.com/documentation/quicklook)、[iOS 27での実HTMLプレビュー調査](https://hostsmith.net/blog/open-html-file-on-iphone/)。
+GitHub最新実行：[Actions #43674040463](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43674040463) — 16/16 PASS（ブラウザはChromiumでありiPhoneではない）。
