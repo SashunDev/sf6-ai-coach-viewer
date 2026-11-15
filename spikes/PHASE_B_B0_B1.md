@@ -70,6 +70,30 @@ Google Identity Services Token Modelを用い、アクセストークンはブ�
 
 YouTube公式\`seekTo\`は、未バッファ位置では直前キーフレームへ移動するため、**実際のコマ送りができるとは証明できない**。YouTubeのPC版では動画一時停止中の「,」「.」が公式の前後フレーム操作だが、iPhoneの第三者IFrameサイトからこのキー操作を呼び出せるAPIは確認できない。動画の実コマ送りが必要なら別の許可された映像入力経路も別途検証する（YouTube動画の無断ダウンロードは禁止）。
 
+
+## B1 補助経路：端末内の本人所有MP4で動画コマ送りを検証（2026-11-15）
+
+**目的は技術検証であり、ユーザーが求める「YouTube限定公開一覧からタップしてコマ送り」を実現したものではない。** 動画の自動ダウンロード／抽出は行わない。
+
+- `spikes/local-frame-probe.html`：iPhoneやブラウザが自分の端末の動画ファイルを選べる場合だけ、HTML5の `video` で直接開く。Blob URLはブラウザメモリ上だけに作り、動画を閉じると解放する。外部fetch・動画アップロード・永続保存・埋め込みYouTubeからのフレーム取得をしない。
+- `spikes/local-frame-probe-core.mjs`：動画再生時の `requestVideoFrameCallback()` の `mediaTime` と `presentedFrames` の差から動画自体の概算コマ間隔を計算。30fps/60fps等の違いを吸収する。**ゲームの1Fとの同期は不要**。
+- 「次のコマ」「前のコマ」は、概算コマ時間に基づいて `currentTime` をシークしてから、次に提示されたメタデータの `mediaTime` 変化を観測。時刻が動かない／反対に動く／複数コマ分飛ぶ／取得不能を分類。**1回の候補判定が必ず隣接したデコード済みフレームを意味するとは保証しない**。
+- `requestVideoFrameCallback()` はフレーム提示の通知であり、直接のコマ送り命令ではない。動画一時停止中のシークでコールバックを取得できない環境も想定し、未観測なら必ず UNKNOWN とする。
+- `seekToNextFrame()` は非標準・非推奨APIであり、本番方式として依存しない。自作のブラウザからYouTube IFrame内部の映像画素を取得することも試みない。
+- GitHub CIの合成テストは30fps/60fps等の周期推定、操作目標値、結果判定、HTML JavaScript構文とローカル限定制約を検証。ユーザーの実動画もGoogle認証も用いない。
+- 独立したブラウザ視覚テストは実行環境で `net::ERR_BLOCKED_BY_ADMINISTRATOR` により `http://127.0.0.1` および `file://` が遮断されたため **NOT TESTED**。アクセス制限による結果をSafari不具合や実装のFAILと混同しない。合成30fps MP4を生成し、`ffprobe` で0.000000 → 0.033333 → 0.066667秒というPTS間隔を確認したが、これはブラウザでのコマ送り成功の証明ではない。
+
+### iPhoneでの受入確認
+
+1. 安全な検証専用HTTPSオリジン（未公開・別途配備レビューが必要）で`spikes/local-frame-probe.html`を開く。読み込み対象は本人所有のMP4等、アプリにアップロード不要。
+2. ファイル選択→数秒間再生→一時停止。概算コマ間隔が表示されるか確認。
+3. 動きのある部分で次／前のコマを5回以上繰り返す。画面の見た目、一時停止維持、逆方向に戻れるか、コマを飛ばさず動くかを観測。ダウンロードしたYouTube映像を必須入力にしない。
+4. 画面内の結果を「候補／複数コマ飛び／失敗／不明」と本人が検証し、差がある場合はメモする。Android/PCの成功をiPhone成功の根拠に流用しない。
+
+**設計ゲート：** (A) YouTube一覧から直接のコマ送りは依然B1 HOLD、(B) 端末内元MP4のコマ送りは任意の技術候補であり別のOwner実機ゲート。端末内ファイル選択を毎回強制するなら、最終UXの価値条件を満たすとは限らない。
+
+参考：[MDN requestVideoFrameCallback](https://developer.mozilla.org/en-US/docs/Web/API/HTMLVideoElement/requestVideoFrameCallback)、[MDN currentTime](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/currentTime)、[MDN seekToNextFrame 非標準](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/seekToNextFrame)。
+
 ## 未解決／検証Gate
 
 - このChatGPTセッションでは本人のGoogle OAuth認可もiPhone Safariの目視検証も実施できない。自動テストはB0/B1の本番合格を証明しない。
