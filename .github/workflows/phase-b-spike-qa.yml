@@ -5,6 +5,7 @@ on:
       - "spikes/phase-b-*"
       - "spikes/local-frame-*"
       - "spikes/build_local_frame_probe*"
+      - "spikes/phase-b-browser-smoke.mjs"
       - "spikes/PHASE_B_B0_B1.md"
       - ".github/workflows/phase-b-spike-qa.yml"
   workflow_dispatch:
@@ -30,6 +31,7 @@ jobs:
           node --check spikes/local-frame-probe.test.mjs
           node --check spikes/build_local_frame_probe.mjs
           node --check spikes/build_local_frame_probe.test.mjs
+          node --check spikes/phase-b-browser-smoke.mjs
       - name: Create optional offline self-contained mobile test file
         run: node spikes/build_local_frame_probe.mjs "${{ runner.temp }}/phase-b-frame-step-offline.html"
       - name: Upload offline HTML (contains no video or credentials)
@@ -39,3 +41,8 @@ jobs:
           path: ${{ runner.temp }}/phase-b-frame-step-offline.html
           if-no-files-found: error
           retention-days: 3
+      - name: Synthetic Chromium paused-frame diagnostic (desktop only)
+        run: |
+          command -v google-chrome
+          command -v ffmpeg
+          node spikes/phase-b-browser-smoke.mjs
