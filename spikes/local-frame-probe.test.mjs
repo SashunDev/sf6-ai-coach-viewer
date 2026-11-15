@@ -57,7 +57,7 @@ test("standalone local probe JS syntax and privacy restrictions",()=>{
 
 test("iOS Quick Look script-blocking and file-load failures are diagnosable",()=>{
  const html=readFileSync(new URL("./local-frame-probe.html",import.meta.url),"utf8");
- const script=html.match(/<script type="module">([\\s\\S]*?)<\\/script>/)?.[1] || "";
+ const script=html.split('<script type="module">')[1]?.split('</script>')[0] || "";
  assert.match(html,/id="runtimeState"/);
  assert.match(html,/JavaScript未起動/);
  assert.match(script,/JavaScript起動確認済み/);
