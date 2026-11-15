@@ -16,8 +16,7 @@ export function inferPeriod(samples, maxSamples = 60) {
     if (perFrame >= MIN_FRAME_PERIOD && perFrame <= MAX_FRAME_PERIOD) diffs.push(perFrame);
   }
   if (diffs.length < 4) return null;
-  diffs.sort((a,b) => a-b);
-  const picked = diffs.slice(-maxSamples);
+  const picked = diffs.slice(-maxSamples).sort((a,b) => a-b);
   const m = Math.floor(picked.length / 2);
   return picked.length % 2 ? picked[m] : (picked[m-1] + picked[m]) / 2;
 }
