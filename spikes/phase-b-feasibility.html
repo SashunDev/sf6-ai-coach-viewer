@@ -97,6 +97,7 @@ const api = async (path, params) => {
   return res.json();
 };
 async function uploaded() {
+  const tokenAtStart=state.token;
   status("本人アップロード情報を読み込み中…");
   const ch = await api("channels",{part:"contentDetails",mine:"true",maxResults:50});
   const ids = (ch.items || []).map(x=>x.contentDetails?.relatedPlaylists?.uploads).filter(Boolean);
@@ -119,6 +120,7 @@ async function uploaded() {
     const resp=await api("videos",{part:"snippet,status,contentDetails",id:videoIds.slice(i,i+50).join(","),maxResults:50});
     details.push(...(resp.items||[]));
   }
+  if (state.token !== tokenAtStart) return; // logout must not repopulate private list
   state.videos=normalizeUnlisted(rows,details);
   renderList();
   status("限定公開 " + state.videos.length + "本 / 候補 " + rows.length + "本" + (incomplete?"（取得上限に達したため一部のみ）":"（取得範囲内）"));
@@ -161,7 +163,7 @@ el("auth").addEventListener("click",()=>{
       if (response.error || !response.access_token) {status("Google認証失敗・中断：" + (response.error||"不明"));return;}
       if (!window.google.accounts.oauth2.hasGrantedAllScopes(response,READONLY_SCOPE)) {status("YouTube読み取り権限が未許可です");return;}
       state.token=response.access_token;
-      try {await uploaded();} catch(e){status("一覧取得失敗：" + e.message);log("B0 エラー：" + e.message);}
+      try {await uploaded();} catch(e){if(state.token){status("一覧取得失敗：" + e.message);log("B0 エラー：" + e.message);}}
     }
   });
   state.tokenClient.requestAccessToken({prompt:"consent"});
@@ -203,8 +205,9 @@ function seekAt(target, desc){
   state.player.pauseVideo();
   state.player.seekTo(to,true);
   state.lastRequested=to;
+  const videoIdAtRequest=state.id;
   log("B1 "+desc+"：直前 "+clock(now)+" → 指定 "+clock(to)+"。"+(wasPlaying?"再生中から一時停止を要求":"停止状態")+"。1F精度は未確認");
-  window.setTimeout(()=>{if(state.id) log("API報告時刻（約900ms後） "+clock(current())+"。視覚上のフレーム変化は別途確認が必要");},900);
+  window.setTimeout(()=>{if(state.id===videoIdAtRequest) log("API報告時刻（約900ms後） "+clock(current())+"。視覚上のフレーム変化は別途確認が必要");},900);
 }
 for (const button of document.querySelectorAll("[data-delta]")) button.addEventListener("click",()=>{
   const n=Number(button.dataset.delta);seekAt(clampTime(current(),n,duration()),button.textContent);
