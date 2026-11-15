@@ -35,7 +35,7 @@ footer{font-size:.8rem;color:#a9b9ce}
 <header>
 <h1>SF6 Phase B 検証専用 <span class="tag">未検証・本番利用不可</span></h1>
 <p>目的：B0「自分の限定公開アップロード一覧」とB1「細かいシーク」を切り分けて検証する。YouTubeの単なる再生ページを製品化するための画面ではない。</p>
-<p class="warning">±1F/±10Fは60fps換算の時刻指定を試すだけです。実際の隣接フレーム表示やフレーム精度は保証されません。</p>
+<p class="warning">目標は、動画を停止したまま1コマずつ前後に移動することです。ゲームの1Fとの一致は不要。下の1/60秒・1/6秒ボタンは単なる時刻シークの試験であり、実際のコマ送りではありません。iPhoneでの実コマ送り機能は未実装・未検証です。</p>
 </header>
 <section class="card" aria-labelledby="auth-title">
 <h2 id="auth-title">B0 — 限定公開動画の一覧取得</h2>
@@ -61,15 +61,15 @@ footer{font-size:.8rem;color:#a9b9ce}
 <p id="time" aria-live="off">現在位置：--:--.---</p>
 <div class="row">
 <button data-delta="-5">-5秒</button><button data-delta="-1">-1秒</button>
-<button data-delta="-0.1666666667">-10F（近似）</button><button data-delta="-0.0166666667">-1F（近似）</button>
-<button data-delta="0.0166666667">+1F（近似）</button><button data-delta="0.1666666667">+10F（近似）</button>
+<button data-delta="-0.1666666667">-1/6秒（試験）</button><button data-delta="-0.0166666667">-1/60秒（試験）</button>
+<button data-delta="0.0166666667">+1/60秒（試験）</button><button data-delta="0.1666666667">+1/6秒（試験）</button>
 <button data-delta="1">+1秒</button><button data-delta="5">+5秒</button>
 </div>
 <label for="target">時刻へ移動：秒数または MM:SS.mmm</label>
 <div class="row"><input id="target" placeholder="01:34.500"><button id="jump">移動（近似）</button><button id="pause">一時停止</button></div>
 <div class="row"><button id="slow">0.5倍速を試す</button><button id="normal">1倍速へ</button></div>
-<p class="muted"><small>操作後に指定時刻とAPI報告時刻を記録します。「現在時刻が変わった」≠「表示フレームが1F変化した」。iPhone上で目視確認してください。</small></p>
-<label for="observed">±1F操作の画面を目視してどうなったか（任意）</label>
+<p class="muted"><small>操作後に指定時刻とAPI報告時刻を記録します。「現在時刻が変わった」≠「動画の実際の1コマ送りができた」。iPhone上で目視確認してください。</small></p>
+<label for="observed">1/60秒シーク後の動画画面がどう変わったか（任意・コマ送りの合否ではない）</label>
 <div class="row"><select id="observed"><option value="未確認">未確認</option><option value="異なるフレームを表示">異なるフレームを表示</option><option value="同じフレームのまま">同じフレームのまま</option><option value="不安定 / 不明">不安定 / 不明</option></select><button id="addObservation">目視結果を記録（この画面のみ）</button></div>
 <pre id="log">検証ログ（ブラウザを閉じると消えます）</pre>
 </section>
@@ -206,7 +206,7 @@ function seekAt(target, desc){
   state.player.seekTo(to,true);
   state.lastRequested=to;
   const videoIdAtRequest=state.id;
-  log("B1 "+desc+"：直前 "+clock(now)+" → 指定 "+clock(to)+"。"+(wasPlaying?"再生中から一時停止を要求":"停止状態")+"。1F精度は未確認");
+  log("B1 "+desc+"：直前 "+clock(now)+" → 指定 "+clock(to)+"。"+(wasPlaying?"再生中から一時停止を要求":"停止状態")+"。コマ送りとしての成立は未確認");
   window.setTimeout(()=>{if(state.id===videoIdAtRequest) log("API報告時刻（約900ms後） "+clock(current())+"。視覚上のフレーム変化は別途確認が必要");},900);
 }
 for (const button of document.querySelectorAll("[data-delta]")) button.addEventListener("click",()=>{
