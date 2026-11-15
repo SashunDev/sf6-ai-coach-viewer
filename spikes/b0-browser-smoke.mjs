@@ -70,7 +70,7 @@ async function main(){
     constructor(el,config){
      this._time=4;this._duration=30;this._state=2;this._container=el;
      el.textContent="FAKE YOUTUBE PLAYER FOR CI";
-     setTimeout(()=>config.events.onReady(),10);
+     setTimeout(()=>config.events.onReady({target:this}),10);
     }
     getPlayerState(){return this._state;}
     getCurrentTime(){return this._time;}
