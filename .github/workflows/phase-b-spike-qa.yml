@@ -6,6 +6,7 @@ on:
       - "spikes/local-frame-*"
       - "spikes/build_local_frame_probe*"
       - "spikes/build_b1_staging_site*"
+      - "spikes/b0-*"
       - "spikes/phase-b-browser-smoke.mjs"
       - "spikes/PHASE_B_B0_B1.md"
       - ".github/workflows/phase-b-spike-qa.yml"
@@ -22,7 +23,7 @@ jobs:
         with:
           node-version: "22"
       - name: Test library filtering, URL safety and seek calculations
-        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs spikes/local-frame-probe.test.mjs spikes/build_local_frame_probe.test.mjs spikes/build_b1_staging_site.test.mjs
+        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs spikes/local-frame-probe.test.mjs spikes/build_local_frame_probe.test.mjs spikes/build_b1_staging_site.test.mjs spikes/b0-library-core.test.mjs spikes/b0-page.test.mjs
       - name: Parse source modules
         run: |
           node --check spikes/phase-b-probe-core.mjs
@@ -34,6 +35,10 @@ jobs:
           node --check spikes/build_local_frame_probe.test.mjs
           node --check spikes/build_b1_staging_site.mjs
           node --check spikes/build_b1_staging_site.test.mjs
+          node --check spikes/b0-library-core.mjs
+          node --check spikes/b0-library-core.test.mjs
+          node --check spikes/b0-app.mjs
+          node --check spikes/b0-page.test.mjs
           node --check spikes/phase-b-browser-smoke.mjs
       - name: Create optional offline self-contained mobile test file
         run: node spikes/build_local_frame_probe.mjs "${{ runner.temp }}/phase-b-frame-step-offline.html"
