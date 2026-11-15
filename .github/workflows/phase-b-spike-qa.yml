@@ -5,6 +5,7 @@ on:
       - "spikes/phase-b-*"
       - "spikes/local-frame-*"
       - "spikes/build_local_frame_probe*"
+      - "spikes/build_b1_staging_site*"
       - "spikes/phase-b-browser-smoke.mjs"
       - "spikes/PHASE_B_B0_B1.md"
       - ".github/workflows/phase-b-spike-qa.yml"
@@ -21,7 +22,7 @@ jobs:
         with:
           node-version: "22"
       - name: Test library filtering, URL safety and seek calculations
-        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs spikes/local-frame-probe.test.mjs spikes/build_local_frame_probe.test.mjs
+        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs spikes/local-frame-probe.test.mjs spikes/build_local_frame_probe.test.mjs spikes/build_b1_staging_site.test.mjs
       - name: Parse source modules
         run: |
           node --check spikes/phase-b-probe-core.mjs
@@ -31,6 +32,8 @@ jobs:
           node --check spikes/local-frame-probe.test.mjs
           node --check spikes/build_local_frame_probe.mjs
           node --check spikes/build_local_frame_probe.test.mjs
+          node --check spikes/build_b1_staging_site.mjs
+          node --check spikes/build_b1_staging_site.test.mjs
           node --check spikes/phase-b-browser-smoke.mjs
       - name: Create optional offline self-contained mobile test file
         run: node spikes/build_local_frame_probe.mjs "${{ runner.temp }}/phase-b-frame-step-offline.html"
@@ -39,6 +42,19 @@ jobs:
         with:
           name: phase-b-offline-probe-${{ github.run_id }}
           path: ${{ runner.temp }}/phase-b-frame-step-offline.html
+          if-no-files-found: error
+          retention-days: 3
+      - name: Prepare dedicated GitHub Pages staging source package (DO NOT deploy)
+        run: |
+          set -euo pipefail
+          node spikes/build_b1_staging_site.mjs "${{ runner.temp }}/b1-staging-src"
+          cd "${{ runner.temp }}/b1-staging-src"
+          zip -q -r "${{ runner.temp }}/b1-safari-staging-source.zip" .github public README.md
+      - name: Upload ready-to-publish, no-user-media staging source
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-b-safari-staging-sources-${{ github.run_id }}
+          path: ${{ runner.temp }}/b1-safari-staging-source.zip
           if-no-files-found: error
           retention-days: 3
       - name: Synthetic Chromium paused-frame diagnostic (desktop only)
