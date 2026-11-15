@@ -52,10 +52,11 @@ export function clampTime(current, delta, duration) {
 }
 export function clock(seconds) {
   const n = Math.max(0, Number(seconds) || 0);
-  const s = Math.floor(n);
-  return String(Math.floor(s/60)).padStart(2, "0") + ":" +
-    String(s%60).padStart(2, "0") + "." +
-    String(Math.round((n - s)*1000)).padStart(3,"0");
+  const millis = Math.round(n * 1000);
+  const s = Math.floor(millis / 1000);
+  return String(Math.floor(s / 60)).padStart(2, "0") + ":" +
+    String(s % 60).padStart(2, "0") + "." +
+    String(millis % 1000).padStart(3, "0");
 }
 export function handoff(videoId, at, note) {
   if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) throw new Error("動画IDが不正です");
