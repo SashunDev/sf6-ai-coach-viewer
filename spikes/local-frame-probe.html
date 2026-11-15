@@ -26,6 +26,8 @@ button:focus-visible,input:focus-visible{outline:2px solid #d7ff9b;outline-offse
 <body>
 <h1>端末内MP4のコマ送り — 実現性検証</h1>
 <p class="warning">検証専用。YouTube動画を自動取得するものではありません。自分が所有している動画ファイルを任意に選ぶ方式です。YouTubeの限定公開一覧との自動連携・正確なコマ送りは未実装です。</p>
+<p id="runtimeState" role="status" class="warning">JavaScript未起動：iPhoneの「ファイル」プレビューでは操作用JavaScriptが実行されない場合があります。動画を選んでも読み込まれない場合は、このHTMLの再試行を中止してください。</p>
+<noscript><p class="warning">JavaScriptが無効です。端末内HTMLプレビューではこの検証は実行できません。</p></noscript>
 <p>映像の各コマの提示時刻を <code>requestVideoFrameCallback()</code> で観察し、前後のコマに移動できるかを試します。動画のコマとゲーム内の1Fが一致する必要はありません。</p>
 <section class="panel">
 <h2>1. 自分の動画を選択（端末内のみ）</h2>
@@ -59,6 +61,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #d7ff9b;outline-offse
 import {inferPeriod,targetForFrameStep,assessFrameStep} from "./local-frame-probe-core.mjs";
 const $=id=>document.getElementById(id);
 const video=$("video");
+$("runtimeState").textContent="JavaScript起動確認済み。動画ファイルの選択と再生を検証できます（端末内のみ）。";
 let objectUrl=null, generation=0, frameId=null, samples=[], lastFrame=null, period=null;
 let requestId=0, busy=false, frameWaiters=[];
 let logLines=[];
@@ -113,24 +116,45 @@ const reset=()=>{
 };
 $("clear").addEventListener("click",()=>{reset();$("file").value="";});
 $("file").addEventListener("change",()=>{
+  // The source file is read after resetting the previous video's internal state.
   reset();
   const file=$("file").files?.[0];
-  if(!file)return;
-  if(!file.type.startsWith("video/")){$("fileState").textContent="動画ファイルを指定してください";return;}
-  objectUrl=URL.createObjectURL(file);
-  video.src=objectUrl;
-  const gen=generation;
-  if(typeof video.requestVideoFrameCallback==="function")
-    frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
-  $("fileState").textContent="端末内動画を読み込みました（"+Math.round(file.size/1024/1024*10)/10+"MB）。通信送信しません。";
-  report("動画読込。数秒再生してから一時停止してください。");
+  if(!file){$("fileState").textContent="選択されたファイルがありません";return;}
+  const type=String(file.type||"");
+  const compatibleHint=type.startsWith("video/") || type==="application/octet-stream" ||
+    /\.(mp4|mov|m4v|webm)$/i.test(String(file.name||""));
+  if(!compatibleHint){$("fileState").textContent="動画ファイルか確認できません。端末で撮影したMP4等を指定してください。";return;}
+  try{
+    objectUrl=URL.createObjectURL(file);
+    $("fileState").textContent="選択を受け付けました（"+(file.size/1024/1024).toFixed(1)+"MB、MIME="+(type||"不明")+"）。メタデータ読み込み中…";
+    report("ファイル選択イベントを取得。ブラウザ内でメタデータを読み込み中。");
+    video.src=objectUrl;
+    video.load();
+    const gen=generation;
+    if(typeof video.requestVideoFrameCallback==="function")
+      frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
+  }catch(err){
+    $("fileState").textContent="ファイル読み込み処理のエラー："+String(err?.message||err);
+    report("ファイル読み込み処理に失敗（動画データは送信していません）。");
+  }
   showMeasure();
 });
+video.addEventListener("loadstart",()=>report("動画のloadstartイベントを確認"));
+video.addEventListener("loadedmetadata",()=>{
+  $("fileState").textContent="動画メタデータ読込完了：長さ "+(Number.isFinite(video.duration)?video.duration.toFixed(2)+"秒":"不明")+
+    "。再生ボタンで開始してください。";
+  report("動画メタデータ取得成功。動画コーデックが再生できるか引き続き確認。");
+});
+video.addEventListener("canplay",()=>report("再生準備完了（canplay）。数秒再生してから一時停止してください。"));
 video.addEventListener("pause",showMeasure);
 video.addEventListener("play",showMeasure);
 video.addEventListener("seeked",showMeasure);
 video.addEventListener("seeking",()=>{samples=[];lastFrame=null;showMeasure();});
-video.addEventListener("error",()=>report("動画のデコードに失敗。iPhoneが対応するMP4/H.264等で試してください。"));
+video.addEventListener("error",()=>{
+  const error=video.error;
+  $("fileState").textContent="動画読み込みエラー（コード "+(error?.code??"不明")+"）。動画形式・コーデック・保存状態の可能性があります。";
+  report("動画読み込みエラー。コード="+(error?.code??"不明")+"（MEDIA_ERR_DECODE=3、MEDIA_ERR_SRC_NOT_SUPPORTED=4）。");
+});
 function waitForAfterFrame(beforeSeq,gen,ms=1500) {
   if(requestId>beforeSeq) return Promise.resolve(lastFrame);
   return new Promise(resolve=>{
