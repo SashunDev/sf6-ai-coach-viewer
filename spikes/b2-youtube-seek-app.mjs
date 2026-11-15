@@ -50,25 +50,24 @@ async function loadOfficialIFrameAPI(){
 }
 function mountPlayer(id){
  // A user must click the official YouTube play button before we can inspect paused seeks.
- const serial=state.serial;
  const container=document.createElement("div");container.id="b2-player";
  el("b2-video").replaceChildren(container);
  state.player=new window.YT.Player(container,{
    width:"640",height:"360",videoId:id,
    playerVars:{playsinline:1,origin:location.origin,controls:1,rel:0},
    events:{
-     onReady:()=>{
-       if(serial!==state.serial)return;
+     onReady:event=>{
+       if(!state.id||state.player!==event.target)return;
        state.ready=true;
        setControlState();
        tell("公式プレイヤー準備完了。動画を再生してから、一時停止してください。");
      },
      onError:event=>{
-       if(serial!==state.serial)return;
+       if(!state.id||state.player!==event.target)return;
        tell("YouTube公式プレイヤーのエラー："+String(event.data).slice(0,4)+"（限定公開の再生可否・埋め込み許可をご確認ください）");
      },
      onStateChange:event=>{
-       if(serial!==state.serial)return;
+       if(!state.id||state.player!==event.target)return;
        if(event.data===window.YT.PlayerState?.PAUSED)tell("一時停止中。細かい時刻移動を試せます。");
        else if(event.data===window.YT.PlayerState?.PLAYING)tell("再生中。まず「一時停止」を押してください。");
      }
