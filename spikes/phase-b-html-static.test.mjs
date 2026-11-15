@@ -19,5 +19,7 @@ test("security and privacy boundaries remain explicit",()=>{
   assert.doesNotMatch(html,/localStorage|sessionStorage|indexedDB|client_secret|AIza[a-zA-Z0-9_-]{20}/i);
   const core = readFileSync(new URL("./phase-b-probe-core.mjs",import.meta.url),"utf8");
   assert.match(core,/AIは映像未確認/);
-  assert.match(html,/保証されません/);
+  assert.match(html,/実コマ送り機能は未実装・未検証/);
+  assert.match(html,/1\/60秒（試験）/);
+  assert.doesNotMatch(html,/>[+-]1F（近似）</);
 });
