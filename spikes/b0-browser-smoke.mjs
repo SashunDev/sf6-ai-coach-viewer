@@ -11,7 +11,7 @@ async function until(f,ms=16000){
  throw Error("Timeout in B0 mock browser smoke");
 }
 async function main(){
- for(const file of ["b0-library.html","b0-app.mjs","b0-library-core.mjs","b0-privacy.html"]){
+ for(const file of ["b0-library.html","b0-app.mjs","b0-library-core.mjs","b0-privacy.html","b2-youtube-seek-core.mjs","b2-youtube-seek-app.mjs"]){
   const input=readFileSync(new URL("./"+file,import.meta.url),"utf8");
   writeFileSync(join(dir,file==="b0-library.html"?"b0.html":file),input);
  }
@@ -61,6 +61,38 @@ async function main(){
  if(!demo.titles.every(t=>t.startsWith("モック：")))throw Error("Demo contains non-mock data");
  if(!filtered.includes("対空")||end.tokenInput)throw Error("Filter/clear behavior is wrong");
  console.log("B0 MOCK BROWSER PASS",JSON.stringify({init,demo,filtered,end,privateApiCalls:apiRequests.length}));
+ // A synthetic YT.Player implementation avoids remote playback and user data.
+ // Test the B0 -> optional IFrame diagnosis wiring without real video downloads.
+ await ev(`(()=>{
+  window.YT={
+   PlayerState:{PLAYING:1,PAUSED:2},
+   Player:class{
+    constructor(el,config){
+     this._time=4;this._duration=30;this._state=2;this._container=el;
+     el.textContent="FAKE YOUTUBE PLAYER FOR CI";
+     setTimeout(()=>config.events.onReady(),10);
+    }
+    getPlayerState(){return this._state;}
+    getCurrentTime(){return this._time;}
+    getDuration(){return this._duration;}
+    seekTo(t){this._time=t;}
+    cueVideoById(){this._time=0;this._state=2;}
+    pauseVideo(){this._state=2;}
+    destroy(){this._container.remove();}
+   }
+  };
+  document.dispatchEvent(new CustomEvent("sf6:b2-open",{detail:{id:"AAAAAAAAAAA"}}));
+  return true;
+ })()`);
+ await until(async()=>await ev("document.querySelector('#b2-next')?.disabled===false"));
+ await ev("document.querySelector('#b2-next').click()");
+ await until(async()=>await ev("document.querySelector('#b2-log')?.textContent?.includes('API報告時刻が変化しました')"));
+ const b2=await ev("({visible:!document.querySelector('#b2-panel').hidden,log:document.querySelector('#b2-log').textContent})");
+ await ev("document.querySelector('#clear').click()");
+ await until(async()=>await ev("document.querySelector('#b2-panel').hidden===true"));
+ if(apiRequests.length)throw Error("B2 synthetic CI unexpectedly called private YouTube API");
+ console.log("B2 IFRAME MOCK BROWSER PASS",JSON.stringify({visible:b2.visible,containsApproximateNotice:b2.log.includes("表示フレームの変化は未証明"),privateApiCalls:apiRequests.length}));
+
  ws.close();
 }
 try{await main();}finally{for(const p of procs){try{p.kill("SIGTERM");}catch{}}try{rmSync(dir,{recursive:true,force:true});}catch{}}
