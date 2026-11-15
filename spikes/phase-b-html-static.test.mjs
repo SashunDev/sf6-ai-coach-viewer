@@ -17,6 +17,7 @@ test("security and privacy boundaries remain explicit",()=>{
   assert.match(html,/window\.google\.accounts\.oauth2/);
   assert.match(html,/https:\/\/www\.googleapis\.com\/youtube\/v3\//);
   assert.doesNotMatch(html,/localStorage|sessionStorage|indexedDB|client_secret|AIza[a-zA-Z0-9_-]{20}/i);
-  assert.match(html,/AIは映像未確認|AI.*映像未確認|映像未確認/);
+  const core = readFileSync(new URL("./phase-b-probe-core.mjs",import.meta.url),"utf8");
+  assert.match(core,/AIは映像未確認/);
   assert.match(html,/保証されません/);
 });
