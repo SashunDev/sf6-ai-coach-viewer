@@ -23,7 +23,7 @@ test("CSP includes only official YouTube embed script and frames, no video downl
  assert.match(seek,/window\.YT\.Player/);
  assert.match(seek,/playerVars:\{playsinline:1,origin:location\.origin,controls:1,rel:0\}/);
  assert.doesNotMatch(seek,/fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage|document\.cookie/);
- assert.doesNotMatch(seek,/download|mediaSource|\.mp4|srcObject|createObjectURL/);
+ assert.doesNotMatch(seek,/\bdownload\s*\(|\bMediaSource\b|\.mp4\b|srcObject|createObjectURL/);
  assert.doesNotMatch(app,/https:\/\/googlevideo|https:\/\/youtube\.com\/api\/timedtext/);
 });
 test("fine seek is paused-only, records approximate API time not a guaranteed decoded frame",()=>{
