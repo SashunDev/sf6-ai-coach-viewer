@@ -53,3 +53,17 @@ test("standalone local probe JS syntax and privacy restrictions",()=>{
  assert.match(html,/動画のコマとゲーム内の1Fが一致する必要はありません/);
  assert.doesNotMatch(script,/fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/);
 });
+
+
+test("iOS Quick Look script-blocking and file-load failures are diagnosable",()=>{
+ const html=readFileSync(new URL("./local-frame-probe.html",import.meta.url),"utf8");
+ const script=html.match(/<script type="module">([\\s\\S]*?)<\\/script>/)?.[1] || "";
+ assert.match(html,/id="runtimeState"/);
+ assert.match(html,/JavaScript未起動/);
+ assert.match(script,/JavaScript起動確認済み/);
+ assert.match(script,/addEventListener\("loadedmetadata"/);
+ assert.match(script,/addEventListener\("error"/);
+ assert.match(script,/addEventListener\("change"/);
+ assert.match(script,/動画読み込みエラー/);
+ assert.doesNotMatch(script,/fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/);
+});
