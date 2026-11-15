@@ -67,3 +67,11 @@ test("iOS Quick Look script-blocking and file-load failures are diagnosable",()=
  assert.match(script,/動画読み込みエラー/);
  assert.doesNotMatch(script,/fetch\(|XMLHttpRequest|sendBeacon|localStorage|sessionStorage/);
 });
+
+test("rapid tap frame controls suppress double tap zoom without disabling page pinch zoom",()=>{
+ const html=readFileSync(new URL("./local-frame-probe.html",import.meta.url),"utf8");
+ assert.match(html,/button\\{[^}]*touch-action:manipulation[^}]*\\}/);
+ assert.doesNotMatch(html,/user-scalable\\s*=\\s*no|maximum-scale\\s*=\\s*1|touch-action:none/);
+ assert.match(html,/id="prev"/);
+ assert.match(html,/id="next"/);
+});
