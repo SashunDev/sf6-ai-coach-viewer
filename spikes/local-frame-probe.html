@@ -33,7 +33,7 @@ button:focus-visible,input:focus-visible{outline:2px solid #d7ff9b;outline-offse
 <h2>1. 自分の動画を選択（端末内のみ）</h2>
 <label for="file">自分のMP4などの動画を選択</label>
 <input type="file" id="file" accept="video/mp4,video/quicktime,video/*">
-<div class="row"><button id="clear">動画を閉じる／メモリ上の参照を破棄</button></div>
+<div class="row"><button id="sample" hidden type="button">30fps合成テスト動画を開く（本人動画不要）</button><button id="clear" type="button">動画を閉じる／メモリ上の参照を破棄</button></div>
 <p id="fileState" role="status">未選択。端末外への送信・ファイルの永続保存は行いません。</p>
 <video id="video" controls playsinline preload="metadata"></video>
 </section>
@@ -110,11 +110,33 @@ const reset=()=>{
   finishWaiters(null);
   video.pause();
   video.removeAttribute("src");video.load();
-  if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null;}
+  if(objectUrl){if(objectUrl.startsWith("blob:")) URL.revokeObjectURL(objectUrl);objectUrl=null;}
   logLines=[];$("log").textContent="動画未選択";$("fileState").textContent="動画なし。端末内のファイルはアップロードしていません。";
   showMeasure();updateButton();
 };
 $("clear").addEventListener("click",()=>{reset();$("file").value="";});
+const sampleMeta=document.querySelector('meta[name="frame-probe-sample"]');
+if(sampleMeta?.content){
+  // Only a static video served from this site's own origin is eligible.
+  const candidate=new URL(sampleMeta.content,location.href);
+  if(candidate.origin===location.origin && candidate.protocol==="https:"){
+    $("sample").hidden=false;
+    $("sample").addEventListener("click",()=>{
+      reset();$("file").value="";
+      objectUrl=candidate.href;
+      video.src=objectUrl;
+      video.load();
+      const gen=generation;
+      if(typeof video.requestVideoFrameCallback==="function")
+        frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
+      $("fileState").textContent="公開の合成30fpsサンプルを読み込み中。ユーザー動画は送信されません。";
+      report("同一サイトの合成動画を選択しました。読み込み処理を確認します。");
+      showMeasure();
+    });
+  }else{
+    report("検証用サンプルのURLがHTTPS同一オリジンではないため無効化しました。");
+  }
+}
 $("file").addEventListener("change",()=>{
   // The source file is read after resetting the previous video's internal state.
   reset();
