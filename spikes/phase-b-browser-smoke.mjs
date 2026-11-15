@@ -76,14 +76,24 @@ async function main(){
  const steps=[];
  for(const selector of ["#next","#next","#prev"]){
   const q=JSON.stringify(selector);
+  const label=selector==="#prev"?"前のコマ：表示":"次のコマ：表示";
+  const search=JSON.stringify(label);
+  const command="document.querySelector('#log').textContent.split('\\n').filter(x=>x.includes("+search+"))";
+  const before=await ev(command+".length");
   await ev("document.querySelector("+q+").click()");
-  await sleep(2450);
-  const result=await ev("({paused:document.querySelector('video').paused,disabled:document.querySelector("+q+").disabled,log:document.querySelector('#log').textContent.split('\\n')[0]})");
+  // A late 'canplay' event may overwrite the FIRST log line. Check the matching
+  // frame-step outcome count instead of assuming it remains at index 0.
+  const result=await until(async()=>{
+    const rows=await ev(command);
+    if(!Array.isArray(rows)||rows.length<=before)return null;
+    const snapshot=await ev("({paused:document.querySelector('video').paused,disabled:document.querySelector("+q+").disabled})");
+    return snapshot.disabled?null:{...snapshot,log:rows[0]};
+  },9000);
   steps.push({button:selector,...result});
  }
  console.log("CHROMIUM STEP OBSERVATIONS",JSON.stringify(steps));
  if(steps.some(x=>!x.paused))throw Error("Paused video unexpectedly resumed");
- if(steps.some(x=>!x.log.includes("コマ")))throw Error("Missing outcome log");
+ if(steps.some(x=>!x.log.includes("candidate：")))throw Error("Missing real synthetic displayed-frame candidate");
  console.log("NOTE: Chromium observations are not iPhone evidence and are not a universal exact frame-step guarantee");
  ws.close();
 }
