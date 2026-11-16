@@ -67,6 +67,8 @@ jobs:
       - name: Build with only eligible public MP4s
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          # Public OAuth Web client identifier; not a secret or access token.
+          SF6_YOUTUBE_OAUTH_CLIENT_ID: ${{ vars.SF6_YOUTUBE_OAUTH_CLIENT_ID }}
         run: |
           set -euo pipefail
           python3 scripts/build_pages_site.py --out _site
