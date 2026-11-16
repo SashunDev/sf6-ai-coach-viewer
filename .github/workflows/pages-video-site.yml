@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'youtube-share.html'
+      - 'youtube-share.mjs'
+      - 'tests/test_youtube_share.mjs'
       - 'demo.html'
       - 'release-smoke.html'
       - 'video-diagnostics.html'
@@ -56,6 +59,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
           python3 -m unittest discover -s tests -p 'test_verify_public_match.py' -v
           node --test tests/test_viewer_pages.cjs
+          node --test tests/test_youtube_share.mjs
       - name: Build with only eligible public MP4s
         env:
           GITHUB_TOKEN: ${{ github.token }}
