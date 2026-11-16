@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 const state={
  active:false,epoch:0,token:null,controller:null,videos:[],partial:false,
  gisPromise:null,ytPromise:null,player:null,playerReady:false,
- selected:null,selectionSerial:0,savedFootnote:null
+ selected:null,selectionSerial:0,seekPlan:null,savedFootnote:null
 };
 const status=message=>{ $("youtubeStatus").textContent=message; };
 const playback=message=>{ $("youtubePlaybackStatus").textContent=message; };
@@ -18,11 +18,12 @@ const info=message=>{
 };
 function buttons(){
  const ready=state.active&&state.player&&state.playerReady;
- for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubeCopy"])$(id).disabled=!ready;
+ for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy"])$(id).disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
 }
 function clearPlayer(){
  state.selectionSerial++;
+ state.seekPlan=null;
  const old=state.player;state.player=null;state.playerReady=false;state.selected=null;
  if(old){try{old.destroy();}catch{}}
  $("youtubePlayer").replaceChildren();
@@ -255,7 +256,10 @@ function mountPlayer(video,serial){
      onStateChange:event=>{
        if(state.player!==event.target||!state.active)return;
        if(event.data===window.YT.PlayerState?.PAUSED)playback("停止中：細かい時刻移動ができます（近似）。");
-       else if(event.data===window.YT.PlayerState?.PLAYING)playback("再生中：細かい時刻移動の前に停止してください。");
+       else if(event.data===window.YT.PlayerState?.PLAYING){
+         state.seekPlan=null;
+         playback("再生中：細かい時刻移動の前に停止してください。");
+       }
      }
    }
  });
@@ -264,6 +268,7 @@ function mountPlayer(video,serial){
 async function selectVideo(video){
  if(!state.active||!state.token||!isVideoId(video?.id)||!state.videos.some(v=>v.id===video.id))return;
  state.selectionSerial++;
+ state.seekPlan=null;
  const serial=state.selectionSerial;
  state.selected=video;
  $("youtubeCurrentTitle").textContent=video.title;
@@ -290,23 +295,37 @@ $("youtubePause").addEventListener("click",()=>{
  if(!state.playerReady)return;
  state.player.pauseVideo();playback("停止を要求しました。映像が止まったことを確認してください。");
 });
+// Short tap bursts should accumulate targets even when YT.getCurrentTime() lags seekTo().
+ // Never treat the optimistic target as proof of the frame that was displayed.
 function fineSeek(delta){
  if(!state.playerReady||!state.player||!state.selected)return;
  const player=state.player;
  if(player.getPlayerState()!==window.YT.PlayerState?.PAUSED){
+   state.seekPlan=null;
    playback("一時停止してから細かい時刻移動を行ってください。");return;
  }
  const current=Number(player.getCurrentTime());
- const goal=targetSeconds(current,delta,Number(player.getDuration()));
- if(goal===null){playback("現在時刻を取得できません。");return;}
- if(Math.abs(goal-current)<.001){playback("動画の冒頭または終端です。");return;}
+ if(!Number.isFinite(current)||current<0){playback("現在時刻を取得できません。");return;}
  const serial=state.selectionSerial;
+ const now=Date.now();
+ const previous=state.seekPlan;
+ // A burst shares one optimistic anchor for <=1.5s between taps. A new video,
+ // a resumed player, or a longer gap starts from the player's reported time.
+ const valid=previous&&previous.player===player&&previous.serial===serial&&
+   now>=previous.at&&now-previous.at<=1500;
+ const baseline=valid?previous.target:current;
+ const goal=targetSeconds(baseline,delta,Number(player.getDuration()));
+ if(goal===null){playback("時刻移動の値が不正です。");return;}
+ if(Math.abs(goal-baseline)<.001){playback("動画の冒頭または終端です。");return;}
+ const plan={player,serial,target:goal,at:now};
  try{player.seekTo(goal,true);}
  catch(e){playback("時刻移動に失敗："+String(e?.message||"不明").slice(0,70));return;}
+ state.seekPlan=plan;
  playback("時刻移動 "+(delta>0?"+":"-")+secondsDisplay(Math.abs(delta))+
-   "："+secondsDisplay(current)+" → "+secondsDisplay(goal)+"（映像の1コマ移動は未保証）");
+   "："+secondsDisplay(baseline)+" → "+secondsDisplay(goal)+"（時刻指定・表示フレーム未保証）");
  setTimeout(()=>{
-   if(!state.active||serial!==state.selectionSerial||player!==state.player||!state.playerReady)return;
+   if(!state.active||serial!==state.selectionSerial||player!==state.player||
+       !state.playerReady||state.seekPlan!==plan)return;
    const reported=Number(player.getCurrentTime());
    const stateNow=player.getPlayerState();
    if(stateNow===window.YT.PlayerState?.PLAYING){
@@ -314,25 +333,36 @@ function fineSeek(delta){
      info("シーク後に再生されたため停止を要求しました。");
    }
    info("要求 "+secondsDisplay(goal)+" / API時刻 "+secondsDisplay(reported)+
-      "：" + classifyReportedSeek(current,goal,reported));
+      "：" + classifyReportedSeek(baseline,goal,reported));
  },1000);
 }
-for(const [id,delta] of [["youtubePrev",-SEEK_SMALL],["youtubeNext",SEEK_SMALL],
- ["youtubePrevSec",-1],["youtubeNextSec",1]]){
+for(const [id,delta] of [["youtubePrevFive",-5],["youtubePrevSec",-1],
+ ["youtubePrevTen",-10*SEEK_SMALL],["youtubePrev",-SEEK_SMALL],
+ ["youtubeNext",SEEK_SMALL],["youtubeNextTen",10*SEEK_SMALL],
+ ["youtubeNextSec",1],["youtubeNextFive",5]]){
  $(id).addEventListener("click",()=>fineSeek(delta));
 }
 function handoffText(){
  if(!state.selected||!state.playerReady)return null;
  const current=Number(state.player.getCurrentTime());
  if(!Number.isFinite(current)||current<0)return null;
- const seconds=Math.floor(current);
+ // Link playback starts at integer seconds, but the analysis timestamp must
+ // preserve milliseconds. Neither API time nor a requested seek certifies a frame.
+ const millis=Math.round(current*1000);
+ const whole=Math.floor(millis/1000);
+ const formatted=String(Math.floor(whole/60)).padStart(2,"0")+":"+
+   String(whole%60).padStart(2,"0")+"."+String(millis%1000).padStart(3,"0");
+ const linkSeconds=Math.floor(current);
  const title=String(state.selected.title||"(無題)").replace(/[\r\n\t]+/g," ").slice(0,160);
  const note=$("youtubeNote").value.trim().slice(0,600);
- const mm=String(Math.floor(seconds/60)).padStart(2,"0"),ss=String(seconds%60).padStart(2,"0");
+ const plan=state.seekPlan;
+ const requested=plan?.player===state.player&&plan?.serial===state.selectionSerial&&
+   Date.now()-plan.at<=2500?plan.target:null;
  return "SF6 AI Coach レビュー引き継ぎ\n"+
   "動画名: "+title+"\n"+
-  "動画URL: https://www.youtube.com/watch?v="+state.selected.id+"&t="+seconds+"s\n"+
-  "時刻: "+mm+":"+ss+"（YouTube公式プレイヤーのAPI時刻・近似）\n"+
+  "動画URL: https://www.youtube.com/watch?v="+state.selected.id+"&t="+linkSeconds+"s（URLの再生開始は秒単位）\n"+
+  "時刻: "+formatted+"（YouTube公式プレイヤーのAPI報告時刻・近似）\n"+
+  (requested!==null?"直近のシーク要求: "+secondsDisplay(requested)+"（表示コマとの一致は未確認）\n":"")+
   "振り返り: "+(note||"この時刻の判断を振り返りたい。")+"\n"+
   "※映像をChatGPTが自動確認したわけではありません。";
 }
