@@ -85,6 +85,12 @@ test("Manual ChatGPT handoff does not claim actual video perception",()=>{
  assert.match(module,/映像をChatGPTが自動確認したわけではありません/);
  assert.ok(module.includes('const millis=Math.round(current*1000)'));
  assert.match(module,/直近のシーク要求/);
+ assert.match(html,/id="youtubeShare" type="button" disabled/);
+ assert.match(html,/id="youtubeShareLink" type="text" readonly/);
+ assert.match(module,/youtubeShare"\)\.addEventListener\("click"/);
+ assert.match(module,/share\.searchParams\.set\("v",id\)/);
+ assert.match(module,/share\.searchParams\.set\("t",String\(seconds\)\)/);
+ assert.match(module,/state\.videos\.some\(video=>video\.id===id\)/);
  assert.match(html,/ChatGPTへ貼り付けてください/);
  assert.match(html,/既存レポートはこのYouTube動画に自動同期しません/);
 });
