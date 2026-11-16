@@ -8,8 +8,8 @@ const $=id=>document.getElementById(id);
 const PUBLIC_ID_KEY="sf6-coach-public-google-oauth-client-id-v1";
 const localStore=()=>{try{return window.localStorage;}catch{return null;}};
 // The OAuth Web Client ID is a public identifier, not a client secret.
-// Only that ID may be remembered. Tokens, the YouTube library and video IDs
-// are still strictly tab-memory-only.
+// Tokens stay in tab memory. An explicitly opted-in metadata list may be
+// restored for up to 30 days by youtube-library-cache.mjs.
 function siteClientId(){
  const value=document.querySelector('meta[name="sf6-youtube-oauth-client-id"]')?.content?.trim()||"";
  return isClientId(value)?value:"";
@@ -36,7 +36,10 @@ const state={
  selected:null,selectionSerial:0,seekPlan:null,savedFootnote:null,
  cachedView:false,lastSyncedAt:null
 };
-const status=message=>{ $("youtubeStatus").textContent=message; };
+const status=message=>{
+ $("youtubeStatus").textContent=message;
+ const mirror=$("youtubeSettingsStatus");if(mirror)mirror.textContent=message;
+};
 const playback=message=>{ $("youtubePlaybackStatus").textContent=message; };
 const cacheNote=message=>{$("youtubeCacheNotice").textContent=message;};
 const lastUpdated=ms=>new Date(ms).toLocaleString("ja-JP",{dateStyle:"short",timeStyle:"short"});
@@ -44,13 +47,13 @@ function cacheStatus(){
  if(state.cachedView&&state.lastSyncedAt)
    cacheNote(($("youtubeKeepList").checked?"前回保存した一覧":"前回取得した一覧（この端末への保存は解除済み）")+
      "（最終同期 "+lastUpdated(state.lastSyncedAt)+
-     "）。最新の公開状態は未確認です。更新するには「最新一覧を再取得」を押してください。"+
+     "）。最新の公開状態は未確認です。更新するには「再取得」を押してください。"+
      (state.partial?" 保存件数または取得件数が上限に達しています。":""));
  else if(state.lastSyncedAt&&$("youtubeKeepList").checked)
    cacheNote("この端末に保存済み：最終同期 "+lastUpdated(state.lastSyncedAt)+
      "。30日経過で自動削除されます。");
  else
-   cacheNote("端末への一覧保存は無効です。保存を有効にして同期すると次回は自動表示します。");
+   cacheNote("端末への一覧保存は無効です。接続・保存設定で保存を有効にできます。");
 }
 function restoreCachedList(){
  const saved=readCache(localStore());
@@ -77,19 +80,25 @@ const info=message=>{
 function buttons(){
  const ready=state.active&&state.player&&state.playerReady;
  for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
+ if($("workbenchShare"))$("workbenchShare").disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
  $("youtubeRefresh").disabled=!state.active||!window.google?.accounts?.oauth2?.initTokenClient;
 }
+function showRecovery(show){ $("youtubeRecovery").hidden=!show; }
 function clearPlayer(){
+ showRecovery(false);
  state.selectionSerial++;
  state.seekPlan=null;
  const old=state.player;state.player=null;state.playerReady=false;state.selected=null;
  if(old){try{old.destroy();}catch{}}
  $("youtubePlayer").replaceChildren();
+ $("youtubeReviewPanel").dataset.hasVideo="false";
+ window.SF6Workbench?.pane("library");
  $("youtubeCurrentTitle").textContent="動画未選択";
  $("youtubePlaybackTime").textContent="--:--.---";
  $("youtubeHandoff").value="";
  $("youtubeShareLink").value="";
+ if($("youtubeShareStatus"))$("youtubeShareStatus").textContent="";
  $("youtubeSeekLog").replaceChildren();
  playback("動画を選択してください。");
  buttons();
@@ -112,11 +121,12 @@ function clearSession(message="YouTube接続・一覧・保存分を消去しま
 }
 function activate(){
  if(state.active)return;
- document.dispatchEvent(new Event("sf6:youtube-review-open"));
+ window.dispatchEvent(new Event("sf6:youtube-review-open"));
  state.active=true;
  setupClientId();
- restoreCachedList();
+ if(!state.videos.length)restoreCachedList();
  document.body.classList.add("youtube-review-active");
+ document.body.dataset.reviewMode="youtube";
  $("viewer").hidden=true;
  $("youtubeReviewPanel").hidden=false;
  $("sourceBadge").textContent="YOUTUBE公式プレイヤー · 外部通信あり";
@@ -142,7 +152,11 @@ function activate(){
 }
 function deactivate(){
  if(!state.active)return;
- clearSession("ローカル動画モードへ戻りました。",false);
+ // Navigation is reversible; only explicit clear/revoke erases notes or state.
+ if(state.player){try{state.player.pauseVideo();}catch{}}
+ state.epoch++;
+ if(state.controller)state.controller.abort();
+ state.controller=null;
  state.active=false;
  document.body.classList.remove("youtube-review-active");
  $("youtubeReviewPanel").hidden=true;
@@ -150,11 +164,16 @@ function deactivate(){
  $("sourceBadge").textContent="LOCAL VIDEO · NO UPLOAD";
  if(state.savedFootnote!==null){$("reviewFootnote").textContent=state.savedFootnote;state.savedFootnote=null;}
  $("youtubeOpen").focus();
+ buttons();
 }
 $("youtubeOpen").addEventListener("click",activate);
-$("youtubeBack").addEventListener("click",deactivate);
+$("youtubeBack").addEventListener("click",()=>{
+ deactivate();window.SF6Workbench?.home();
+});
+window.addEventListener("sf6:review-home",deactivate);
 $("youtubeLocalFallback").addEventListener("click",()=>{
  deactivate();
+ window.SF6Workbench?.local();
  $("fileInput")?.click();
 });
 $("youtubeClear").addEventListener("click",()=>clearSession());
@@ -212,9 +231,11 @@ function render(){
  $("youtubeCount").textContent=state.videos.length
   ?(state.cachedView?"前回保存 ":"限定公開 ")+state.videos.length+"件（絞り込み："+matching.length+"件）"+(state.partial?" / 上限到達：一部のみ":"")
   :"限定公開動画の一覧は未取得です。";
+ if($("youtubeLibraryEmpty"))$("youtubeLibraryEmpty").hidden=state.videos.length>0;
  for(const video of matching){
    const b=document.createElement("button");b.type="button";b.className="youtube-card";
    b.setAttribute("aria-label",video.title+"を公式YouTubeプレイヤーで開く");
+   b.setAttribute("aria-pressed",String(video.id===state.selected?.id));
    if(safeThumbnail(video.thumbnail)){
      const img=document.createElement("img");
      img.src=video.thumbnail;img.alt="";img.loading="lazy";img.referrerPolicy="no-referrer";b.append(img);
@@ -269,6 +290,8 @@ async function listOwnVideos(epoch,token){
      else cacheStatus();
    }else{removeCache(localStore());cacheStatus();}
    render();
+   const settings=$("youtubeSettings");if(settings?.open)settings.close();
+   window.SF6Workbench?.pane("library");
    status("本人限定公開 "+result.items.length+"件を表示 / 候補 "+result.candidateCount+
      "件 / "+result.requests+" API要求"+(result.partial?"。取得上限により一部のみ。":"。"));
  }catch(err){
@@ -290,9 +313,15 @@ async function listOwnVideos(epoch,token){
 }
 function beginGoogleConnection(){
  if(!state.active)return;
- if(!$("youtubeConsent").checked){status("データ取扱説明への同意が必要です。");return;}
+ if(!$("youtubeConsent").checked){
+   status("データ取扱説明への同意が必要です。");
+   const dialog=$("youtubeSettings");if(dialog&&!dialog.open)dialog.showModal();return;
+ }
  const id=$("youtubeClientId").value.trim();
- if(!isClientId(id)){status("Webアプリ用OAuth Client IDの形式を確認してください。");return;}
+ if(!isClientId(id)){
+   status("Webアプリ用OAuth Client IDの形式を確認してください。");
+   const dialog=$("youtubeSettings");if(dialog&&!dialog.open)dialog.showModal();return;
+ }
  if(!window.google?.accounts?.oauth2?.initTokenClient){
     status("Google認証用スクリプトが準備できていません。");return;
  }
@@ -385,12 +414,12 @@ function mountPlayer(video,serial){
    events:{
      onReady:event=>{
        if(state.player!==event.target||!state.active)return;
-       state.playerReady=true;buttons();
+       state.playerReady=true;showRecovery(false);buttons();
        playback("公式プレイヤー準備完了。映像を再生した後、一時停止してください。");
      },
      onError:event=>{
        if(state.player!==event.target||!state.active)return;
-       state.playerReady=false;buttons();
+       state.playerReady=false;showRecovery(true);buttons();
        playback("YouTube埋め込み再生エラー "+String(event.data).slice(0,4)+
          "。動画の埋め込み制限を確認するか、端末内MP4を選択してください。");
      },
@@ -409,9 +438,12 @@ function mountPlayer(video,serial){
 async function selectVideo(video){
  if(!state.active||!(state.token||state.cachedView)||!isVideoId(video?.id)||!state.videos.some(v=>v.id===video.id))return;
  state.selectionSerial++;
+ showRecovery(false);
  state.seekPlan=null;
  const serial=state.selectionSerial;
  state.selected=video;
+ $("youtubeReviewPanel").dataset.hasVideo="true";
+ render();window.SF6Workbench?.pane("memo");
  $("youtubeCurrentTitle").textContent=video.title;
  $("youtubeHandoff").value="";$("youtubeShareLink").value="";$("youtubeSeekLog").replaceChildren();
  $("youtubePlayer").scrollIntoView({behavior:"smooth",block:"nearest"});
@@ -429,7 +461,7 @@ async function selectVideo(video){
      mountPlayer(video,serial);
    }
  }catch(e){
-   if(serial===state.selectionSerial)playback("プレイヤー起動失敗："+String(e?.message||"不明").slice(0,110));
+   if(serial===state.selectionSerial){showRecovery(true);playback("プレイヤー起動失敗："+String(e?.message||"不明").slice(0,110));}
  }
 }
 $("youtubePause").addEventListener("click",()=>{
@@ -497,12 +529,15 @@ $("youtubeShare").addEventListener("click",async()=>{
  if(seconds)share.searchParams.set("t",String(seconds));
  const link=share.href;
  $("youtubeShareLink").value=link;
+ const shareStatus=$("youtubeShareStatus");
  try{
    await navigator.clipboard.writeText(link);
+   if(shareStatus)shareStatus.textContent="共有リンクをコピーしました。リンクを知っている人は再共有できます。";
    playback(state.cachedView?
      "共有リンクをコピーしました。前回の公開状態は未確認です。リンクは第三者へ再共有できます。":
      "共有リンクをコピーしました。限定公開リンクは第三者へ再共有できます。");
  }catch{
+   if(shareStatus)shareStatus.textContent="自動コピーできませんでした。下の共有URLを選択してコピーしてください。";
    playback("自動コピーが制限されました。共有URL欄を長押ししてコピーしてください。");
    $("youtubeShareLink").focus();$("youtubeShareLink").select();
  }
@@ -539,6 +574,7 @@ $("youtubeCopy").addEventListener("click",async()=>{
    playback("引き継ぎテキストをコピーしました。ChatGPTへの送信は手動です。");
  }catch{
    playback("自動コピーが制限されました。下のテキスト欄から手動でコピーしてください。");
+   if($("youtubeHandoffFallback"))$("youtubeHandoffFallback").open=true;
    $("youtubeHandoff").focus();$("youtubeHandoff").select();
  }
 });
@@ -547,7 +583,8 @@ window.setInterval(()=>{
  try{$("youtubePlaybackTime").textContent=secondsDisplay(state.player.getCurrentTime())+
       " / "+secondsDisplay(state.player.getDuration());}catch{}
 },500);
+// Purge expired/invalid metadata on every visit without bypassing mode choice.
+readCache(localStore());
 render();buttons();
-// Only a locally opted-in, non-expired saved owner list triggers opening
-// this panel on plain page visits. Report links using # remain unaffected.
-if(!window.location.hash&&readCache(localStore()))activate();
+// Entry always offers the mode choice. Cached metadata is restored only when
+// the owner opens YouTube; neither cache nor a plain visit initiates OAuth.

@@ -68,42 +68,80 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
 #youtubeHandoff{min-height:105px}
 @media(max-width:650px){.ytr-content{padding:0 12px 14px}.ytr-grid{grid-template-columns:1fr 1fr}.ytr-actions button{flex:1 1 130px}.ytr-group{padding:11px}}
 @media(max-width:410px){.ytr-grid{grid-template-columns:1fr}}
+</style><style id="workbench-styles">
+/* Selected workbench direction. App content only; no decorative concept-board art. */
+body{background:#080e1b;font-size:15px;line-height:1.6}button,input,textarea{font:inherit}button{touch-action:manipulation}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}button,input,textarea{border-radius:8px}button{min-height:44px;padding:9px 14px;background:#19283e;border:1px solid #465a74;color:var(--ink);font-size:14px}button:hover:not(:disabled){background:#223650;border-color:#8096ae}button:active:not(:disabled){transform:translateY(1px)}h1,h2,p{margin-top:0}.layout{display:block}.main{max-width:1600px;padding:0 32px 24px}.app-brand{height:80px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--stroke)}.brand-mark{font-size:17px;font-weight:950;display:grid;place-items:center;background:var(--accent);color:#101b13;border-radius:14px;width:40px;height:40px}.app-brand strong{font-size:16px;letter-spacing:.08em}.app-brand strong span{color:var(--accent)}.app-context{margin-left:auto;color:var(--muted);font-size:12px}.mode-entry{max-width:530px;margin:clamp(48px,11vh,110px) auto 50px}.eyebrow{font-size:12px;letter-spacing:.16em;color:var(--accent);font-weight:700;margin-bottom:16px}.mode-entry h1{font-size:32px;letter-spacing:-.03em;line-height:1.35;margin-bottom:12px}.entry-intro{color:#bccad9;margin-bottom:36px;font-size:16px}.mode-choices{display:grid;gap:16px}.mode-choice{width:100%;min-height:110px;text-align:left;padding:24px 28px;background:#111e31;border:1px solid #344962;display:flex;flex-direction:column;justify-content:center;gap:5px}.mode-choice strong{font-size:20px;line-height:1.4}.mode-choice span{font-size:14px;color:#b6c9dc}.mode-choice:hover{border-color:var(--accent)!important}.entry-help{font-size:13px;color:var(--muted);margin-top:36px;padding-top:24px;border-top:1px solid var(--stroke);line-height:1.9}
+body:not([data-review-mode="home"]) #modeEntry{display:none}body[data-review-mode="home"] .workarea,body[data-review-mode="home"] .local-heading,body[data-review-mode="home"] .local-overview,body[data-review-mode="home"] .footnote{display:none}body[data-review-mode="youtube"] .local-heading,body[data-review-mode="youtube"] .local-overview{display:none}body:not([data-review-mode="local"]) .right-col,body:not([data-review-mode="local"]) #insight{display:none}
+.local-heading{display:flex;align-items:center;gap:20px;padding:22px 0}.local-heading h1{font-size:18px;margin:0}.local-heading>span{font-size:12px;color:var(--muted);margin-left:auto}.local-overview{margin:0 0 18px;color:#b6c7da}.local-overview summary{cursor:pointer;min-height:36px}.local-overview .match-header{justify-content:start}.summary-grid{margin-bottom:12px}.metric{min-height:0}.workarea{grid-template-columns:minmax(0,1.7fr) minmax(310px,.85fr);gap:24px}.panel{background:#10192b;border-color:#2a3c55;border-radius:12px}.panel-head{padding:16px 20px}.panel-head h2{font-size:15px}.local-empty{background:#0b1422;display:flex;align-items:center;justify-content:center;text-align:center;flex-direction:column;padding:24px}.local-empty>strong{display:block;font-size:20px;margin-top:12%}.local-empty p{color:var(--muted);font-size:14px;margin:12px 0 20px}.local-empty button{border-color:var(--accent);background:var(--accent);color:#182314}.local-empty small{display:block;color:var(--muted);font-size:12px;margin-top:20px}.iconbtn,.textbtn{min-height:44px;height:auto;min-width:52px;font-size:14px}.main-play{min-width:62px}.scene-caption{font-size:12px}.scene-title{font-size:14px}.scene-card{padding:15px 10px}.scene-tag{font-size:11px}.filter{font-size:13px;min-height:40px}.detail-cell p,.overall p{font-size:14px}.uploadinfo,.uploadbtn{font-size:13px}.uploadbtn{min-height:44px}.detail-cell{background:#111f31}.scenes-panel{min-height:0}.list-scroll{max-height:70vh}
+body.youtube-review-active .workarea{display:block}body.youtube-review-active .left-col{gap:0}#youtubeReviewPanel{background:transparent;border:0;border-radius:0;overflow:visible}.workbench-heading{display:flex;align-items:center;gap:18px;padding:20px 0;border-bottom:1px solid var(--stroke);margin-bottom:24px}.workbench-heading h1{font-size:17px;line-height:1.5;margin:0;font-weight:700}.heading-actions{display:flex;gap:10px;margin-left:auto}.ytr-content{display:grid;grid-template-columns:240px minmax(320px,1fr) 250px;gap:24px;padding:0;align-items:start}.ytr-content>*{min-width:0}.library-pane{border-right:1px solid var(--stroke);padding-right:22px}.library-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.library-heading h2,.memo-pane h2{font-size:15px;line-height:1.5;margin:0}.library-heading button{font-size:12px;padding:8px 11px}.ytr-content input[type=search],.ytr-content textarea,.workbench-dialog input[type=text],.workbench-dialog textarea{display:block;max-width:100%;width:100%;font-size:14px;color:var(--ink);background:#0f1b2d;border:1px solid #50647d;padding:12px;border-radius:8px}#youtubeQuery{min-height:44px;margin:16px 0 10px}.ytr-status{font-size:12px;line-height:1.7;white-space:normal;color:#aebfd2;margin:10px 0;overflow-wrap:anywhere}.ytr-note{font-size:12px;color:#9cb1c9;line-height:1.8}.ytr-grid{display:flex;flex-direction:column;gap:0;margin:8px 0}.youtube-card{border:1px solid transparent;border-bottom-color:#293b52;border-radius:8px;background:transparent;padding:13px 8px;display:grid;grid-template-columns:76px minmax(0,1fr);column-gap:10px;min-height:84px;width:100%;align-content:center}.youtube-card img{grid-row:1/4;width:76px;height:48px;object-fit:cover;margin:0;border-radius:4px;background:#1c2c40}.youtube-card strong{font-size:13px;font-weight:650;line-height:1.6;overflow-wrap:anywhere;grid-column:2}.youtube-card small{grid-column:2;font-size:11px;color:#9eb2c9;margin:3px 0 0}.youtube-card span{display:none}.youtube-card:not(:has(img)){grid-template-columns:1fr}.youtube-card:not(:has(img)) strong,.youtube-card:not(:has(img)) small{grid-column:1}.youtube-card[aria-pressed=true]{border-color:var(--accent);background:#1b2a36}.youtube-card:hover:not(:disabled){background:#1a2a40}.library-empty{padding:16px 0 20px;font-size:13px;color:#aebfd2}.library-empty button{font-size:13px}.youtube-stage h2{font-size:15px;font-weight:650;line-height:1.6;margin:0 0 14px;overflow-wrap:anywhere}#youtubePlayer{width:100%;aspect-ratio:16/9;min-height:0;margin:0;background:#060a10;border-radius:8px;overflow:hidden}#youtubePlayer iframe{width:100%;height:100%;min-height:0;display:block}.youtube-empty{height:100%;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#101a29}.youtube-empty strong{font-size:17px}.youtube-empty p{font-size:13px;margin:10px 0 0;color:#9bafc6}.ytr-seek-controls{display:flex;flex-direction:column;gap:10px;margin:22px 0 10px}.seek-seconds,.seek-fine{display:grid;grid-template-columns:1fr 1fr 1.1fr 1fr 1fr;gap:8px;align-items:center}.ytr-seek-controls button{width:100%;min-height:48px;padding:9px 5px;font-size:14px;background:#1a2a40;border-color:#4b6481;white-space:nowrap;border-radius:9px}.ytr-seek-controls .ytr-seek-pause{grid-column:auto;color:#182314;background:var(--accent);border-color:var(--accent);font-weight:800;font-size:13px;min-height:48px}.seek-fine button{min-height:44px;font-size:13px}.seek-fine span{text-align:center;font-size:11px;color:#a9bdd1}.playback-line{display:flex;flex-direction:column;gap:0;min-height:70px}.playback-line #youtubePlaybackTime{font-size:13px;font-variant-numeric:tabular-nums;margin:2px 0 0;color:#e9f0f8}.playback-line .ytr-status{font-size:12px;min-height:20px;margin:6px 0}.playback-help{font-size:12px;color:#9cb1c9;border-top:1px solid var(--stroke);padding-top:10px}.playback-help summary{cursor:pointer;min-height:36px}.playback-help button{font-size:13px}.memo-pane{border-left:1px solid var(--stroke);padding-left:24px}.memo-pane h2{margin:0 0 16px}.memo-pane h2 span{font-size:12px;font-weight:400;color:var(--muted)}#youtubeNote{resize:vertical;min-height:190px;font-size:14px;line-height:1.8}.memo-pane>button{margin-top:16px;width:100%;padding:12px 8px;font-size:14px;font-weight:750}.ytr-main{background:var(--accent)!important;border-color:var(--accent)!important;color:#13200f!important}.memo-pane details{font-size:12px;color:#9cb1c9}.memo-pane details summary{cursor:pointer;min-height:44px}#youtubeHandoff{font-size:12px;min-height:160px;resize:vertical}.mobile-tabs,.mobile-library-toggle{display:none}.workbench-dialog{background:#101c2e;color:var(--ink);border:1px solid #566d89;border-radius:14px;width:min(600px,calc(100vw - 32px));max-height:85dvh;padding:24px;overflow:auto;overscroll-behavior:contain}.workbench-dialog::backdrop{background:#020711bb}.dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px}.dialog-heading h2{font-size:19px;margin:0}.dialog-heading button{font-size:13px}.workbench-dialog .ytr-group{border:0;padding:0;background:transparent;margin:0}.workbench-dialog label{display:block;margin:16px 0 8px;font-size:14px}.workbench-dialog input[type=checkbox]{width:18px;height:18px;vertical-align:middle;margin-right:7px}.workbench-dialog h3{font-size:15px}.workbench-dialog button{margin:4px 0}.workbench-dialog .ytr-actions button{font-size:13px}.workbench-dialog p{font-size:14px}.workbench-dialog .ytr-note{font-size:12px}.workbench-dialog a{color:var(--cyan)}.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(min-width:1500px){.ytr-content{grid-template-columns:260px minmax(320px,1fr) 280px;gap:28px}}
+@media(min-width:761px) and (max-width:1150px){.main{padding:0 24px 24px}.ytr-content{grid-template-columns:210px minmax(0,1fr);gap:20px}.memo-pane{grid-column:2;border-left:0;border-top:1px solid var(--stroke);padding:20px 0 0}.memo-pane #youtubeNote{min-height:95px}.library-pane{grid-row:1/3}.workbench-heading{gap:12px}.workbench-heading h1{font-size:15px}.heading-actions{gap:8px}.heading-actions button{font-size:12px}}
+@media(max-width:950px){.workarea{grid-template-columns:1fr}.list-scroll{max-height:none}.local-heading>span{display:none}}
+@media(max-width:760px){.main{padding:0 16px 24px}.app-brand{height:64px;gap:10px}.brand-mark{width:32px;height:32px;border-radius:11px;font-size:14px}.app-brand strong{font-size:13px;letter-spacing:.02em}.app-context{display:none}.mode-entry{margin:58px auto 30px}.mode-entry h1{font-size:28px}.entry-intro{font-size:14px;margin-bottom:30px}.mode-choice{min-height:108px;padding:22px}.mode-choice strong{font-size:20px}.entry-help{font-size:12px;line-height:1.9}.workbench-heading{padding:16px 0;margin-bottom:16px;gap:8px;flex-wrap:wrap}.workbench-heading>button{font-size:12px;padding:8px 10px}.workbench-heading h1{font-size:14px;flex:1}.heading-actions{gap:8px;margin-left:0}.heading-actions>button{font-size:12px;padding:8px 10px}.heading-actions>[data-settings]{font-size:11px}.ytr-content{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}.youtube-stage{grid-row:1}.youtube-stage h2{font-size:14px;margin:12px 0}.mobile-library-toggle{display:block;width:100%;min-height:44px;font-size:13px}.ytr-seek-controls{margin:16px 0 10px;gap:10px}.seek-seconds,.seek-fine{gap:6px;grid-template-columns:1fr 1fr 1.08fr 1fr 1fr}.ytr-seek-controls button{font-size:13px;min-height:48px;padding:8px 2px}.ytr-seek-controls .ytr-seek-pause{font-size:11px;padding:8px 2px}.seek-fine button{font-size:12px;min-height:44px}.seek-fine span{font-size:10px;line-height:1.5}.playback-line{min-height:0}.playback-line .ytr-status{font-size:11px;margin:5px 0 0}.playback-help{margin-top:10px}.playback-help summary{min-height:28px}.mobile-tabs{grid-row:2;display:grid;grid-template-columns:1fr 1fr;background:#101d30;border:1px solid #3a506b;border-radius:9px;padding:3px;gap:3px}.mobile-tabs button{border:0;background:transparent;font-size:14px;min-height:44px}.mobile-tabs button[aria-selected=true]{background:var(--accent);color:#172613;font-weight:750}.library-pane,.memo-pane{grid-column:1;grid-row:3;padding:0;border:0;min-width:0}.ytr-content[data-mobile-pane=memo] .library-pane,.ytr-content[data-mobile-pane=library] .memo-pane{display:none}.memo-pane h2{display:none}#youtubeNote{min-height:100px;max-height:200px;resize:vertical}.memo-pane>button{margin-top:12px;min-height:48px}.memo-pane .ytr-note{font-size:11px}.library-heading h2{font-size:14px}.youtube-card{grid-template-columns:104px minmax(0,1fr);padding:14px 8px;min-height:88px}.youtube-card img{width:104px;height:60px}.youtube-card strong{font-size:14px}.library-pane #youtubeCacheNotice{font-size:11px}.local-heading{gap:12px;padding:18px 0}.local-heading button{font-size:12px}.local-heading h1{font-size:16px}.player-controls{padding:16px}.controlrow .cluster{flex-wrap:wrap}.controlrow{align-items:start}.detail-grid{grid-template-columns:1fr}.local-empty>strong{margin-top:0;font-size:17px}.local-empty p{font-size:12px;margin:8px 0 12px}.local-empty small{display:none}.workbench-dialog{padding:20px;max-height:88dvh}.local-overview .summary-grid{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+
+body[data-has-report="false"] .local-overview,body[data-has-report="false"] #insight,body[data-has-report="false"] .right-col,body[data-has-report="false"] #sceneReadout,body[data-has-report="false"] #markers{display:none}body[data-has-report="false"][data-review-mode="local"] .workarea{grid-template-columns:minmax(0,1fr)}body[data-has-report="false"][data-review-mode="local"] #viewer{max-width:1050px;margin:auto;width:100%}
+@media(max-width:760px){.workbench-heading h1{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}.heading-actions{margin-left:auto}#youtubeNote{height:96px;min-height:96px}#youtubeReviewPanel[data-has-video="false"] .youtube-stage,#youtubeReviewPanel[data-has-video="false"] .mobile-tabs{display:none}}
+@media(min-width:761px){#youtubePlayer{width:min(100%,max(320px,calc((100vh - 360px)*1.777778)));width:min(100%,max(320px,calc((100dvh - 360px)*1.777778)));margin:0 auto}}
+body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{display:none}
 </style></head><body>
-<div class="layout"><aside class="side"><div class="side-logo">S6</div><div class="side-button current" aria-label="レビュー">▤</div><div class="side-button" aria-label="分析">◎</div><div class="side-button" aria-label="設定">⌘</div><div class="side-bottom">SF6 / COACH LAB</div></aside>
+<div class="layout">
 <main class="main">
- <div class="topbar"><div class="brandline"><span class="crumb">SF6 / AI COACH</span><span class="crumb-sep">/</span><span class="crumb-sub">MATCH REVIEW</span></div><div class="rightbar"><span class="pill" id="sourceBadge">LOCAL VIDEO · NO UPLOAD</span><span class="pill">RESPONSIVE REVIEW</span></div></div>
- <div class="match-header"><div class="match-pill"><div><div class="caption">MATCH RESULT</div><div class="value"><span id="scoreSelf">2</span> <span style="color:#7b90aa;font-size:17px">—</span> <span id="scoreOpponent">1</span></div></div><div class="score-players"><strong><span class="accent-line"></span><span id="selfName">PLAYER 1</span></strong>vs <span id="oppName">PLAYER 2</span><br><span style="color:#9cafc6" id="styleName">DEMO / 架空データ</span></div></div></div>
+ <header class="app-brand"><span class="brand-mark">S6</span><strong>SF6 <span>/ AI COACH</span></strong><span class="app-context" id="sourceBadge">リプレイレビュー</span></header>
+<!-- workbench:entry:start -->
+ <section id="modeEntry" class="mode-entry" aria-labelledby="modeTitle">
+  <p class="eyebrow">REPLAY REVIEW</p><h1 id="modeTitle" tabindex="-1">モードを選択</h1>
+  <p class="entry-intro">対戦を見返して、次の一手を考える。</p>
+  <div class="mode-choices">
+   <button class="mode-choice" id="localOpen" type="button"><strong>ローカル動画</strong><span>端末の動画とレポートを開く</span></button>
+   <button class="mode-choice" type="button" id="youtubeOpen"><strong>YouTube</strong><span>自分の限定公開動画から選ぶ</span></button>
+  </div>
+  <p class="entry-help">ローカル動画は端末内で再生します。<br>YouTubeでは、保存済み一覧またはGoogle接続から動画を選べます。</p>
+ </section>
+<!-- workbench:entry:end -->
+ <div class="local-heading"><button type="button" data-home>モード選択</button><h1 tabindex="-1" id="localHeading">ローカル動画レビュー</h1><span>端末内で再生・アップロードなし</span></div>
+ <details class="local-overview"><summary>試合の概要</summary> <div class="match-header"><div class="match-pill"><div><div class="caption">MATCH RESULT</div><div class="value"><span id="scoreSelf">2</span> <span style="color:#7b90aa;font-size:17px">—</span> <span id="scoreOpponent">1</span></div></div><div class="score-players"><strong><span class="accent-line"></span><span id="selfName">PLAYER 1</span></strong>vs <span id="oppName">PLAYER 2</span><br><span style="color:#9cafc6" id="styleName">DEMO / 架空データ</span></div></div></div>
  <section class="summary-grid" aria-label="試合概要"><div class="metric"><div class="small">MAIN FOCUS</div><div class="large green" id="mainFocus">起き攻めの判断</div><div class="mini" id="mainFocusNote">行動を選ぶ時点から振り返る</div></div><div class="metric"><div class="small">IMPORTANT SCENES</div><div class="large"><span id="eventTotal">05</span> <span style="font-size:12px;color:#90a2ba">events</span></div><div class="mini" id="eventBreakdown">良いプレイ 3 ・振り返り 2</div></div><div class="metric"><div class="small">MATCH LENGTH</div><div class="large" id="matchDuration">02:10</div><div class="mini" id="durationCaption">デモ用タイムライン</div></div><div class="metric"><div class="small">ANALYSIS MODE</div><div class="large" id="analysisMode">STANDARD</div><div class="mini">観察 / 判断 / 次の行動</div></div></section>
+</details>
  <div class="workarea"><div class="left-col">
-  <section class="panel" id="viewer"><div class="panel-head"><h2><span class="green-dot"></span> MATCH PLAYER</h2><span class="secondary" id="videoMode">デモタイムライン</span></div><div class="player-frame">
-<div id="demoVisual" class="demo-visual" aria-label="オリジナルの抽象的な対戦画面。実際のゲーム映像ではありません">
- <div class="stage-dots"></div>
- <div class="stage-hud"><div class="hud-player"><span><span id="hudSelfName">PLAYER 1</span> <small>PLAYER 1</small></span><div class="health"><i></i></div></div><div class="hud-vs">Ⅲ</div><div class="hud-player alt"><span><span id="hudOppName">PLAYER 2</span> <small>PLAYER 2</small></span><div class="health"><i></i></div></div></div>
- <div class="stage-art"><div class="stage-ring"></div>
- <svg class="fighter-figures" viewBox="0 0 720 310" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-  <defs><linearGradient id="bodyA" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#c2f47a"/><stop offset="1" stop-color="#477c8d"/></linearGradient><linearGradient id="bodyB" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#eac0f2"/><stop offset="1" stop-color="#ba648e"/></linearGradient></defs>
-  <g opacity=".18" stroke="#dfebff" stroke-width="1"><path d="M0 280H720 M0 290H720 M0 300H720 M360 180V310 M240 180L100 310 M480 180L620 310" fill="none"/></g>
-  <g fill="url(#bodyA)" stroke="#080e20" stroke-width="5" stroke-linejoin="round"><circle cx="252" cy="120" r="31"/><path d="M227 146L286 150L306 210L274 240L246 216L212 230L194 203Z"/><path d="M221 158L165 189L151 213L171 229L190 208L247 196Z"/><path d="M285 158L347 179L368 164L385 175L369 194L305 218Z"/><path d="M245 221L218 294L253 302L289 248Z"/><path d="M280 221L298 299L340 299L312 230Z"/></g>
-  <g fill="url(#bodyB)" stroke="#080e20" stroke-width="5" stroke-linejoin="round"><circle cx="505" cy="129" r="26"/><path d="M484 155L526 151L550 213L509 248L481 213L458 202Z"/><path d="M482 168L421 162L402 143L388 154L411 182L467 207Z"/><path d="M524 168L578 171L594 202L572 209L550 193L529 195Z"/><path d="M487 226L460 298L498 301L522 249Z"/><path d="M520 226L553 292L589 277L550 213Z"/></g>
-  <g opacity=".65"><path d="M372 148L399 174L379 187L354 161Z" fill="#ffdca3"/><circle cx="389" cy="161" r="30" fill="none" stroke="#ffdca3" stroke-width="2"/></g>
- </svg></div>
- <div class="stage-center"><div class="stage-eyebrow">ILLUSTRATIVE STAGE</div><div class="stage-main">MATCH REPLAY</div><div class="stage-sub">動画未選択・デモタイムラインで再生</div></div>
- <div class="stage-bottom-left">SF6 / AI COACH <span class="live-dot"></span> DEMO</div>
-</div>
+  <section class="panel" id="viewer"><div class="panel-head"><h2><span class="green-dot"></span> MATCH PLAYER</h2><span class="secondary" id="videoMode">レポート未読込</span></div><div class="player-frame">
+<div id="demoVisual" class="demo-visual local-empty"><strong>端末の動画を開く</strong><p>動画を選ぶと、ここに表示されます。</p><button type="button" data-select-file>動画を選択</button><small>動画はアップロードされません。<br>レポートJSONを読み込むと重要シーンから再生できます。</small></div>
 <video id="matchVideo" class="match-video" playsinline webkit-playsinline preload="metadata"></video>
 </div>
   <div class="player-controls"><div class="timebar"><div class="timer"><span id="timeNow">00:15.0</span> <span class="faint">/ <span id="timeEnd">02:10</span></span></div><span class="video-mode" id="sceneReadout">R1 / 対空を成功させた場面</span></div><div class="track"><input id="seek" type="range" min="0" max="130" value="15" step="0.05" aria-label="動画の再生位置"><span id="seekBubble" class="seek-bubble" aria-hidden="true">00:15.0</span><div class="markers" id="markers"></div></div>
-   <div class="controlrow"><div class="cluster"><button class="iconbtn main-play" data-play aria-label="再生と停止"><span id="playIcon">▶</span></button><button class="iconbtn" data-jump="-5" title="5秒戻る" aria-label="5秒戻る">↶</button><button class="iconbtn" data-jump="5" title="5秒進む" aria-label="5秒進む">↷</button><span id="playLabel" style="font-size:11px;color:#a7b7cd;margin-left:5px">再生</span></div><div class="cluster"><button id="clipMode" class="textbtn on" aria-pressed="true">▣ 区間再生</button><button id="loopMode" class="textbtn" aria-pressed="false">↻ リピート</button><button id="speedButton" class="textbtn">速度 <span id="speedLabel">1.0×</span></button></div></div></div>
-  <div class="uploadrow"><div class="uploadinfo"><strong id="localName">動画未選択 · 操作可能なデモが再生されます</strong><span id="fileStatus">動画を選ぶと実映像に切り替わります。ファイルは外部送信されません。</span></div><div class="upload-actions"><button class="uploadbtn" data-select-file>＋ 端末内の動画を選択</button><button class="uploadbtn" type="button" id="youtubeOpen">▶ YouTubeライブラリ（本人のみ）</button><button class="uploadbtn reportbtn" id="selectReport">レポートJSONを読込</button></div><input id="fileInput" type="file" accept="video/*,.mp4,.mov,.webm" style="display:none" aria-label="動画を選択"><input id="reportInput" type="file" accept="application/json,.json" style="display:none" aria-label="Chatで生成したレポートJSONを選択"></div></section>
+   <div class="controlrow"><div class="cluster"><button class="iconbtn main-play" data-play aria-label="再生と停止"><span id="playIcon">再生</span></button><button class="iconbtn" data-jump="-5" title="5秒戻る" aria-label="5秒戻る">−5秒</button><button class="iconbtn" data-jump="5" title="5秒進む" aria-label="5秒進む">＋5秒</button><span id="playLabel" style="font-size:11px;color:#a7b7cd;margin-left:5px">再生</span></div><div class="cluster"><button id="clipMode" class="textbtn on" aria-pressed="true">区間再生</button><button id="loopMode" class="textbtn" aria-pressed="false">リピート</button><button id="speedButton" class="textbtn">速度 <span id="speedLabel">1.0×</span></button></div></div></div>
+  <div class="uploadrow"><div class="uploadinfo"><strong id="localName">動画未選択</strong><span id="fileStatus">動画を選ぶと実映像に切り替わります。ファイルは外部送信されません。</span></div><div class="upload-actions"><button class="uploadbtn" data-select-file>端末の動画を選択</button><button class="uploadbtn reportbtn" id="selectReport">レポートJSONを読込</button></div><input id="fileInput" type="file" accept="video/*,.mp4,.mov,.webm" style="display:none" aria-label="動画を選択"><input id="reportInput" type="file" accept="application/json,.json" style="display:none" aria-label="Chatで生成したレポートJSONを選択"></div></section>
 
-  <section class="panel" id="youtubeReviewPanel" hidden aria-labelledby="youtubeReviewTitle">
-    <div class="panel-head"><h2 id="youtubeReviewTitle" tabindex="-1">YouTubeライブラリ · 本人専用レビュー</h2><span class="secondary">公式プレイヤー / 近似時刻移動</span></div>
-    <div class="ytr-content">
-      <div class="ytr-actions"><button id="youtubeBack" type="button">← ローカル動画レビューへ戻る</button><button id="youtubeLocalFallback" type="button">端末内MP4を選択して戻る</button></div>
-      <p class="ytr-description">本人の限定公開YouTube動画を選んで、公式プレイヤーで細かい時刻移動を試せます。<strong>本当の1コマ送りを保証するものではありません。</strong> 無許可の動画ダウンロード・ストリーム抽出は行いません。</p>
-      <p class="ytr-warning">右側のシーンカードや既存レポートはこのYouTube動画に自動同期しません。このモードでは動画・時刻・メモを手動でChatGPTへ引き継ぎます。映像はAIへ自動送信されません。</p>
+  <section class="panel" id="youtubeReviewPanel" hidden data-has-video="false" aria-labelledby="youtubeReviewTitle">
+   <div class="workbench-heading"><button id="youtubeBack" type="button">モード選択</button><h1 id="youtubeReviewTitle" tabindex="-1">YouTubeレビュー</h1><div class="heading-actions"><button id="workbenchShare" type="button" disabled>共有</button><button type="button" data-settings>接続・保存設定</button></div></div>
+   <div class="ytr-content" data-mobile-pane="library">
+    <aside class="library-pane" id="youtubeLibraryPane" aria-label="動画一覧">
+     <div class="library-heading"><h2>動画一覧</h2><button id="youtubeRefresh" type="button" disabled>再取得</button></div>
+     <p id="youtubeCacheNotice" class="ytr-status" role="status" aria-live="polite">保存済みの一覧はありません。</p>
+     <label class="sr-only" for="youtubeQuery">動画タイトル検索</label><input id="youtubeQuery" type="search" placeholder="タイトルで検索" autocomplete="off">
+     <p id="youtubeCount" class="ytr-status">動画未取得</p>
+     <div id="youtubeList" class="ytr-grid" aria-label="本人の限定公開動画一覧"></div>
+     <div id="youtubeLibraryEmpty" class="library-empty"><p>自分の限定公開リプレイを<br>読み込んで、見返しましょう。</p><button type="button" data-settings>Google接続を設定</button></div>
+     <p id="youtubeStatus" class="ytr-status" role="status" aria-live="polite">Google未接続。接続・保存設定から読み込めます。</p>
+    </aside>
+    <div class="youtube-stage">
+     <button type="button" class="mobile-library-toggle" id="youtubeLibraryToggle">動画一覧を開く</button>
+     <h2 id="youtubeCurrentTitle">動画未選択</h2>
+     <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"><div class="youtube-empty"><strong>見返す動画を選択</strong><p>一覧から選ぶと、公式プレイヤーで開きます。</p></div></div>
+     <div class="ytr-seek-controls" role="group" aria-label="動画の停止と時刻移動">
+      <div class="seek-fine" role="group" aria-label="細かい時刻移動（近似）"><button id="youtubePrevTen" type="button" aria-label="10F相当戻る（近似）" disabled>−10F</button><button id="youtubePrev" type="button" aria-label="1F相当戻る（近似）" disabled>−1F</button><span>F相当・近似</span><button id="youtubeNext" type="button" aria-label="1F相当進む（近似）" disabled>＋1F</button><button id="youtubeNextTen" type="button" aria-label="10F相当進む（近似）" disabled>＋10F</button></div>
+      <div class="seek-seconds" role="group" aria-label="秒単位の移動"><button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>−5秒</button><button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>−1秒</button><button id="youtubePause" class="ytr-seek-pause" type="button" disabled>一時停止</button><button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>＋1秒</button><button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>＋5秒</button></div>
+     </div>
+     <div id="youtubeRecovery" hidden><button id="youtubeLocalFallback" type="button">端末内MP4で開く</button></div>
+     <div class="playback-line"><p id="youtubePlaybackTime">--:--.---</p><p id="youtubePlaybackStatus" class="ytr-status" role="status">一覧から動画を選択してください。</p></div>
+
+    </div>
+    <div class="mobile-tabs" role="tablist" aria-label="レビューの補助パネル"><button id="youtubeMemoTab" role="tab" type="button" aria-selected="false" aria-controls="youtubeMemoPane" data-pane="memo" tabindex="-1">メモ</button><button id="youtubeLibraryTab" role="tab" type="button" aria-selected="true" aria-controls="youtubeLibraryPane" data-pane="library">動画一覧</button></div>
+    <section class="memo-pane" id="youtubeMemoPane" aria-labelledby="youtubeMemoLabel"><h2 id="youtubeMemoLabel">メモ <span>（任意）</span></h2><label for="youtubeNote" class="sr-only">振り返りたい内容（任意）</label><textarea id="youtubeNote" rows="7" placeholder="気づいたこと、振り返りたい判断など…"></textarea><button id="youtubeCopy" class="ytr-main" type="button" disabled>ChatGPT用にコピー</button><p class="ytr-note">動画・時刻・メモをコピーし、ChatGPTへ貼り付けてください。映像は自動送信されません。</p><details id="youtubeHandoffFallback"><summary>コピー用テキスト</summary><label for="youtubeHandoff" class="sr-only">引き継ぎテキスト</label><textarea id="youtubeHandoff" rows="5" readonly></textarea></details></section>
+   </div>
+   <dialog id="youtubeSettings" class="workbench-dialog" aria-labelledby="youtubeSettingsTitle"><div class="dialog-heading"><h2 id="youtubeSettingsTitle">接続・保存設定</h2><button type="button" data-close-dialog>閉じる</button></div>
       <div class="ytr-group" id="youtubeAuthGroup">
-        <h3>1. 自分の限定公開動画を読み込む</h3>
+        <details class="playback-help"><summary>細かい時刻移動について</summary><p>本当の1コマ送りを保証するものではありません。1Fは1/30秒、10Fは10×1/30秒の近似的な時刻指定です。厳密なフレーム送り（10コマ・1コマの移動）ではありません。</p><div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div></details><h3>Google接続と端末への保存</h3><p id="youtubeSettingsStatus" role="status" aria-live="polite"></p>
         <div id="youtubeClientIdRow"><label for="youtubeClientId">Google OAuth WebクライアントID（公開識別子のみ）</label>
         <input id="youtubeClientId" type="text" autocomplete="off" spellcheck="false" placeholder="123456789-xxxxx.apps.googleusercontent.com"></div>
         <p id="youtubeClientIdHelp" class="ytr-note">クライアントIDだけを、この端末に記憶できます。Google認証・同意は別途必要です。</p>
@@ -111,71 +149,13 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <label><input id="youtubeConsent" type="checkbox"> 本人のYouTubeアップロード一覧・動画タイトル・公開状態を読み取ることに同意します</label>
         <label><input id="youtubeKeepList" type="checkbox"> この端末に動画一覧を保存し、次回はGoogle認証なしで前回の一覧を表示</label>
         <p class="ytr-note">保存は初回のみ有効化してください（共用端末では非推奨）。動画ID・タイトル・投稿日・サムネイルURLのみ保存し、30日経過で削除します。Googleのトークンや動画そのものは保存しません。前回の一覧は最新の公開状態を保証しません。</p>
-        <p id="youtubeCacheNotice" class="ytr-status" role="status" aria-live="polite">この端末に保存済みの動画一覧はありません。</p>
         <div class="ytr-actions"><button id="youtubeForgetList" type="button">この端末の保存済み一覧を削除</button></div>
         <p class="ytr-note">許可する権限はYouTube読み取り専用です。Client Secret・Googleパスワード・アクセストークンは入力しないでください。Googleの認証スクリプトはYouTubeモードを開いたときだけ読み込みます。Googleトークンは保存しません。動画一覧は上の保存設定を有効にした端末だけに保存します。公開識別子のClient IDだけを端末に保存する場合があります（上のボタンで削除可能）。サイト管理者が公開設定済みの場合は入力欄を省略します。</p>
-        <div class="ytr-actions"><button id="youtubeRefresh" class="ytr-main" type="button" disabled>最新一覧を再取得</button><button id="youtubeConnect" type="button">Googleに接続</button><button id="youtubeClear" type="button">接続・一覧・保存分を消去</button><button id="youtubeRevoke" type="button" disabled>Google側の許可を取り消す</button></div>
-        <p id="youtubeStatus" class="ytr-status" role="status" aria-live="polite">Google未接続。必要に応じてClient IDを設定し、同意して接続してください。</p>
+        <div class="ytr-actions"><button id="youtubeConnect" type="button">Googleに接続</button><button id="youtubeClear" type="button">接続・一覧・保存分を消去</button><button id="youtubeRevoke" type="button" disabled>Google側の許可を取り消す</button></div>
         <p class="ytr-note">データ取扱説明：<a href="./youtube-privacy.html" target="_blank" rel="noopener noreferrer">SF6 AI Coach YouTube連携</a>／<a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube利用規約</a>／<a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Googleのアプリ連携管理</a></p>
       </div>
-      <div class="ytr-group">
-        <h3>2. 限定公開動画を選ぶ</h3>
-        <label for="youtubeQuery">動画タイトル検索</label>
-        <input id="youtubeQuery" type="text" placeholder="エド / 対戦" autocomplete="off">
-        <p id="youtubeCount" class="ytr-status">動画未取得</p>
-        <div id="youtubeList" class="ytr-grid" aria-label="本人の限定公開動画一覧"></div>
-        <p class="ytr-note">取得は1チャンネルあたり最大20ページ×50件の範囲。上限に達した場合は一部のみと明示します。</p>
-      </div>
-      <div class="ytr-group">
-        <h3>3. 公式YouTubeプレイヤーで細かい時刻移動（近似）</h3>
-        <p id="youtubeCurrentTitle" class="ytr-status">動画未選択</p>
-        <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"></div>
-        <div class="ytr-seek-controls" role="group" aria-label="動画の停止と時刻移動">
-          <button id="youtubePause" class="ytr-seek-pause" type="button" disabled>⏸ 一時停止</button>
-          <div class="ytr-seek-group" role="group" aria-label="細かい時刻移動（近似）">
-            <p class="ytr-seek-label">細かい時刻移動 <span>1/30秒基準・近似</span></p>
-            <div class="ytr-seek-pair" role="group" aria-label="10F相当（約0.33秒、近似）">
-              <button id="youtubePrevTen" type="button" aria-label="10F相当戻る（約0.33秒の近似時刻移動）" disabled>← 10F</button>
-              <button id="youtubeNextTen" type="button" aria-label="10F相当進む（約0.33秒の近似時刻移動）" disabled>10F →</button>
-            </div>
-            <div class="ytr-seek-pair" role="group" aria-label="1F相当（約0.033秒、近似）">
-              <button id="youtubePrev" type="button" aria-label="1F相当戻る（約0.033秒の近似時刻移動）" disabled>← 1F</button>
-              <button id="youtubeNext" type="button" aria-label="1F相当進む（約0.033秒の近似時刻移動）" disabled>1F →</button>
-            </div>
-          </div>          <div class="ytr-seek-group" role="group" aria-label="秒単位の移動">
-            <p class="ytr-seek-label">秒単位の移動 <span>← 戻る　｜　進む →</span></p>
-            <div class="ytr-seek-pair" role="group" aria-label="5秒単位">
-              <button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>← 5秒</button>
-              <button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>5秒 →</button>
-            </div>
-            <div class="ytr-seek-pair" role="group" aria-label="1秒単位">
-              <button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>← 1秒</button>
-              <button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>1秒 →</button>
-            </div>
-          </div>
-
-        </div>
-        <p id="youtubePlaybackStatus" class="ytr-status" role="status">先に本人の動画を一覧から選択してください。</p>
-        <p id="youtubePlaybackTime" class="ytr-note">--:--.---</p>
-        <div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div>
-        <p class="ytr-warning">ボタン表記の「10F」は10×1/30秒、「1F」は1/30秒の近似的な時刻指定を意味します。厳密なフレーム送り（10コマ・1コマの移動）ではありません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
-      </div>
-      <div class="ytr-group">
-        <h3>4. 友人への動画共有（リンクを知っている人が視聴可能）</h3>
-        <p class="ytr-note">共有する動画を自分で選び、明示的にボタンを押した場合だけ、動画1本のIDと現在の再生秒数を含む視聴専用リンクを作ります。本人のGoogle認証・動画一覧・振り返りメモは共有しません。限定公開リンクは転送可能です。</p>
-        <div class="ytr-actions"><button id="youtubeShare" type="button" disabled>友人向け視聴リンクをコピー</button></div>
-        <label for="youtubeShareLink">共有URL（自動コピーできない場合はこちら）</label>
-        <input id="youtubeShareLink" type="text" readonly autocomplete="off" spellcheck="false" placeholder="動画を選択して共有ボタンを押してください">
-      </div>
-      <div class="ytr-group"><h3>5. ChatGPTへの手動引き継ぎ</h3>
-        <label for="youtubeNote">振り返りたい内容（任意）</label>
-        <textarea id="youtubeNote" rows="2" placeholder="例：対空の判断が遅れた"></textarea>
-        <div class="ytr-actions"><button id="youtubeCopy" type="button" disabled>動画・時刻・メモをコピー</button></div>
-        <label for="youtubeHandoff">引き継ぎテキスト（自動コピーできない場合はこちら）</label>
-        <textarea id="youtubeHandoff" rows="4" readonly></textarea>
-        <p class="ytr-note">コピーした情報は自身でChatGPTへ貼り付けてください。動画の映像をAIが直接確認したという意味ではありません。</p>
-      </div>
-    </div>
+<p class="ytr-note">既存レポートはこのYouTube動画に自動同期しません。本人の動画一覧の取得は最大20ページ×50件までです。上限到達時は一部のみと表示します。</p></dialog>
+   <dialog id="youtubeShareDialog" class="workbench-dialog" aria-labelledby="youtubeShareTitle"><div class="dialog-heading"><h2 id="youtubeShareTitle">友人に動画を共有</h2><button type="button" data-close-dialog>閉じる</button></div><p>選択中の動画と現在の時刻だけを含む視聴専用リンクを作ります。リンクを知っている人は視聴・再共有できます。</p><p class="ytr-note">Google認証、動画一覧、振り返りメモは共有しません。</p><button id="youtubeShare" type="button" disabled>友人向け視聴リンクをコピー</button><label for="youtubeShareLink">共有URL</label><input id="youtubeShareLink" type="text" readonly autocomplete="off" spellcheck="false"><p id="youtubeShareStatus" role="status" aria-live="polite"></p></dialog>
   </section>
   <section class="panel" id="insight"><div class="panel-head"><h2>この場面をどう見るか</h2><span class="detail-id" id="detailId">E01</span></div><div class="insight-body"><div class="insight-titleline"><span class="tag good" id="detailTag">良いプレイ</span><span style="color:#8a9cb3;font-size:10px">OBSERVATION → ACTION</span></div><h3 class="detail-title" id="detailTitle">対空を成功させた場面</h3><div class="detail-time" id="detailTime">R1 · 00:15–00:19</div><div class="detail-grid"><div class="detail-cell"><span class="number">01 / 観察できたこと</span><p id="detailObserved"></p></div><div class="detail-cell"><span class="number">02 / 評価・留保</span><p id="detailJudgment"></p></div><div class="detail-cell action"><span class="number">03 / 次に選ぶ行動</span><p id="detailAction"></p></div><div class="detail-cell"><span class="number">04 / 成功の確認条件</span><p id="detailSuccess"></p></div></div></div></section>
  </div><div class="right-col">
@@ -183,6 +163,57 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
   <section class="panel overall" id="summary"><h3>今回の振り返り <span style="color:var(--accent);float:right;font-size:11px">COACH NOTE</span></h3><p><span id="coachSummary">これは架空のデモ用レポートです。実際の試合データは公開せず、JSONを端末で読み込んでください。</span></p><div class="theme"><strong>NEXT MATCH · PRIMARY THEME</strong><span id="primaryTheme">相手の反応を見てから、次の起き攻めで一度様子見を選ぶ。</span></div></section>
  </div></div><div class="footnote"><span id="reviewFootnote">公開用サンプルは架空データです。動画とレポートJSONは選択した端末で処理し、このビューアから送信しません。</span></div>
 </main></div><div class="toast" id="toast" role="status" aria-live="polite"></div><script id="coach-report-data" type="application/json">{"schemaVersion":1,"match":{"self":"PLAYER 1","opponent":"PLAYER 2","scoreSelf":2,"scoreOpponent":1,"style":"DEMO / 架空データ","durationSec":130,"analysisMode":"STANDARD","mainFocus":"起き攻めの判断","mainFocusNote":"行動を選ぶ時点から振り返る"},"coaching":{"summary":"これは架空のデモ用レポートです。実際の試合データは公開せず、Chatで生成したJSONを端末内で読み込んでください。","primaryTheme":"相手の反応を見てから、次の起き攻めで一度様子見を選ぶ。","secondaryTheme":null},"events":[{"id":"E01","round":"ROUND 01","start":15,"end":19,"category":"good","tag":"良いプレイ","title":"対空を成功させた場面","short":"相手のジャンプに反応して攻撃が命中。","observed":"相手がジャンプし、こちらの攻撃が空中で命中した。","judgment":"画面から確認できる範囲では対空が成功した。具体的な技名・性能はこの架空デモでは特定しない。","action":"次もジャンプを見てから、操作可能な状態で反応する。","success":"ジャンプへの反応を再現できるかを確認する。"},{"id":"E02","round":"ROUND 01","start":42,"end":46,"category":"review","tag":"判断","title":"起き攻めの打撃を選んだ場面","short":"相手の切り返しに被弾した例。","observed":"相手の起き上がりに打撃を選択し、相手の切り返しで被弾した。","judgment":"被弾だけで確定ミスとは扱わない。実行可能性・判断時点を確認する必要がある。","action":"次の類似状況では、攻める前に様子見も候補に入れる。","success":"同じ状況で選択肢を意識して選べたかを確認する。"},{"id":"E03","round":"ROUND 02","start":73,"end":78,"category":"good","tag":"良いプレイ","title":"相手の空振りを咎める","short":"相手の空振り後に反撃した例。","observed":"相手の攻撃が空振り、その後こちらの攻撃が命中した。","judgment":"相手の動作終了に合わせた良い判断の候補。確定反撃のフレーム数は未検証。","action":"届く距離で相手の空振りを確認する。","success":"似た距離で反撃を再現できたかを確認する。"},{"id":"E04","round":"ROUND 03","start":94,"end":98,"category":"review","tag":"コンボ","title":"締めの攻撃が届かなかった","short":"コンボ継続に失敗した例。","observed":"連続攻撃の最後の一撃が相手に届かなかった。","judgment":"ルート選択・距離・入力のどれが原因かは追加根拠が必要。","action":"同じ始動で距離に合った締めを選ぶ。","success":"次回同じ機会で締めの攻撃を当てられたか。"},{"id":"E05","round":"ROUND 03","start":115,"end":121,"category":"good","tag":"勝ち筋","title":"起き攻めから攻撃が命中","short":"相手の起き上がりに打撃を当てた例。","observed":"起き上がりに合わせた打撃が命中し、続けて攻撃を当てた。","judgment":"成立した起き攻めの成功例として残す。具体的な技名は未確認。","action":"相手の起き上がり時の距離・位置を意識する。","success":"類似場面で同じ有効な選択を再現できたか。"}],"meta":{"example":true,"source":"完全に架空の画面表示例。実際のユーザーの試合・記録を含まない。"}}</script>
+<script id="workbench-ui">
+// UI-only navigation. Keeps the local runtime and the owner/guest boundaries separate.
+(() => {
+ const byId=id=>document.getElementById(id);
+ const body=document.body;
+ function pane(name,focus=false){
+  const content=document.querySelector('.ytr-content');if(!content)return;
+  content.dataset.mobilePane=name;
+  for(const tab of document.querySelectorAll('[data-pane]')){
+   const active=tab.dataset.pane===name;
+   tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1;
+   if(active&&focus)tab.focus();
+  }
+ }
+ function local(){
+  window.dispatchEvent(new Event('sf6:review-home'));
+  body.dataset.reviewMode='local';
+  byId('localHeading')?.focus({preventScroll:true});
+  window.scrollTo({top:0});
+ }
+ function home(){
+  if(!byId('modeEntry')){local();return;}
+  window.dispatchEvent(new Event('sf6:review-home'));
+  for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
+  body.dataset.reviewMode='home';
+  if(byId('sourceBadge'))byId('sourceBadge').textContent='リプレイレビュー';
+  byId('modeTitle')?.focus({preventScroll:true});window.scrollTo({top:0});
+ }
+ function showDialog(id){const d=byId(id);if(d&&!d.open)d.showModal();}
+ body.dataset.reviewMode=location.hash||!byId('modeEntry')||byId('embedded-video')?'local':'home';
+ byId('localOpen')?.addEventListener('click',local);
+ document.querySelectorAll('[data-home]').forEach(b=>b.addEventListener('click',home));
+ document.querySelectorAll('[data-settings]').forEach(b=>b.addEventListener('click',()=>showDialog('youtubeSettings')));
+ document.querySelectorAll('[data-close-dialog]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+ byId('workbenchShare')?.addEventListener('click',()=>showDialog('youtubeShareDialog'));
+ document.querySelectorAll('[data-pane]').forEach(b=>{
+  b.addEventListener('click',()=>pane(b.dataset.pane));
+  b.addEventListener('keydown',e=>{
+   if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+   e.preventDefault();pane(e.key==='Home'?'memo':e.key==='End'?'library':b.dataset.pane==='memo'?'library':'memo',true);
+  });
+ });
+ byId('youtubeLibraryToggle')?.addEventListener('click',()=>{
+  pane('library');byId('youtubeLibraryPane')?.scrollIntoView({block:'start',behavior:'smooth'});
+  byId('youtubeQuery')?.focus({preventScroll:true});
+ });
+ window.addEventListener('hashchange',()=>{if(location.hash)local();});
+ window.SF6Workbench={home,local,pane};
+})();
+
+</script>
 <script>
 (()=>{
 'use strict';
@@ -193,12 +224,14 @@ const $=(sel)=>document.querySelector(sel);
 const $$=(sel)=>Array.from(document.querySelectorAll(sel));
 const video=$('#matchVideo');
 function renderReportMeta(){
+ document.body.dataset.hasReport=String(!report.meta?.example);
+ for(const id of ['clipMode','loopMode']){const el=document.getElementById(id);if(el)el.disabled=!!report.meta?.example;}
  const m=report.match,c=report.coaching;
- const values={scoreSelf:m.scoreSelf,scoreOpponent:m.scoreOpponent,selfName:m.self,oppName:m.opponent,hudSelfName:m.self,hudOppName:m.opponent,styleName:m.style,mainFocus:m.mainFocus,mainFocusNote:m.mainFocusNote,eventTotal:String(events.length).padStart(2,'0'),eventBreakdown:`良いプレイ ${events.filter(e=>e.category==='good').length} ・振り返り ${events.filter(e=>e.category==='review').length}`,matchDuration:fmt(m.durationSec),durationCaption:report.meta?.example?'デモ用タイムライン':'動画相対時刻',analysisMode:m.analysisMode,hudSelfName:m.self,hudOppName:m.opponent,coachSummary:c.summary,primaryTheme:c.primaryTheme,reviewFootnote:report.meta?.example?'サンプルデータで動作を試せます。動画は同梱・送信されません。実動画を選択すると端末内で再生されます。':'このレポートに元動画は含まれません。再生するときは、この端末の動画を選択してください。'};
+ const values={scoreSelf:m.scoreSelf,scoreOpponent:m.scoreOpponent,selfName:m.self,oppName:m.opponent,hudSelfName:m.self,hudOppName:m.opponent,styleName:m.style,mainFocus:m.mainFocus,mainFocusNote:m.mainFocusNote,eventTotal:String(events.length).padStart(2,'0'),eventBreakdown:`良いプレイ ${events.filter(e=>e.category==='good').length} ・振り返り ${events.filter(e=>e.category==='review').length}`,matchDuration:fmt(m.durationSec),durationCaption:report.meta?.example?'デモ用タイムライン':'動画相対時刻',analysisMode:m.analysisMode,hudSelfName:m.self,hudOppName:m.opponent,coachSummary:c.summary,primaryTheme:c.primaryTheme,reviewFootnote:report.meta?.example?'動画とレポートJSONは、この端末で開きます。動画はアップロードされません。':'このレポートに元動画は含まれません。再生するときは、この端末の動画を選択してください。'};
  Object.entries(values).forEach(([id,val])=>safeText(document.getElementById(id),val));
 }
 
-const state={selected:0,category:'all',current:Math.min(events[0].start,DEMO_DURATION),duration:DEMO_DURATION,playing:false,clipMode:true,loop:false,speed:1,fileUrl:null,hasVideo:false,videoSource:null,scrubbing:false,pendingSeek:null};
+const state={selected:0,category:'all',current:Math.min(events[0].start,DEMO_DURATION),duration:DEMO_DURATION,playing:false,clipMode:!report.meta?.example,loop:false,speed:1,fileUrl:null,hasVideo:false,videoSource:null,scrubbing:false,pendingSeek:null};
 const fmt=(v)=>{v=Math.max(0,Math.floor(Number(v)||0));return String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0')};
 const fmtTenths=(v)=>{const tenths=Math.max(0,Math.round((Number(v)||0)*10));const minutes=Math.floor(tenths/600),seconds=Math.floor((tenths%600)/10),dec=tenths%10;return String(minutes).padStart(2,'0')+':'+String(seconds).padStart(2,'0')+'.'+dec};
 const selected=()=>events[state.selected];
@@ -228,11 +261,12 @@ function drawDetails(){const e=selected();safeText($('#detailTag'),e.tag);safeTe
  drawCards();drawMarks();}
 function refresh(){
  safeText($('#timeNow'),fmtTenths(state.current));safeText($('#timeEnd'),fmt(state.duration));
- safeText($('#videoMode'),state.hasVideo?'ローカル動画を再生中':'デモタイムライン');
+ safeText($('#videoMode'),state.hasVideo?'動画を再生中':'動画未選択');
+ $('#viewer').dataset.hasVideo=String(state.hasVideo);
  const range=$('#seek');if(range){range.max=state.duration;range.value=Math.min(state.current,state.duration);range.style.setProperty('--pct',(Math.min(state.current/state.duration*100,100))+'%');range.setAttribute('aria-valuetext',fmtTenths(state.current));const bubble=$('#seekBubble');if(bubble){bubble.textContent=fmtTenths(state.current);bubble.style.left=Math.max(5,Math.min(95,state.current/state.duration*100))+'%'}}
  const progress=$('#miniProgress');if(progress)progress.style.width=(Math.min(state.current/state.duration*100,100))+'%';
  const playing=state.playing;
- safeText($('#playIcon'),playing?'❚❚':'▶');safeText($('#playLabel'),playing?'一時停止':'再生');
+ safeText($('#playIcon'),playing?'停止':'再生');safeText($('#playLabel'),playing?'一時停止':'再生');
  const big=$('#bigPlay');if(big)big.innerText=playing?'❚❚':'▶';
  const scene=$('#demoVisual');if(scene)scene.classList.toggle('is-playing',playing);
  const clip=$('#clipMode');if(clip){clip.classList.toggle('on',state.clipMode);clip.setAttribute('aria-pressed',String(state.clipMode))}
@@ -298,11 +332,11 @@ if(video){
  video.addEventListener('loadedmetadata',()=>{
   state.duration=Number.isFinite(video.duration)&&video.duration>0?video.duration:DEMO_DURATION;
   const diff=Math.abs(state.duration-DEMO_DURATION);
-  const mismatch=diff>Math.max(2,DEMO_DURATION*.02);
+  const mismatch=!report.meta?.example&&diff>Math.max(2,DEMO_DURATION*.02);
   safeText($('#fileStatus'),mismatch?'注意：レポートの動画長と選択ファイルが一致しません。正しい元動画か確認してください。':(state.videoSource==='pages'?'GitHub Pagesの公開動画を再生中':'ローカル読み込み済み（端末内だけで再生）'));
-  state.pendingSeek=null;seekTo(Math.min(selected().start,state.duration));drawMarks();refresh();
+  state.pendingSeek=null;seekTo(report.meta?.example?0:Math.min(selected().start,state.duration));drawMarks();refresh();
   if(mismatch)toast('動画の長さがレポートと異なります。間違ったファイルの可能性があります。');
-  if(state.duration<selected().start)toast('選択したシーンの時刻より短い動画です。別のファイルを選んでください。');
+  if(!report.meta?.example&&state.duration<selected().start)toast('選択したシーンの時刻より短い動画です。別のファイルを選んでください。');
  });
    video.addEventListener('timeupdate',()=>{
    if(!state.hasVideo||state.scrubbing)return;
@@ -339,7 +373,7 @@ seekBar?.addEventListener('change',e=>{state.clipMode=false;seekTo(Number(e.targ
 $('#fileInput')?.addEventListener('change',e=>{const f=e.target.files?.[0];if(f)setVideoFile(f)});
 $$('[data-select-file]').forEach(b=>b.addEventListener('click',()=>$('#fileInput')?.click()));
 $$('[data-go]').forEach(b=>b.addEventListener('click',()=>{const el=document.querySelector(b.dataset.go);if(el)el.scrollIntoView({behavior:'smooth',block:'start'});$$('[data-go]').forEach(x=>x.classList.toggle('active',x===b))}));
-document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement?.tagName))return;if(e.key===' '){e.preventDefault();playPause()}if(e.key==='ArrowRight'){e.preventDefault();seekTo(state.current+5)}if(e.key==='ArrowLeft'){e.preventDefault();seekTo(state.current-5)}});
+document.addEventListener('keydown',e=>{if(document.body.dataset.reviewMode!=='local'||document.querySelector('dialog[open]'))return;if(['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement?.tagName))return;if(e.key===' '){e.preventDefault();playPause()}if(e.key==='ArrowRight'){e.preventDefault();seekTo(state.current+5)}if(e.key==='ArrowLeft'){e.preventDefault();seekTo(state.current-5)}});
 window.addEventListener('pagehide',()=>{if(state.fileUrl)URL.revokeObjectURL(state.fileUrl)});
 
 // Reports are text-only files read locally. This page makes no network requests.
@@ -481,6 +515,7 @@ function loadReportFromHash(){
 }
 
 window.addEventListener('sf6:youtube-review-open',()=>pause());
+window.addEventListener('sf6:review-home',()=>pause());
 renderReportMeta();choose(0,false);refresh();
 void loadReportFromHash();
 window.addEventListener('hashchange',()=>void loadReportFromHash());

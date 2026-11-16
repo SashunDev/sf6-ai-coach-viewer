@@ -136,7 +136,7 @@ async function loadEmbeddedMatch() {
 
 # Canonical product includes optional external YouTube mode, but standalone HTML must
 # remain self-contained and preserve its original offline/local-video security boundary.
-YT_BUTTON = '<button class="uploadbtn" type="button" id="youtubeOpen">▶ YouTubeライブラリ（本人のみ）</button>'
+YT_BUTTON = '<button class="mode-choice" type="button" id="youtubeOpen">'
 YT_MODULE = '<script type="module" src="./youtube-review.mjs"></script>'
 YT_PANEL_START = '  <section class="panel" id="youtubeReviewPanel" hidden'
 YT_PANEL_END = '  <section class="panel" id="insight">'
@@ -162,7 +162,15 @@ def strip_external_youtube_mode(template: str) -> str:
     end = template.index(YT_PANEL_END, start)
     # Isolate the precise entire top-level section; never strip other report sections.
     result = template[:start] + template[end:]
-    result = result.replace(YT_BUTTON, "", 1).replace(YT_MODULE, "", 1)
+    entry_start = '<!-- workbench:entry:start -->'
+    entry_end = '<!-- workbench:entry:end -->'
+    if template.count(entry_start) != 1 or template.count(entry_end) != 1:
+        raise ValueError("Canonical mode-entry markers changed")
+    first = result.index(entry_start)
+    last = result.index(entry_end, first) + len(entry_end)
+    result = result[:first] + result[last:]
+    result = result.replace(YT_MODULE, "", 1)
+    result = result.replace('<button type="button" data-home>モード選択</button>', "", 1)
     result = result.replace(YT_CSP, LOCAL_CSP, 1)
     result = result.replace("window.addEventListener('sf6:youtube-review-open',()=>pause());\n", "", 1)
     return result
