@@ -216,7 +216,7 @@ async function main(){
  // Disabling/re-enabling local cache must preserve the original synchronizedAt;
  // it must never silently extend the 30-day authorized-data retention window.
  await ev('document.querySelector("#youtubeKeepList").checked=false;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
- if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null')===false)
+ if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null'))
    throw Error("Opt-out failed to remove saved owner list");
  if(!(await ev('document.querySelector("#youtubeCacheNotice").textContent.includes("解除済み")')))
    throw Error("Opt-out left a misleading stored-cache label");
