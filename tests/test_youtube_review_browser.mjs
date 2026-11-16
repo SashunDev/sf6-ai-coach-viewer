@@ -49,11 +49,12 @@ async function main(){
 
  await until(async()=>await ev('document.readyState==="complete" && !!document.querySelector("#youtubeOpen")'));
  await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
+ await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
  await new Promise(r=>setTimeout(r,300));
  const start=await ev('({viewer:!document.querySelector("#viewer").hidden,youtube:document.querySelector("#youtubeReviewPanel").hidden,hasFile:!!document.querySelector("#fileInput")})');
  if(!start.viewer||!start.youtube||!start.hasFile)throw Error("Local reviewer changed by B3");
  // Inject synthetic Google/YT browser APIs only after load; no real OAuth, uploads or CDN.
- await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:()=>callback({access_token:"SYNTHETIC_ONLY"})}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
+ await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:(args)=>{window.__lastOAuthPrompt=args?.prompt;callback({access_token:"SYNTHETIC_ONLY"})}}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
  // Delayed API time intentionally emulates the asynchronous official YouTube iframe.
  await ev('window.__ytPlayers=[];window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.events=config.events;this.time=5;this.state=2;this.requests=[];this.generation=0;window.__ytPlayers.push(this);host.textContent="SYNTHETIC YT PLAYER";setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}pauseVideo(){this.state=2;this.events.onStateChange({target:this,data:2})}cueVideoById(_id){this.generation++;this.time=5;this.state=2;this.events.onStateChange({target:this,data:2})}seekTo(v){this.requests.push(v);const gen=this.generation;setTimeout(()=>{if(gen===this.generation)this.time=v},120)}destroy(){this.generation++;this.host.remove()}}};true');
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
@@ -72,8 +73,22 @@ async function main(){
    lastBottom=left.y+left.h;
  }
 
+ // Also check a compact desktop viewport where the video and all controls
+ // must fit into one viewport when the review section is scrolled into view.
+ const mobileSequence=mobileGeometry.pairs.map(pair=>pair[0].y);
+ if(!(mobileSequence[2]<mobileSequence[0]))throw Error("Fine seek controls are not first on mobile");
+ await send("Emulation.setDeviceMetricsOverride",{width:1280,height:720,deviceScaleFactor:1,mobile:false});
+ const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
+ if(desk.scrollWidth>1280.5||desk.player.w>560.5||desk.player.h>315.5||desk.player.h<180)
+   throw Error("Desktop player size/layout out of range: "+JSON.stringify(desk));
+ if(!(desk.fine.x<desk.seconds.x&&Math.abs(desk.fine.y-desk.seconds.y)<3))
+   throw Error("Desktop groups are not side by side with fine controls first: "+JSON.stringify(desk));
+ if(desk.last.bottom-desk.title.y>desk.viewport-12)
+   throw Error("Desktop player and controls do not fit one review viewport: "+JSON.stringify(desk));
+ await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
+ if((await ev('window.__lastOAuthPrompt'))!=="")throw Error("OAuth must reuse prior consent without forced select_account");
  const remembered=await ev('window.localStorage.getItem("sf6-coach-public-google-oauth-client-id-v1")');
  if(remembered!=="1234567890-abcd.apps.googleusercontent.com")throw Error("Public client ID was not retained");
  const onlyKeys=await ev('Object.keys(window.localStorage)');
