@@ -4,6 +4,30 @@ import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail} from "./yout
 import {SEEK_SMALL,targetSeconds,secondsDisplay,classifyReportedSeek} from "./youtube-seek-core.mjs";
 
 const $=id=>document.getElementById(id);
+const PUBLIC_ID_KEY="sf6-coach-public-google-oauth-client-id-v1";
+// The OAuth Web Client ID is a public identifier, not a client secret.
+// Only that ID may be remembered. Tokens, the YouTube library and video IDs
+// are still strictly tab-memory-only.
+function siteClientId(){
+ const value=document.querySelector('meta[name="sf6-youtube-oauth-client-id"]')?.content?.trim()||"";
+ return isClientId(value)?value:"";
+}
+function cachedClientId(){
+ try{const value=window.localStorage.getItem(PUBLIC_ID_KEY)||"";return isClientId(value)?value:"";}
+ catch{return "";}
+}
+function setupClientId(){
+ const configured=siteClientId();
+ const saved=configured?"":cachedClientId();
+ $("youtubeClientId").value=configured||saved;
+ $("youtubeClientIdRow").hidden=!!configured;
+ $("youtubeForgetClientId").hidden=!!configured||!saved;
+ $("youtubeClientIdHelp").textContent=configured
+   ?"このサイトは公開Google OAuth Client IDを設定済みです。Googleへの接続・同意のみ行ってください。"
+   : saved?"公開Client IDをこの端末から読み込みました。Googleへの接続・同意のみ行ってください。"
+   :"公開Google OAuth Client IDを初回だけ入力してください。接続時に、この端末へIDのみを保存します。";
+}
+
 const state={
  active:false,epoch:0,token:null,controller:null,videos:[],partial:false,
  gisPromise:null,ytPromise:null,player:null,playerReady:false,
@@ -40,6 +64,7 @@ function clearSession(message="YouTube接続と一覧を消去しました。"){
  state.controller=null;
  state.token=null;state.videos=[];state.partial=false;
  $("youtubeClientId").value="";
+ setupClientId();
  $("youtubeConsent").checked=false;
  $("youtubeQuery").value="";
  $("youtubeNote").value="";
@@ -50,6 +75,7 @@ function activate(){
  if(state.active)return;
  document.dispatchEvent(new Event("sf6:youtube-review-open"));
  state.active=true;
+ setupClientId();
  document.body.classList.add("youtube-review-active");
  $("viewer").hidden=true;
  $("youtubeReviewPanel").hidden=false;
@@ -62,7 +88,7 @@ function activate(){
  if(!window.google?.accounts?.oauth2?.initTokenClient){
    $("youtubeConnect").disabled=true;
    ensureGoogleScript().then(()=>{
-     if(state.active){$("youtubeConnect").disabled=false;status("認証準備完了。Client ID入力・同意後に接続できます。");}
+     if(state.active){$("youtubeConnect").disabled=false;status("認証準備完了。"+(siteClientId()||cachedClientId()?"同意後にGoogleへ接続できます。":"公開Client IDの入力・同意後に接続できます。"));}
    }).catch(()=>{
      if(state.active)status("Google認証の準備に失敗しました。ネットワーク設定・Safariのコンテンツブロックを確認してください。");
    });
@@ -86,6 +112,10 @@ $("youtubeLocalFallback").addEventListener("click",()=>{
  $("fileInput")?.click();
 });
 $("youtubeClear").addEventListener("click",()=>clearSession());
+$("youtubeForgetClientId").addEventListener("click",()=>{
+ try{window.localStorage.removeItem(PUBLIC_ID_KEY);}catch{}
+ clearSession("この端末に保存した公開Client IDを削除しました。Google接続と一覧も消去しました。");
+});
 
 function ensureGoogleScript(){
  if(window.google?.accounts?.oauth2?.initTokenClient)return Promise.resolve();
@@ -178,6 +208,10 @@ $("youtubeConnect").addEventListener("click",()=>{
  // Open the Google consent popup synchronously from this user click.
  clearSession("Googleの認証画面を開いています…");
  $("youtubeClientId").value=id;$("youtubeConsent").checked=true;
+ if(!siteClientId()){
+   try{window.localStorage.setItem(PUBLIC_ID_KEY,id);}catch{}
+ }
+ setupClientId();
  const epoch=state.epoch;
  try{
    const client=window.google.accounts.oauth2.initTokenClient({
