@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SF6 AI Coach — YouTube連携 データ取扱説明</title>
+<style>body{max-width:800px;margin:0 auto;padding:24px;background:#0b1524;color:#eaf2ff;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;line-height:1.8}a{color:#bde6ff}h1{font-size:1.5rem}h2{font-size:1.1rem;margin-top:1.5rem}</style>
+</head><body>
+<h1>SF6 AI Coach — YouTube連携に関するデータ取扱説明</h1>
+<p>SF6 AI Coachは本人用のストリートファイター6対戦振り返りビューアです。この連携では本人がアップロードしたYouTube限定公開動画を一覧表示し、YouTube公式プレイヤーで再生・時刻移動して振り返る機能を提供します。動画の1コマ単位の正確な移動は保証しません。</p>
+<h2>Googleアカウントのアクセス権限と目的</h2>
+<p>本人が画面上で明示的に接続を許可した場合だけ、Google OAuthの読み取り専用スコープ <code>https://www.googleapis.com/auth/youtube.readonly</code> を利用します。この権限は限定公開だけではなく、本人のYouTubeデータの読み取りを許可します。アプリは本人のチャンネルのアップロード一覧と、動画ID・タイトル・投稿日・サムネイルURL・公開状態を取得し、画面上では限定公開動画だけを表示します。</p>
+<h2>保存・外部通信</h2>
+<p>この連携で受け取るアクセストークンと動画一覧は、開いているブラウザタブのメモリでのみ保持します。クライアントシークレット、Googleパスワードやアクセストークンを本アプリ独自のサーバーに送信しません。localStorage・sessionStorage・Cookie・GitHubリポジトリには本人のトークンや動画一覧を保存しません。</p>
+<p>モードを開くとGoogle公式の認証用JavaScriptを取得します。明示的に接続するとGoogleの認証基盤とYouTube Data APIへアクセスします。動画を選択するとYouTube公式IFrameプレイヤーによりYouTubeへ再生通信が発生し、サムネイルを表示するとYouTubeのサムネイル配信へ通信します。各サービスにはそれぞれの規約が適用されます。</p>
+<p>自分で選択した端末内MP4は、ブラウザで直接再生します。本アプリから動画ファイルをYouTubeへ自動アップロードしたり、YouTubeストリームを抽出・ダウンロード・プロキシ配信したりしません。</p>
+<h2>削除・取り消し</h2>
+<p>「接続・一覧を消去」、または「ローカル動画レビューへ戻る」で、ブラウザ内のトークン・一覧・公式プレイヤーを消去します。Google側の認可を取り消すには「Google側の許可を取り消す」を押すか、<a href="https://myaccount.google.com/connections">Googleアカウントの連携管理</a>を利用してください。Google側に残る同意履歴はGoogleが管理します。</p>
+<h2>ChatGPTへの引き継ぎ</h2>
+<p>「動画・時刻・メモをコピー」は、本人が明示的にクリックした場合にのみ、YouTubeの限定公開URL・動画タイトル・時刻・任意のメモを端末のクリップボードへコピーします。ChatGPTへ自動送信しません。また、URLと時刻だけではChatGPTが映像を実際に視聴・検証したことにはなりません。</p>
+<h2>公式規約</h2>
+<p><a href="https://policies.google.com/privacy">Googleプライバシーポリシー</a>／<a href="https://www.youtube.com/t/terms">YouTube利用規約</a>／<a href="https://developers.google.com/youtube/terms/developer-policies">YouTube APIポリシー</a></p>
+</body></html>
