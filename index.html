@@ -49,6 +49,18 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
 .youtube-card span{display:block;color:#d7fd8c;font-size:11px}
 #youtubePlayer{width:100%;aspect-ratio:16/9;background:#000;min-height:185px;margin:12px 0}
 #youtubePlayer iframe{width:100%;height:100%;min-height:185px;display:block}
+/* Desktop: avoid an oversized 16:9 player pushing all seek controls below
+   the fold. Keep standard YouTube controls intact and never alter media. */
+@media(min-width:851px){
+  #youtubePlayer{width:min(100%,560px);min-height:0;margin:10px auto}
+  #youtubePlayer iframe{min-height:0}
+  .ytr-seek-controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+  .ytr-seek-pause{grid-column:1/-1;min-height:44px}
+  .ytr-seek-group{padding:8px 10px}
+  .ytr-seek-pair button{min-height:42px;padding:7px 5px}
+  .ytr-seek-pair+.ytr-seek-pair{margin-top:7px}
+  .ytr-seek-label{margin-bottom:6px}
+}
 #youtubeSeekLog{max-height:160px;overflow-y:auto;overflow-wrap:anywhere;font-size:11px;color:#b6cbe1}
 #youtubeSeekLog>div{padding:5px 0;border-top:1px solid #2c4260}
 #youtubeHandoff{min-height:105px}
@@ -114,17 +126,6 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"></div>
         <div class="ytr-seek-controls" role="group" aria-label="動画の停止と時刻移動">
           <button id="youtubePause" class="ytr-seek-pause" type="button" disabled>⏸ 一時停止</button>
-          <div class="ytr-seek-group" role="group" aria-label="秒単位の移動">
-            <p class="ytr-seek-label">秒単位の移動 <span>← 戻る　｜　進む →</span></p>
-            <div class="ytr-seek-pair" role="group" aria-label="5秒単位">
-              <button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>← 5秒</button>
-              <button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>5秒 →</button>
-            </div>
-            <div class="ytr-seek-pair" role="group" aria-label="1秒単位">
-              <button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>← 1秒</button>
-              <button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>1秒 →</button>
-            </div>
-          </div>
           <div class="ytr-seek-group" role="group" aria-label="細かい時刻移動（近似）">
             <p class="ytr-seek-label">細かい時刻移動 <span>1/30秒基準・近似</span></p>
             <div class="ytr-seek-pair" role="group" aria-label="10F相当（約0.33秒、近似）">
@@ -135,7 +136,18 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
               <button id="youtubePrev" type="button" aria-label="1F相当戻る（約0.033秒の近似時刻移動）" disabled>← 1F</button>
               <button id="youtubeNext" type="button" aria-label="1F相当進む（約0.033秒の近似時刻移動）" disabled>1F →</button>
             </div>
+          </div>          <div class="ytr-seek-group" role="group" aria-label="秒単位の移動">
+            <p class="ytr-seek-label">秒単位の移動 <span>← 戻る　｜　進む →</span></p>
+            <div class="ytr-seek-pair" role="group" aria-label="5秒単位">
+              <button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>← 5秒</button>
+              <button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>5秒 →</button>
+            </div>
+            <div class="ytr-seek-pair" role="group" aria-label="1秒単位">
+              <button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>← 1秒</button>
+              <button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>1秒 →</button>
+            </div>
           </div>
+
         </div>
         <p id="youtubePlaybackStatus" class="ytr-status" role="status">先に本人の動画を一覧から選択してください。</p>
         <p id="youtubePlaybackTime" class="ytr-note">--:--.---</p>
