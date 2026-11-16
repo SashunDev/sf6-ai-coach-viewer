@@ -45,7 +45,9 @@ test("B0 keeps owner-only in-memory read-only access, logout and partial-data sa
  assert.match(module,/gatherOwnUnlisted/);
  assert.match(module,/scope:SCOPE/);
  assert.match(module,/hasGrantedAllScopes/);
- assert.match(module,/requestAccessToken\(\{prompt:"select_account"\}\)/);
+ assert.match(module,/requestAccessToken\\(\\{prompt:""\\}\\)/);
+ assert.doesNotMatch(module,/prompt:"select_account"/);
+ assert.doesNotMatch(module,/requestAccessToken\\(\\{prompt:"none"\\}\\)/);
  assert.match(module,/state\.epoch\+\+/);
  assert.match(module,/state\.controller\.abort\(\)/);
  assert.match(module,/state\.token=null/);
@@ -92,6 +94,11 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
  }
  assert.ok(html.includes('厳密なフレーム送り（10コマ・1コマの移動）ではありません。'));
  assert.equal((seekSection.match(/class="ytr-seek-group"/g)||[]).length,2);
+ assert.ok(seekSection.indexOf('aria-label="細かい時刻移動（近似）"')<
+           seekSection.indexOf('aria-label="秒単位の移動"'),"fine controls must appear first");
+ assert.match(html,/@media\\(min-width:851px\\)/);
+ assert.match(html,/#youtubePlayer\\{width:min\\(100%,560px\\)/);
+ assert.match(html,/\\.ytr-seek-pause\\{grid-column:1\\/-1/);
  for(const [previous,next] of ids){
    const start=seekSection.indexOf('id="'+previous+'"');
    const end=seekSection.indexOf('id="'+next+'"');
