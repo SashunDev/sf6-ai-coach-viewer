@@ -89,7 +89,7 @@ function activate(){
  if(!window.google?.accounts?.oauth2?.initTokenClient){
    $("youtubeConnect").disabled=true;
    ensureGoogleScript().then(()=>{
-     if(state.active){$("youtubeConnect").disabled=false;status("認証準備完了。"+(siteClientId()||cachedClientId()?"同意後にGoogleへ接続できます。":"公開Client IDの入力・同意後に接続できます。"));}
+     if(state.active){$("youtubeConnect").disabled=false;status("認証準備完了。"+(siteClientId()||cachedClientId()?"接続ボタンから以前の許可を再利用できます（Googleによる再認証が必要な場合があります）。":"公開Client IDの入力・同意後に接続できます。"));}
    }).catch(()=>{
      if(state.active)status("Google認証の準備に失敗しました。ネットワーク設定・Safariのコンテンツブロックを確認してください。");
    });
@@ -231,7 +231,9 @@ $("youtubeConnect").addEventListener("click",()=>{
        if(epoch===state.epoch)status("認証画面の処理失敗："+String(resp?.type||"不明").slice(0,60));
      }
    });
-   client.requestAccessToken({prompt:"select_account"});
+   // Reuse existing Google approval where possible. An explicit owner click
+   // is still required by Google's token model; never start auth on page load.
+   client.requestAccessToken({prompt:""});
  }catch(e){if(epoch===state.epoch)status("認証開始失敗："+String(e?.message||"不明").slice(0,100));}
 });
 $("youtubeRevoke").addEventListener("click",()=>{
