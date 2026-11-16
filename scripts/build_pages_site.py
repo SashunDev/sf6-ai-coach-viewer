@@ -32,6 +32,8 @@ NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I | r
 SITE_FILES = (
     "index.html", "demo.html", "release-smoke.html", "video-diagnostics.html",
     "pages-video-smoke.html", "pages-integration-smoke.html",
+    # OAuth-free, watch-only guest route. No private owner library is published.
+    "youtube-share.html", "youtube-share.mjs",
 )
 
 
