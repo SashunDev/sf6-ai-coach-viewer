@@ -219,7 +219,7 @@ async function main(){
  if(!configured.hidden||!configured.forgetHidden||configured.field!=="1234567890-site.apps.googleusercontent.com")throw Error("Site-wide OAuth ID not auto-configured");
  await ev('document.querySelector("#youtubeBack").click()');
  const finish=await ev('({local:!document.querySelector("#viewer").hidden,youtubeHidden:document.querySelector("#youtubeReviewPanel").hidden,source:document.querySelector("#sourceBadge").textContent})');
- if(!finish.local||!finish.youtubeHidden||!finish.source.includes("LOCAL VIDEO")||await ev('document.body.dataset.reviewMode!=="home"'))throw Error("Local reviewer not restored");
+ if(!finish.local||!finish.youtubeHidden||!finish.source.includes("リプレイレビュー")||await ev('document.body.dataset.reviewMode!=="home"'))throw Error("Mode choice/home state not restored: "+JSON.stringify(finish));
  if(apiRequests.length||external.length)throw Error("Mock browser unexpectedly sent real private Google/YouTube network requests");
  // A subsequent visit to this device MUST show the previous owner list
  // without clicking Google OAuth. Reuse the cache created by the real opt-in path.
