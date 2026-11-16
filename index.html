@@ -109,8 +109,12 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <p id="youtubeClientIdHelp" class="ytr-note">クライアントIDだけを、この端末に記憶できます。Google認証・同意は別途必要です。</p>
         <button id="youtubeForgetClientId" type="button">この端末の保存済みClient IDを削除</button>
         <label><input id="youtubeConsent" type="checkbox"> 本人のYouTubeアップロード一覧・動画タイトル・公開状態を読み取ることに同意します</label>
-        <p class="ytr-note">許可する権限はYouTube読み取り専用です。Client Secret・Googleパスワード・アクセストークンは入力しないでください。Googleの認証スクリプトはこのモードを開いたときだけ読み込みます。本人動画の一覧・トークンは保存しません。公開識別子のClient IDだけを端末に保存する場合があります（上のボタンで削除可能）。サイト管理者が公開設定済みの場合は入力欄を省略します。</p>
-        <div class="ytr-actions"><button id="youtubeConnect" class="ytr-main" type="button">Googleに接続して一覧を表示</button><button id="youtubeClear" type="button">接続・一覧を消去</button><button id="youtubeRevoke" type="button" disabled>Google側の許可を取り消す</button></div>
+        <label><input id="youtubeKeepList" type="checkbox"> この端末に動画一覧を保存し、次回はGoogle認証なしで前回の一覧を表示</label>
+        <p class="ytr-note">保存は初回のみ有効化してください（共用端末では非推奨）。動画ID・タイトル・投稿日・サムネイルURLのみ保存し、30日経過で削除します。Googleのトークンや動画そのものは保存しません。前回の一覧は最新の公開状態を保証しません。</p>
+        <p id="youtubeCacheNotice" class="ytr-status" role="status" aria-live="polite">この端末に保存済みの動画一覧はありません。</p>
+        <div class="ytr-actions"><button id="youtubeForgetList" type="button">この端末の保存済み一覧を削除</button></div>
+        <p class="ytr-note">許可する権限はYouTube読み取り専用です。Client Secret・Googleパスワード・アクセストークンは入力しないでください。Googleの認証スクリプトはYouTubeモードを開いたときだけ読み込みます。Googleトークンは保存しません。動画一覧は上の保存設定を有効にした端末だけに保存します。公開識別子のClient IDだけを端末に保存する場合があります（上のボタンで削除可能）。サイト管理者が公開設定済みの場合は入力欄を省略します。</p>
+        <div class="ytr-actions"><button id="youtubeRefresh" class="ytr-main" type="button" disabled>最新一覧を再取得</button><button id="youtubeConnect" type="button">Googleに接続</button><button id="youtubeClear" type="button">接続・一覧・保存分を消去</button><button id="youtubeRevoke" type="button" disabled>Google側の許可を取り消す</button></div>
         <p id="youtubeStatus" class="ytr-status" role="status" aria-live="polite">Google未接続。必要に応じてClient IDを設定し、同意して接続してください。</p>
         <p class="ytr-note">データ取扱説明：<a href="./youtube-privacy.html" target="_blank" rel="noopener noreferrer">SF6 AI Coach YouTube連携</a>／<a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube利用規約</a>／<a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Googleのアプリ連携管理</a></p>
       </div>
