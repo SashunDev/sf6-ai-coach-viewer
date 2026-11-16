@@ -48,6 +48,7 @@ async function main(){
  await send("Runtime.enable");await send("Network.enable");
 
  await until(async()=>await ev('document.readyState==="complete" && !!document.querySelector("#youtubeOpen")'));
+ await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
  await new Promise(r=>setTimeout(r,300));
  const start=await ev('({viewer:!document.querySelector("#viewer").hidden,youtube:document.querySelector("#youtubeReviewPanel").hidden,hasFile:!!document.querySelector("#fileInput")})');
  if(!start.viewer||!start.youtube||!start.hasFile)throw Error("Local reviewer changed by B3");
@@ -58,6 +59,19 @@ async function main(){
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
  await ev('document.querySelector("#youtubeOpen").click()');
  await until(async()=>await ev('!document.querySelector("#youtubeReviewPanel").hidden'));
+ const mobileGeometry=await ev('(()=>{const pairs=[["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,pause:rect("youtubePause"),pairs:pairs.map(([a,b])=>[rect(a),rect(b)])}})()');
+ if(mobileGeometry.width!==375||mobileGeometry.scrollWidth>375.5)throw Error("Mobile seek layout overflow: "+JSON.stringify(mobileGeometry));
+ if(mobileGeometry.pause.h<44)throw Error("Pause target too small");
+ let lastBottom=mobileGeometry.pause.y+mobileGeometry.pause.h;
+ for(const [left,right] of mobileGeometry.pairs){
+   if(left.x>=right.x||Math.abs(left.y-right.y)>1||Math.abs(left.h-right.h)>1)
+     throw Error("Seek pair not horizontally aligned: "+JSON.stringify([left,right]));
+   if(left.w<100||right.w<100||left.h<44||right.h<44)
+     throw Error("Seek targets too small: "+JSON.stringify([left,right]));
+   if(left.y<=lastBottom)throw Error("Seek rows overlap or wrong order");
+   lastBottom=left.y+left.h;
+ }
+
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
  const remembered=await ev('window.localStorage.getItem("sf6-coach-public-google-oauth-client-id-v1")');
