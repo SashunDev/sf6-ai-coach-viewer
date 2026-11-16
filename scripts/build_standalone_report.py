@@ -134,11 +134,46 @@ async function loadEmbeddedMatch() {
 """
 
 
+# Canonical product includes optional external YouTube mode, but standalone HTML must
+# remain self-contained and preserve its original offline/local-video security boundary.
+YT_BUTTON = '<button class="uploadbtn" type="button" id="youtubeOpen">▶ YouTubeライブラリ（本人のみ）</button>'
+YT_MODULE = '<script type="module" src="./youtube-review.mjs"></script>'
+YT_PANEL_START = '  <section class="panel" id="youtubeReviewPanel" hidden'
+YT_PANEL_END = '  <section class="panel" id="insight">'
+YT_CSP = ("default-src 'none'; script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client "
+          "https://www.youtube.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; "
+          "media-src 'self' blob:; img-src data: blob: https://*.ytimg.com; connect-src 'self' "
+          "https://www.googleapis.com https://accounts.google.com/gsi/; frame-src https://accounts.google.com/gsi/ "
+          "https://www.youtube.com https://www.youtube-nocookie.com; font-src 'none'; object-src 'none'; "
+          "base-uri 'none'; form-action 'none'")
+LOCAL_CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+             "media-src 'self' blob:; img-src data: blob:; connect-src 'self'; font-src 'none'; "
+             "object-src 'none'; base-uri 'none'; form-action 'none'")
+
+
+def strip_external_youtube_mode(template: str) -> str:
+    if YT_PANEL_START not in template:
+        return template  # Older fixture; there is no external mode to remove.
+    if (template.count(YT_PANEL_START) != 1 or template.count(YT_PANEL_END) != 1
+            or template.count(YT_BUTTON) != 1 or template.count(YT_MODULE) != 1
+            or template.count(YT_CSP) != 1):
+        raise ValueError("Canonical YouTube mode markers changed: refusing unsafe standalone HTML")
+    start = template.index(YT_PANEL_START)
+    end = template.index(YT_PANEL_END, start)
+    # Isolate the precise entire top-level section; never strip other report sections.
+    result = template[:start] + template[end:]
+    result = result.replace(YT_BUTTON, "", 1).replace(YT_MODULE, "", 1)
+    result = result.replace(YT_CSP, LOCAL_CSP, 1)
+    result = result.replace("window.addEventListener('sf6:youtube-review-open',()=>pause());\n", "", 1)
+    return result
+
+
 def build(template: str, report: dict, video: bytes) -> str:
     if template.count(BOOTSTRAP) != 1 or len(REPORT_TAG.findall(template)) != 1:
         raise ValueError("Canonical index.html changed: report/bootstrap markers not unique")
     if "function setVideoFile(file)" not in template or "function verifyReport(data)" not in template:
         raise ValueError("Canonical viewer local-video/JSON validation unavailable")
+    template = strip_external_youtube_mode(template)
     result = REPORT_TAG.sub(lambda match: match.group(1) + safe_json_script(report) + match.group(3), template, count=1)
     runtime = "<script>\n(()=>{"
     if result.count(runtime) != 1:
