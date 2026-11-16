@@ -76,7 +76,7 @@ async function main(){
  // Also check a compact desktop viewport where the video and all controls
  // must fit into one viewport when the review section is scrolled into view.
  const mobileSequence=mobileGeometry.pairs.map(pair=>pair[0].y);
- if(!(mobileSequence[2]<mobileSequence[0]))throw Error("Fine seek controls are not first on mobile");
+ if(!(mobileSequence[0]<mobileSequence[2]))throw Error("Fine seek controls are not first on mobile");
  await send("Emulation.setDeviceMetricsOverride",{width:1280,height:720,deviceScaleFactor:1,mobile:false});
  const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
  if(desk.scrollWidth>1280.5||desk.player.w>560.5||desk.player.h>315.5||desk.player.h<180)
