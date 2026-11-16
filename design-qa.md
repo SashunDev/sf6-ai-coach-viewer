@@ -1,6 +1,6 @@
-# Workbench UI — hosted Chromium QA passed / owner acceptance pending
+# Workbench UI — hosted Chromium and owner PC/iPhone acceptance passed
 
-final result: **SYNTHETIC CHROMIUM QA PASS / REAL iPHONE SAFARI + OWNER GOOGLE/YOUTUBE PENDING / MERGE HOLD**
+final result: **HOSTED SYNTHETIC CHROMIUM QA PASS / OWNER PC+iPHONE ACCEPTANCE PASS (self-reported) / RELEASE INTEGRATION PENDING**
 
 ## 2026-11-16 — GitHub-hosted browser validation (newest evidence)
 
@@ -121,3 +121,19 @@ The runner uses Chromium viewport emulation, not physical iPhone Safari. Even a 
 Build checks: existing Pages builder and canonical standalone HTML tests run actual packaging on synthetic/mocked inputs in the 125-test Python suite; this is not a live Release fetch or deployment. JavaScript syntax, Python compile and `git diff --check` PASS. No OAuth/client/cache/seek-core/guest-route implementation, secret, owner data or production state was changed.
 
 **Status: BLOCKED / MERGE HOLD / Draft maintained.** Code changes are ready for independent source re-review; P1-2 and the execution/visual portions of P1-1/P2-2 remain unresolved until a permitted browser environment is available.
+
+
+## 2026-11-16 — Owner staging acceptance (after browser QA)
+
+The Owner explicitly confirmed that **all six specified checks PASS on both PC and iPhone** at the isolated PR #23 staging page (`https://sashundev.github.io/sf6-b1-safari-probe/b3-product.html`).
+
+1. Normal navigation opens the mode-selection screen first.
+2. Local video and YouTube modes show only their own relevant data and controls.
+3. Cached YouTube list, explicit refresh and real video playback work.
+4. Approximate 1F/10F controls appear above the seconds controls.
+5. Player and controls do not overflow the visible device area.
+6. A guest-only link opens and plays its video.
+
+**Evidence class:** Owner self-report from PC and physical iPhone usage; this is acceptance evidence, not independently captured device screenshots, network traces or access-token inspection. The specific simulated iframe error → native MP4 chooser flow was verified by synthetic DOM tests but was not separately reported as exercised during the owner’s six checks. Prior historical sections above record the situation before the later hosted Chromium and owner acceptance, and should not be read as the current release gate.
+
+Release prerequisite: preserve the separate friend-only guest route and owner OAuth/cache workflows when merging the stacked PRs. Recheck CI against the integrated head and validate GitHub Pages deployment; source acceptance alone does not confirm production deployment.

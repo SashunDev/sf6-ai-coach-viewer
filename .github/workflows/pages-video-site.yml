@@ -7,8 +7,11 @@ on:
       - 'index.html'
       - 'youtube-review.mjs'
       - 'youtube-library-core.mjs'
+      - 'youtube-library-cache.mjs'
       - 'youtube-seek-core.mjs'
       - 'youtube-privacy.html'
+      - 'youtube-share.html'
+      - 'youtube-share.mjs'
       - 'demo.html'
       - 'release-smoke.html'
       - 'video-diagnostics.html'
@@ -62,7 +65,7 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
           python3 -m unittest discover -s tests -p 'test_verify_public_match.py' -v
           node --test tests/test_viewer_pages.cjs
-          node --test tests/test_youtube_library_core.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs
+          node --test tests/test_youtube_library_core.mjs tests/test_youtube_cache.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_youtube_share.mjs
           python3 -m unittest discover -s tests -p 'test_youtube_standalone.py' -v
       - name: Build with only eligible public MP4s
         env:
