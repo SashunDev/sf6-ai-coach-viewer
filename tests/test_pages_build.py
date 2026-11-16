@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from build_pages_site import (
     Asset, MEDIA_BUDGET, MAX_AGE_DAYS, SITE_FILES, build,
     parse_asset, select_assets, parse_report_asset, select_reports,
-    REPORT_TOTAL_BUDGET, REPORT_MAX_BYTES
+    REPORT_TOTAL_BUDGET, REPORT_MAX_BYTES, inject_public_oauth_client_id, CLIENT_ID_MARKER
 )
 
 NOW = datetime(2026, 10, 11, tzinfo=timezone.utc)
@@ -79,6 +79,23 @@ class PagesMirrorTests(TestCase):
     def test_duplicate_filename_refuses_ambiguity(self):
         with self.assertRaises(ValueError):
             select_assets([item(1,1,200,"ABC.mp4"),item(2,2,100,"abc.mp4")],NOW)
+
+    def test_public_oauth_client_id_injection_is_explicit_and_validated(self):
+        with tempfile.TemporaryDirectory() as temp:
+            target = Path(temp) / "index.html"
+            target.write_text("<head>" + CLIENT_ID_MARKER + "</head>", encoding="utf-8")
+            self.assertFalse(inject_public_oauth_client_id(target, ""))
+            self.assertIn(CLIENT_ID_MARKER, target.read_text(encoding="utf-8"))
+            public_id = "1234567890-site.apps.googleusercontent.com"
+            self.assertTrue(inject_public_oauth_client_id(target, public_id))
+            self.assertIn('content="' + public_id + '"', target.read_text(encoding="utf-8"))
+            self.assertNotIn(CLIENT_ID_MARKER, target.read_text(encoding="utf-8"))
+            target.write_text("<head>" + CLIENT_ID_MARKER + "</head>", encoding="utf-8")
+            for value in ('<script>oops</script>', 'not-a-client-id', '12345-id.apps.googleusercontent.com" x="1'):
+                with self.subTest(value=value):
+                    with self.assertRaises(ValueError):
+                        inject_public_oauth_client_id(target, value)
+            self.assertIn(CLIENT_ID_MARKER, target.read_text(encoding="utf-8"))
 
     def test_site_copies_existing_pages_and_video(self):
         with tempfile.TemporaryDirectory() as base:
