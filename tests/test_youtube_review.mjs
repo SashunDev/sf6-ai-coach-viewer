@@ -24,6 +24,8 @@ test("YouTube mode is hidden by default and original MP4/reports remain intact",
  assert.match(module,/document\.body\.classList\.add\("youtube-review-active"\)/);
  assert.match(module,/document\.body\.classList\.remove\("youtube-review-active"\)/);
  assert.match(module,/\$\("viewer"\)\.hidden=false/);
+ assert.match(html,/name="sf6-youtube-oauth-client-id" content=""/);
+ assert.match(html,/id="youtubeForgetClientId"/);
 });
 
 test("CSP allows only required Google/YouTube endpoints without media extraction",()=>{
@@ -51,7 +53,11 @@ test("B0 keeps owner-only in-memory read-only access, logout and partial-data sa
  assert.match(module,/youtubeClear/);
  assert.match(module,/youtubeRevoke/);
  assert.match(module,/partial\?" \/ 上限到達：一部のみ"/);
- assert.doesNotMatch(module,/localStorage|sessionStorage|document\.cookie|window\.open\(/);
+ assert.doesNotMatch(module,/sessionStorage|document\.cookie|window\.open\(/);
+ assert.match(module,/const PUBLIC_ID_KEY=/);
+ assert.match(module,/window\.localStorage\.setItem\(PUBLIC_ID_KEY,id\)/);
+ assert.match(module,/window\.localStorage\.removeItem\(PUBLIC_ID_KEY\)/);
+ assert.doesNotMatch(module,/localStorage\.setItem\([^\n]*(?:token|videos|access_token)/);
  assert.doesNotMatch(module,/createObjectURL|MediaSource|XMLHttpRequest|sendBeacon/);
 });
 test("Official IFrame player is user-selected, paused-only approximate seek",()=>{
@@ -91,6 +97,8 @@ test("Pages includes all four assets and standalone strips web mode",()=>{
  assert.match(standalone,/result = result\.replace\(YT_CSP, LOCAL_CSP, 1\)/);
  assert.match(privacy,/YouTube連携に関するデータ取扱説明/);
  assert.match(privacy,/Googleアカウントの連携管理/);
+ assert.match(privacy,/公開識別子/);
+ assert.match(builder,/SF6_YOUTUBE_OAUTH_CLIENT_ID/);
 });
 test("Node syntax check for new modules",()=>{
  for(const path of ["youtube-review.mjs","youtube-library-core.mjs","youtube-seek-core.mjs"]){
