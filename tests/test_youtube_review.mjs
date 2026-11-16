@@ -97,7 +97,10 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
  assert.ok(seekSection.indexOf('aria-label="細かい時刻移動（近似）"')<
            seekSection.indexOf('aria-label="秒単位の移動"'),"fine controls must appear first");
  assert.ok(html.includes('@media(min-width:851px)'));
- assert.ok(html.includes('#youtubePlayer{width:min(100%,560px)'));
+ assert.ok(html.includes('calc(177.7778dvh - 520px)'));
+ assert.ok(html.includes('calc(177.7778vh - 520px)'));
+ assert.ok(html.includes('#youtubePlayer{width:min(100%,1080px'));
+ assert.ok(!html.includes('#youtubePlayer{width:min(100%,560px)'));
  assert.ok(html.includes('.ytr-seek-pause{grid-column:1/-1'));
  for(const [previous,next] of ids){
    const start=seekSection.indexOf('id="'+previous+'"');
