@@ -25,13 +25,14 @@ jobs:
       - name: New owner-library and seek JS modules parse
         run: |
           node --check youtube-library-core.mjs
+          node --check youtube-library-cache.mjs
           node --check youtube-seek-core.mjs
           node --check youtube-review.mjs
           node --check tests/test_youtube_review_browser.mjs
           python3 -m py_compile scripts/build_pages_site.py scripts/build_standalone_report.py
       - name: Product integration, existing review, and read-only API regression
         run: |
-          node --test tests/test_youtube_library_core.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_viewer_pages.cjs
+          node --test tests/test_youtube_library_core.mjs tests/test_youtube_cache.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_viewer_pages.cjs
       - name: Legacy Pages build and canonical offline bundle regressions
         run: |
           python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
