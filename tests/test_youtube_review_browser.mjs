@@ -77,14 +77,27 @@ async function main(){
  // must fit into one viewport when the review section is scrolled into view.
  const mobileSequence=mobileGeometry.pairs.map(pair=>pair[0].y);
  if(!(mobileSequence[0]<mobileSequence[2]))throw Error("Fine seek controls are not first on mobile");
- await send("Emulation.setDeviceMetricsOverride",{width:1280,height:720,deviceScaleFactor:1,mobile:false});
- const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
- if(desk.scrollWidth>1280.5||desk.player.w>560.5||desk.player.h>315.5||desk.player.h<180)
-   throw Error("Desktop player size/layout out of range: "+JSON.stringify(desk));
- if(!(desk.fine.x<desk.seconds.x&&Math.abs(desk.fine.y-desk.seconds.y)<3))
-   throw Error("Desktop groups are not side by side with fine controls first: "+JSON.stringify(desk));
- if(desk.last.bottom-desk.title.y>desk.viewport-12)
-   throw Error("Desktop player and controls do not fit one review viewport: "+JSON.stringify(desk));
+ // Desktop 16:9 scales smoothly with available viewport height, rather than
+ // always occupying 560px. Test short and tall viewports without logging in.
+ const desktopSizes=[[1280,720],[1600,900],[1680,800],[1366,600]];
+ const observedDesktop=[];
+ for(const [width,height] of desktopSizes){
+   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:false});
+   const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
+   if(desk.scrollWidth>width+0.5||desk.player.w>1080.5||desk.player.h<180)
+     throw Error("Desktop player overflow or too small: "+JSON.stringify({width,height,desk}));
+   if(Math.abs(desk.player.w/desk.player.h-16/9)>0.025)
+     throw Error("Desktop player 16:9 aspect ratio lost: "+JSON.stringify({width,height,desk}));
+   if(!(desk.fine.x<desk.seconds.x&&Math.abs(desk.fine.y-desk.seconds.y)<3))
+     throw Error("Desktop seek groups not side-by-side: "+JSON.stringify({width,height,desk}));
+   if(desk.last.bottom-desk.title.y>desk.viewport-12)
+     throw Error("Desktop video and seek buttons do not fit one section viewport: "+JSON.stringify({width,height,desk}));
+   observedDesktop.push({width,height,videoWidth:desk.player.w,videoHeight:desk.player.h});
+ }
+ if(observedDesktop[0].videoWidth<=620)
+   throw Error("720p desktop player did not improve over 560px: "+JSON.stringify(observedDesktop));
+ if(observedDesktop[1].videoWidth<=observedDesktop[0].videoWidth+200)
+   throw Error("Desktop player did not respond to available height: "+JSON.stringify(observedDesktop));
  await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
