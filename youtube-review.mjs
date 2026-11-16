@@ -42,7 +42,7 @@ const info=message=>{
 };
 function buttons(){
  const ready=state.active&&state.player&&state.playerReady;
- for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy"])$(id).disabled=!ready;
+ for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
 }
 function clearPlayer(){
@@ -54,6 +54,7 @@ function clearPlayer(){
  $("youtubeCurrentTitle").textContent="動画未選択";
  $("youtubePlaybackTime").textContent="--:--.---";
  $("youtubeHandoff").value="";
+ $("youtubeShareLink").value="";
  $("youtubeSeekLog").replaceChildren();
  playback("動画を選択してください。");
  buttons();
@@ -306,7 +307,7 @@ async function selectVideo(video){
  const serial=state.selectionSerial;
  state.selected=video;
  $("youtubeCurrentTitle").textContent=video.title;
- $("youtubeHandoff").value="";$("youtubeSeekLog").replaceChildren();
+ $("youtubeHandoff").value="";$("youtubeShareLink").value="";$("youtubeSeekLog").replaceChildren();
  $("youtubePlayer").scrollIntoView({behavior:"smooth",block:"nearest"});
  try{
    if(state.player&&state.playerReady){
@@ -376,6 +377,28 @@ for(const [id,delta] of [["youtubePrevFive",-5],["youtubePrevSec",-1],
  ["youtubeNextSec",1],["youtubeNextFive",5]]){
  $(id).addEventListener("click",()=>fineSeek(delta));
 }
+// Share is a deliberate owner action. Only the selected unlisted video's validated
+// ID and whole-second playback time enter the link; never titles, notes or OAuth.
+$("youtubeShare").addEventListener("click",async()=>{
+ if(!state.active||!state.token||!state.selected||!state.playerReady||!state.player)return;
+ const id=state.selected.id;
+ if(!isVideoId(id)||!state.videos.some(video=>video.id===id))return;
+ const raw=Number(state.player.getCurrentTime());
+ const seconds=Number.isFinite(raw)&&raw>=0&&raw<=43200?Math.floor(raw):0;
+ const share=new URL("./youtube-share.html",location.href);
+ share.search="";share.hash="";
+ share.searchParams.set("v",id);
+ if(seconds)share.searchParams.set("t",String(seconds));
+ const link=share.href;
+ $("youtubeShareLink").value=link;
+ try{
+   await navigator.clipboard.writeText(link);
+   playback("共有リンクをコピーしました。限定公開リンクは第三者へ再共有できます。");
+ }catch{
+   playback("自動コピーが制限されました。共有URL欄を長押ししてコピーしてください。");
+   $("youtubeShareLink").focus();$("youtubeShareLink").select();
+ }
+});
 function handoffText(){
  if(!state.selected||!state.playerReady)return null;
  const current=Number(state.player.getCurrentTime());
