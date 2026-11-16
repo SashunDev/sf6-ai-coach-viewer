@@ -97,11 +97,11 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <h3>3. 公式YouTubeプレイヤーで細かい時刻移動（近似）</h3>
         <p id="youtubeCurrentTitle" class="ytr-status">動画未選択</p>
         <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"></div>
-        <div class="ytr-actions"><button id="youtubePause" type="button" disabled>一時停止</button><button id="youtubePrevSec" type="button" disabled>−1秒</button><button id="youtubeNextSec" type="button" disabled>＋1秒</button><button id="youtubePrev" type="button" disabled>−1/30秒（近似）</button><button id="youtubeNext" type="button" disabled>＋1/30秒（近似）</button></div>
+        <div class="ytr-actions"><button id="youtubePause" type="button" disabled>一時停止</button><button id="youtubePrevFive" type="button" disabled>−5秒</button><button id="youtubePrevSec" type="button" disabled>−1秒</button><button id="youtubePrevTen" type="button" disabled>−10×1/30秒（近似）</button><button id="youtubePrev" type="button" disabled>−1/30秒（近似）</button><button id="youtubeNext" type="button" disabled>＋1/30秒（近似）</button><button id="youtubeNextTen" type="button" disabled>＋10×1/30秒（近似）</button><button id="youtubeNextSec" type="button" disabled>＋1秒</button><button id="youtubeNextFive" type="button" disabled>＋5秒</button></div>
         <p id="youtubePlaybackStatus" class="ytr-status" role="status">先に本人の動画を一覧から選択してください。</p>
         <p id="youtubePlaybackTime" class="ytr-note">--:--.---</p>
         <div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div>
-        <p class="ytr-warning">時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
+        <p class="ytr-warning">±10×1/30秒は約0.333秒の時刻指定で、実動画10コマの表示を保証しません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
       </div>
       <div class="ytr-group">
         <h3>4. ChatGPTへの手動引き継ぎ</h3>
