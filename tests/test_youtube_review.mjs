@@ -61,7 +61,7 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
  assert.match(module,/playerVars:\{playsinline:1,origin:location\.origin,controls:1,rel:0\}/);
  assert.match(module,/getPlayerState\(\)!==window\.YT\.PlayerState\?\.PAUSED/);
  assert.match(module,/player\.seekTo\(goal,true\)/);
- assert.match(module,/classifyReportedSeek\(current,goal,reported\)/);
+ assert.match(module,/classifyReportedSeek\(baseline,goal,reported\)/);
  assert.match(html,/細かい時刻移動/);
  assert.match(html,/本当の1コマ送りを保証するものではありません/);
  assert.match(html,/touch-action:manipulation/);
@@ -69,15 +69,15 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
    assert.match(html,new RegExp('id="'+id+'"'));
    assert.match(module,new RegExp('"'+id+'"'));
  }
- assert.match(module,/state\\.seekPlan=plan/);
- assert.match(module,/now-previous\\.at<=1500/);
- assert.match(html,/10×1\\/30秒/);
+ assert.ok(module.includes('state.seekPlan=plan'));
+ assert.ok(module.includes('now-previous.at<=1500'));
+ assert.ok(html.includes('10×1/30秒'));
 });
 test("Manual ChatGPT handoff does not claim actual video perception",()=>{
  assert.match(module,/youtubeCopy"\)\.addEventListener\("click"/);
  assert.match(module,/navigator\.clipboard\.writeText\(content\)/);
  assert.match(module,/映像をChatGPTが自動確認したわけではありません/);
- assert.match(module,/const millis=Math\\.round\\(current\\*1000\\)/);
+ assert.ok(module.includes('const millis=Math.round(current*1000)'));
  assert.match(module,/直近のシーク要求/);
  assert.match(html,/ChatGPTへ貼り付けてください/);
  assert.match(html,/既存レポートはこのYouTube動画に自動同期しません/);
