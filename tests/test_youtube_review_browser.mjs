@@ -103,6 +103,14 @@ async function main(){
  if(Math.abs(target-base)>0.001)throw Error("-5s preset wrong");
  await ev('document.querySelector("#youtubeNext").click()');
  await until(async()=>await ev('Math.abs(window.__ytPlayers[0].getCurrentTime()-'+JSON.stringify(base+1/30)+')<0.001'));
+ await ev('document.querySelector("#youtubeShare").click()');
+ const ownerLink=await ev('document.querySelector("#youtubeShareLink").value');
+ const friendUrl=new URL(ownerLink);
+ if(!friendUrl.pathname.endsWith("/youtube-share.html")||
+    friendUrl.searchParams.get("v")!=="AAAAAAAAAAA"||
+    friendUrl.searchParams.get("t")!=="5"||friendUrl.searchParams.size!==2||
+    ownerLink.includes("Mock Ed")||ownerLink.includes("SYNTHETIC_ONLY")||ownerLink.includes("対空"))
+    throw Error("Guest share URL included unexpected data or invalid parameters");
  await ev('document.querySelector("#youtubeNote").value="対空の確認";document.querySelector("#youtubeCopy").click()');
  await until(async()=>await ev('document.querySelector("#youtubeHandoff").value.includes("対空の確認")'));
  const handoff=await ev('document.querySelector("#youtubeHandoff").value');
@@ -118,6 +126,7 @@ async function main(){
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===0 && document.querySelector("#youtubePlayer").childElementCount===0'));
  const cleared=await ev('({tokenField:document.querySelector("#youtubeClientId").value,selected:document.querySelector("#youtubeCurrentTitle").textContent})');
  if(cleared.tokenField!==remembered)throw Error("Clear lost the saved public client ID");
+ if(await ev('document.querySelector("#youtubeShareLink").value!==""'))throw Error("Shared URL survived logout");
  await ev('document.querySelector("#youtubeBack").click()');
  await ev('document.querySelector("#youtubeOpen").click()');
  const reused=await ev('document.querySelector("#youtubeClientId").value');
