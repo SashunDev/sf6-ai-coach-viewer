@@ -213,6 +213,17 @@ async function main(){
     !restored.keep||!restored.consent||restored.items.length!==2)
    throw Error("Returning visitor cache not shown or not labeled stale: "+JSON.stringify(restored));
  if(apiRequests.length!==beforeReloadApiCalls)throw Error("Cached visit made an authenticated YouTube Data API request");
+ // Disabling/re-enabling local cache must preserve the original synchronizedAt;
+ // it must never silently extend the 30-day authorized-data retention window.
+ await ev('document.querySelector("#youtubeKeepList").checked=false;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
+ if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null')===false)
+   throw Error("Opt-out failed to remove saved owner list");
+ if(!(await ev('document.querySelector("#youtubeCacheNotice").textContent.includes("解除済み")')))
+   throw Error("Opt-out left a misleading stored-cache label");
+ await ev('document.querySelector("#youtubeKeepList").checked=true;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
+ const restoredAt=await ev('JSON.parse(window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")).savedAt');
+ if(restoredAt!==cachedMetadata.savedAt)
+   throw Error("Re-opt-in silently extended 30-day cache lifetime");
  // Loading the cached video needs NO owner Google token. Stub the official player
  // only for synthetic verification; don't contact real YouTube.
  await ev('window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.time=5;this.state=2;this.events=config.events;setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}pauseVideo(){this.state=2}seekTo(v){this.time=v}cueVideoById(){}destroy(){this.host.remove()}}};true');
