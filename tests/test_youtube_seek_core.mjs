@@ -10,6 +10,9 @@ test("30fps time seek bounded; not a step command",()=>{
  assert.ok(Math.abs(targetSeconds(1,SEEK_SMALL,4)-(1+1/30))<1e-8);
  assert.equal(targetSeconds(3.99,SEEK_SMALL,4),4);
  assert.equal(targetSeconds(0,-SEEK_SMALL,4),0);
+ assert.ok(Math.abs(targetSeconds(1,10*SEEK_SMALL,4)-(1+10/30))<1e-8);
+ assert.equal(targetSeconds(1,5,10),6);
+ assert.equal(targetSeconds(6,-5,10),1);
  assert.equal(targetSeconds(1,6,4),null);
  assert.equal(targetSeconds(NaN,SEEK_SMALL,4),null);
 });
