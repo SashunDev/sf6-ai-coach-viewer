@@ -78,6 +78,20 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
  assert.ok(module.includes('state.seekPlan=plan'));
  assert.ok(module.includes('now-previous.at<=1500'));
  assert.ok(html.includes('10×1/30秒'));
+ const ids=[["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],
+   ["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]];
+ const seekSection=html.slice(html.indexOf('class="ytr-seek-controls"'),html.indexOf('id="youtubePlaybackStatus"'));
+ assert.ok(seekSection.includes('class="ytr-seek-pause"'));
+ assert.equal((seekSection.match(/class="ytr-seek-pair"/g)||[]).length,4);
+ assert.equal((seekSection.match(/class="ytr-seek-group"/g)||[]).length,2);
+ for(const [previous,next] of ids){
+   const start=seekSection.indexOf('id="'+previous+'"');
+   const end=seekSection.indexOf('id="'+next+'"');
+   assert.ok(start>=0&&end>start&&end-start<220,"back/forward pair separated: "+previous);
+ }
+ assert.ok(html.includes('.ytr-seek-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)'));
+ assert.match(html,/min-height:52px/);
+ assert.match(html,/role="group" aria-label="細かい時刻移動（近似）"/);
 });
 test("Manual ChatGPT handoff does not claim actual video perception",()=>{
  assert.match(module,/youtubeCopy"\)\.addEventListener\("click"/);
