@@ -60,7 +60,7 @@ async function main(){
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
  await ev('document.querySelector("#youtubeOpen").click()');
  await until(async()=>await ev('!document.querySelector("#youtubeReviewPanel").hidden'));
- const mobileGeometry=await ev('(()=>{const pairs=[["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,pause:rect("youtubePause"),pairs:pairs.map(([a,b])=>[rect(a),rect(b)])}})()');
+ const mobileGeometry=await ev('(()=>{const pairs=[["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"],["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"]];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,pause:rect("youtubePause"),pairs:pairs.map(([a,b])=>[rect(a),rect(b)])}})()');
  if(mobileGeometry.width!==375||mobileGeometry.scrollWidth>375.5)throw Error("Mobile seek layout overflow: "+JSON.stringify(mobileGeometry));
  if(mobileGeometry.pause.h<44)throw Error("Pause target too small");
  let lastBottom=mobileGeometry.pause.y+mobileGeometry.pause.h;
@@ -76,7 +76,7 @@ async function main(){
  // Also check a compact desktop viewport where the video and all controls
  // must fit into one viewport when the review section is scrolled into view.
  const mobileSequence=mobileGeometry.pairs.map(pair=>pair[0].y);
- if(!(mobileSequence[2]<mobileSequence[0]))throw Error("Fine seek controls are not first on mobile");
+ if(!(mobileSequence[0]<mobileSequence[2]))throw Error("Fine seek controls are not first on mobile");
  await send("Emulation.setDeviceMetricsOverride",{width:1280,height:720,deviceScaleFactor:1,mobile:false});
  const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
  if(desk.scrollWidth>1280.5||desk.player.w>560.5||desk.player.h>315.5||desk.player.h<180)
