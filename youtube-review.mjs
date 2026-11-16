@@ -84,7 +84,9 @@ function buttons(){
  $("youtubeRevoke").disabled=!state.token;
  $("youtubeRefresh").disabled=!state.active||!window.google?.accounts?.oauth2?.initTokenClient;
 }
+function showRecovery(show){ $("youtubeRecovery").hidden=!show; }
 function clearPlayer(){
+ showRecovery(false);
  state.selectionSerial++;
  state.seekPlan=null;
  const old=state.player;state.player=null;state.playerReady=false;state.selected=null;
@@ -151,7 +153,7 @@ function activate(){
 function deactivate(){
  if(!state.active)return;
  // Navigation is reversible; only explicit clear/revoke erases notes or state.
- if(state.playerReady){try{state.player.pauseVideo();}catch{}}
+ if(state.player){try{state.player.pauseVideo();}catch{}}
  state.epoch++;
  if(state.controller)state.controller.abort();
  state.controller=null;
@@ -412,12 +414,12 @@ function mountPlayer(video,serial){
    events:{
      onReady:event=>{
        if(state.player!==event.target||!state.active)return;
-       state.playerReady=true;buttons();
+       state.playerReady=true;showRecovery(false);buttons();
        playback("公式プレイヤー準備完了。映像を再生した後、一時停止してください。");
      },
      onError:event=>{
        if(state.player!==event.target||!state.active)return;
-       state.playerReady=false;buttons();
+       state.playerReady=false;showRecovery(true);buttons();
        playback("YouTube埋め込み再生エラー "+String(event.data).slice(0,4)+
          "。動画の埋め込み制限を確認するか、端末内MP4を選択してください。");
      },
@@ -436,6 +438,7 @@ function mountPlayer(video,serial){
 async function selectVideo(video){
  if(!state.active||!(state.token||state.cachedView)||!isVideoId(video?.id)||!state.videos.some(v=>v.id===video.id))return;
  state.selectionSerial++;
+ showRecovery(false);
  state.seekPlan=null;
  const serial=state.selectionSerial;
  state.selected=video;
@@ -458,7 +461,7 @@ async function selectVideo(video){
      mountPlayer(video,serial);
    }
  }catch(e){
-   if(serial===state.selectionSerial)playback("プレイヤー起動失敗："+String(e?.message||"不明").slice(0,110));
+   if(serial===state.selectionSerial){showRecovery(true);playback("プレイヤー起動失敗："+String(e?.message||"不明").slice(0,110));}
  }
 }
 $("youtubePause").addEventListener("click",()=>{

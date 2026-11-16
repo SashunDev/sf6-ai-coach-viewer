@@ -82,7 +82,7 @@ body.youtube-review-active .workarea{display:block}body.youtube-review-active .l
 
 body[data-has-report="false"] .local-overview,body[data-has-report="false"] #insight,body[data-has-report="false"] .right-col,body[data-has-report="false"] #sceneReadout,body[data-has-report="false"] #markers{display:none}body[data-has-report="false"][data-review-mode="local"] .workarea{grid-template-columns:minmax(0,1fr)}body[data-has-report="false"][data-review-mode="local"] #viewer{max-width:1050px;margin:auto;width:100%}
 @media(max-width:760px){.workbench-heading h1{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}.heading-actions{margin-left:auto}#youtubeNote{height:96px;min-height:96px}#youtubeReviewPanel[data-has-video="false"] .youtube-stage,#youtubeReviewPanel[data-has-video="false"] .mobile-tabs{display:none}}
-@media(min-width:761px){#youtubePlayer{width:min(100%,max(320px,calc((100vh - 300px)*1.777778)));width:min(100%,max(320px,calc((100dvh - 300px)*1.777778)));margin:0 auto}}
+@media(min-width:761px){#youtubePlayer{width:min(100%,max(320px,calc((100vh - 360px)*1.777778)));width:min(100%,max(320px,calc((100dvh - 360px)*1.777778)));margin:0 auto}}
 body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{display:none}
 </style></head><body>
 <div class="layout">
@@ -129,9 +129,10 @@ body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{d
      <h2 id="youtubeCurrentTitle">動画未選択</h2>
      <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"><div class="youtube-empty"><strong>見返す動画を選択</strong><p>一覧から選ぶと、公式プレイヤーで開きます。</p></div></div>
      <div class="ytr-seek-controls" role="group" aria-label="動画の停止と時刻移動">
-      <div class="seek-seconds" role="group" aria-label="秒単位の移動"><button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>−5秒</button><button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>−1秒</button><button id="youtubePause" class="ytr-seek-pause" type="button" disabled>一時停止</button><button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>＋1秒</button><button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>＋5秒</button></div>
       <div class="seek-fine" role="group" aria-label="細かい時刻移動（近似）"><button id="youtubePrevTen" type="button" aria-label="10F相当戻る（近似）" disabled>−10F</button><button id="youtubePrev" type="button" aria-label="1F相当戻る（近似）" disabled>−1F</button><span>F相当・近似</span><button id="youtubeNext" type="button" aria-label="1F相当進む（近似）" disabled>＋1F</button><button id="youtubeNextTen" type="button" aria-label="10F相当進む（近似）" disabled>＋10F</button></div>
+      <div class="seek-seconds" role="group" aria-label="秒単位の移動"><button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>−5秒</button><button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>−1秒</button><button id="youtubePause" class="ytr-seek-pause" type="button" disabled>一時停止</button><button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>＋1秒</button><button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>＋5秒</button></div>
      </div>
+     <div id="youtubeRecovery" hidden><button id="youtubeLocalFallback" type="button">端末内MP4で開く</button></div>
      <div class="playback-line"><p id="youtubePlaybackTime">--:--.---</p><p id="youtubePlaybackStatus" class="ytr-status" role="status">一覧から動画を選択してください。</p></div>
 
     </div>
@@ -140,7 +141,7 @@ body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{d
    </div>
    <dialog id="youtubeSettings" class="workbench-dialog" aria-labelledby="youtubeSettingsTitle"><div class="dialog-heading"><h2 id="youtubeSettingsTitle">接続・保存設定</h2><button type="button" data-close-dialog>閉じる</button></div>
       <div class="ytr-group" id="youtubeAuthGroup">
-        <details class="playback-help"><summary>細かい時刻移動について</summary><p>本当の1コマ送りを保証するものではありません。1Fは1/30秒、10Fは10×1/30秒の近似的な時刻指定です。厳密なフレーム送り（10コマ・1コマの移動）ではありません。</p><div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div><button id="youtubeLocalFallback" type="button">端末内MP4で見直す</button></details><h3>Google接続と端末への保存</h3><p id="youtubeSettingsStatus" role="status" aria-live="polite"></p>
+        <details class="playback-help"><summary>細かい時刻移動について</summary><p>本当の1コマ送りを保証するものではありません。1Fは1/30秒、10Fは10×1/30秒の近似的な時刻指定です。厳密なフレーム送り（10コマ・1コマの移動）ではありません。</p><div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div></details><h3>Google接続と端末への保存</h3><p id="youtubeSettingsStatus" role="status" aria-live="polite"></p>
         <div id="youtubeClientIdRow"><label for="youtubeClientId">Google OAuth WebクライアントID（公開識別子のみ）</label>
         <input id="youtubeClientId" type="text" autocomplete="off" spellcheck="false" placeholder="123456789-xxxxx.apps.googleusercontent.com"></div>
         <p id="youtubeClientIdHelp" class="ytr-note">クライアントIDだけを、この端末に記憶できます。Google認証・同意は別途必要です。</p>

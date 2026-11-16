@@ -1,10 +1,15 @@
 // Browser-only smoke test for B0 mock UI. Does not ask Google for tokens or read private uploads.
 import {spawn} from "node:child_process";
-import {mkdtempSync,readFileSync,writeFileSync,rmSync} from "node:fs";
+import {request} from "node:http";
+function localRequest(url,method="GET"){return new Promise((resolve,reject)=>{const req=request(url,{method},res=>{let data="";res.setEncoding("utf8");res.on("data",c=>data+=c);res.on("end",()=>resolve({status:res.statusCode,data}));});req.on("error",reject);req.end();});}
+import {mkdtempSync,readFileSync,writeFileSync,rmSync,mkdirSync} from "node:fs";
 import {tmpdir} from "node:os";
 import {join} from "node:path";
+const evidence=process.env.SF6_QA_DIR||join(process.cwd(),"docs/qa/pr23");mkdirSync(evidence,{recursive:true});
 const dir=mkdtempSync(join(tmpdir(),"sf6-b0-browser-"));const procs=[];
-function launch(program,args,opts={}){const p=spawn(program,args,{...opts,stdio:"ignore"});procs.push(p);return p;}
+function launch(program,args,opts={}){const p=spawn(program,args,{...opts,stdio:["ignore","ignore","pipe"]});
+ p.stderr.on("data",chunk=>{writeFileSync(join(evidence,program.includes("chrom")?"browser-startup.log":"server.log"),chunk,{flag:"a"});});
+ p.on("error",e=>writeFileSync(join(evidence,"startup-error.log"),String(e)));procs.push(p);return p;}
 async function until(f,ms=16000){
  const stop=Date.now()+ms;
  while(Date.now()<stop){try{const x=await f();if(x)return x;}catch{}await new Promise(r=>setTimeout(r,200));}
@@ -16,20 +21,22 @@ async function main(){
   writeFileSync(join(dir,file),input);
  }
  launch("python3",["-m","http.server","18777","--bind","127.0.0.1"],{cwd:dir});
- await until(async()=> (await fetch("http://127.0.0.1:18777/index.html")).ok);
+ await until(async()=> (await localRequest("http://127.0.0.1:18777/index.html")).status===200);
  launch(process.env.CHROME_BIN||"google-chrome",
   ["--headless=new","--no-sandbox","--disable-gpu","--disable-dev-shm-usage",
    "--remote-allow-origins=*","--remote-debugging-port=18778",
    "--user-data-dir="+join(dir,"chrome-profile"),"--no-first-run"]);
  const tab=await until(async()=>{
-  const r=await fetch("http://127.0.0.1:18778/json/new?http://127.0.0.1:18777/index.html",{method:"PUT"});
-  return r.ok?await r.json():null;
+  const r=await localRequest("http://127.0.0.1:18778/json/new?http://127.0.0.1:18777/index.html","PUT");
+  return r.status===200?JSON.parse(r.data):null;
  });
  const ws=new WebSocket(tab.webSocketDebuggerUrl);
  await new Promise((res,rej)=>{ws.addEventListener("open",res,{once:true});ws.addEventListener("error",rej,{once:true});});
- let serial=0;const pending=new Map();const apiRequests=[];const external=[];
+ let serial=0;const pending=new Map();const apiRequests=[];const external=[];const consoleErrors=[];
  ws.addEventListener("message",e=>{
   const m=JSON.parse(e.data);
+  if(m.method==="Runtime.exceptionThrown")consoleErrors.push(m.params.exceptionDetails);
+  if(m.method==="Runtime.consoleAPICalled"&&m.params.type==="error")consoleErrors.push(m.params.args);
   if(m.method==="Network.requestWillBeSent"){const url=m.params?.request?.url||"";if(url.includes("youtube/v3"))apiRequests.push(url);if(url.startsWith("https://"))external.push(url.split("?")[0]);}
   if(!m.id||!pending.has(m.id))return;
   const p=pending.get(m.id);pending.delete(m.id);
@@ -45,7 +52,7 @@ async function main(){
   if(r.exceptionDetails)throw Error("Browser JS exception: "+JSON.stringify(r.exceptionDetails).slice(0,300));
   return r.result?.value;
  }
- await send("Runtime.enable");await send("Network.enable");
+ await send("Runtime.enable");await send("Network.enable");await send("Page.enable");
 
  await until(async()=>await ev('document.readyState==="complete" && !!document.querySelector("#youtubeOpen")'));
  await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
@@ -92,25 +99,55 @@ async function main(){
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===1'));
  await ev('document.querySelector("#youtubeList .youtube-card").click()');
  await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
- const mobileGeometry=await ev('(()=>{const ids=["youtubePause","youtubePrevTen","youtubeNextTen","youtubePrev","youtubeNext","youtubePrevFive","youtubeNextFive","youtubePrevSec","youtubeNextSec"];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,controls:Object.fromEntries(ids.map(id=>[id,rect(id)]))}})()');
- if(mobileGeometry.width!==375||mobileGeometry.scrollWidth>375.5)throw Error("Mobile toolbar overflow");
- for(const [id,r] of Object.entries(mobileGeometry.controls)){
-   if(r.w<44||r.h<44)throw Error("Small mobile target "+id+JSON.stringify(r));
+ const geometry=[];
+ const ids=["youtubePause","youtubePrevTen","youtubeNextTen","youtubePrev","youtubeNext","youtubePrevFive","youtubeNextFive","youtubePrevSec","youtubeNextSec"];
+ async function screenshot(name){const shot=await send("Page.captureScreenshot",{format:"png"});writeFileSync(join(evidence,name+".png"),Buffer.from(shot.data,"base64"));}
+ async function measure(){return ev('(()=>{const r=id=>{const x=document.getElementById(id).getBoundingClientRect();return{x:x.x,y:x.y,w:x.width,h:x.height,bottom:x.bottom}};return{width:innerWidth,height:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),controls:Object.fromEntries('+JSON.stringify(ids)+'.map(id=>[id,r(id)]))}})()');}
+ await ev('document.documentElement.style.scrollBehavior="auto";true');
+ for(const [width,height] of [[375,812],[390,844],[1280,720],[1440,1024],[1366,600]]){
+   const mobile=width<761;
+   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile});
+   await ev('window.scrollTo(0,0);true');
+   const g=await measure();
+   if(g.width!==width||g.scrollWidth>width+.5)throw Error("Viewport overflow "+JSON.stringify(g));
+   for(const [id,r] of Object.entries(g.controls))if(r.w<44||r.h<44)throw Error("Small tap target "+id+JSON.stringify(g));
+   for(const [a,b] of [["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]]){
+     const x=g.controls[a],y=g.controls[b];
+     if(x.x+x.w>y.x||Math.abs(x.y-y.y)>1)throw Error("Backward/forward pair shuffled "+JSON.stringify(g));
+   }
+   const fineBottom=Math.max(...["youtubePrevTen","youtubeNextTen","youtubePrev","youtubeNext"].map(id=>g.controls[id].bottom));
+   const secondsTop=Math.min(...["youtubePrevFive","youtubeNextFive","youtubePrevSec","youtubeNextSec"].map(id=>g.controls[id].y));
+   if(fineBottom>secondsTop)throw Error("Fine seeks not above seconds "+JSON.stringify(g));
+   if(Math.abs(g.player.w/g.player.h-16/9)>.025)throw Error("Player aspect ratio changed");
+   if(!mobile&&(g.player.y<0||Math.max(...Object.values(g.controls).map(r=>r.bottom))>height))throw Error("Player or LAST control below viewport "+JSON.stringify(g));
+   await screenshot(width+"x"+height+"-review");geometry.push(g);
+   // Tab switching preserves the selected replay and note, without mounting a new player.
+   if(mobile){
+     await ev('document.querySelector("#youtubeNote").value="layout-test-note";document.querySelector("#youtubeLibraryTab").click();true');
+     if(!(await ev('getComputedStyle(document.querySelector("#youtubeLibraryPane")).display!=="none"&&getComputedStyle(document.querySelector("#youtubeMemoPane")).display==="none"')))throw Error("Library tab failed");
+     await screenshot(width+"x"+height+"-library");
+     await ev('document.querySelector("#youtubeMemoTab").click();true');
+     if(!(await ev('getComputedStyle(document.querySelector("#youtubeMemoPane")).display!=="none"&&document.querySelector("#youtubeNote").value==="layout-test-note"')))throw Error("Memo tab failed");
+   }
+   await ev('document.querySelector("[data-settings]").click();true');
+   if(!(await ev('document.querySelector("#youtubeSettings").open&&document.querySelector("#youtubeSettings").contains(document.activeElement)')))throw Error("Settings focus missing");
+   await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
+   await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
+   if(!(await ev('document.querySelector("#youtubeSettings").contains(document.activeElement)')))throw Error("Dialog focus escaped");
+   await screenshot(width+"x"+height+"-settings");
+   await ev('document.querySelector("#youtubeSettings [data-close-dialog]").click();document.querySelector("#youtubeBack").click();true');
+   if(!(await ev('document.body.dataset.reviewMode==="home"&&getComputedStyle(document.querySelector(".workarea")).display==="none"')))throw Error("Mode choice failed");
+   await screenshot(width+"x"+height+"-home");
+   await ev('document.querySelector("#localOpen").click();true');
+   if(!(await ev('document.body.dataset.reviewMode==="local"&&document.querySelector("#youtubeReviewPanel").hidden')))throw Error("Local mode isolation failed");
+   await screenshot(width+"x"+height+"-local");
+   await ev('document.querySelector("[data-home]").click();document.querySelector("#youtubeOpen").click();window.scrollTo(0,0);true');
+   if(!(await ev('document.querySelector("#viewer").hidden&&getComputedStyle(document.querySelector("#insight")).display==="none"&&scrollY===0')))throw Error("YouTube isolation/scroll failed");
  }
- for(const [a,b] of [["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]]){
-   const x=mobileGeometry.controls[a],y=mobileGeometry.controls[b];
-   if(x.x>=y.x||Math.abs(x.y-y.y)>1)throw Error("Backward/forward pair shuffled");
- }
- const observedDesktop=[];
- for(const [width,height] of [[1280,720],[1440,1024],[1600,900],[1366,600]]){
-   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:false});
-   const desk=await ev('(()=>{const r=id=>{const x=document.getElementById(id).getBoundingClientRect();return{x:x.x,y:x.y,w:x.width,h:x.height,bottom:x.bottom}};return{scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),library:r("youtubeLibraryPane"),memo:r("youtubeMemoPane"),pause:r("youtubePause")}})()');
-   if(desk.scrollWidth>width+.5||Math.abs(desk.player.w/desk.player.h-16/9)>.025||desk.player.h<180)throw Error("Desktop player geometry regression "+JSON.stringify({width,height,desk}));
-   if(!(desk.library.x<desk.player.x&&desk.player.x<desk.memo.x))throw Error("Desktop workbench columns not ordered");
-   if(desk.pause.bottom>height)throw Error("Desktop pause below viewport");
-   observedDesktop.push({width,height,videoWidth:desk.player.w,videoHeight:desk.player.h});
- }
+ if(consoleErrors.length)throw Error("Console errors: "+JSON.stringify(consoleErrors));
+ writeFileSync(join(evidence,"layout-results.json"),JSON.stringify({geometry,consoleErrors,engine:"Chromium emulation, not physical iPhone Safari"},null,2));
  await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
+ const mobileGeometry=geometry[0],observedDesktop=geometry.filter(x=>x.width>760);
 
  await ev('document.querySelector("#youtubeNext").click()');
  await until(async()=>await ev('document.querySelector("#youtubeSeekLog").textContent.includes("未証明")'),5000);
@@ -221,6 +258,7 @@ async function main(){
  await ev('document.querySelector("#youtubeForgetList").click()');
  if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null||document.querySelectorAll("#youtubeList .youtube-card").length!==0'))
    throw Error("Forget saved list left persistent or visible owner metadata");
+ if(consoleErrors.length)throw Error("Console errors: "+JSON.stringify(consoleErrors));
  console.log("B3 OWNER CACHE BROWSER PASS",JSON.stringify({restored,friendShareHasUrl:!!cachedShare}));
  ws.close();
 }

@@ -14,6 +14,43 @@ const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8
 const videos=[{id:'AAAAAAAAAAA',title:'合成テスト：対空の確認',publishedAt:'2026-11-15T00:00:00Z',thumbnail:''},
  {id:'BBBBBBBBBBB',title:'合成テスト：起き攻め',publishedAt:'2026-11-14T00:00:00Z',thumbnail:''}];
 const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
+test('fine controls precede seconds and recovery is outside settings, hidden by default',()=>{
+ const t=setup();try{
+  const controls=t.d.querySelector('.ytr-seek-controls');
+  assert.equal(controls.firstElementChild.className,'seek-fine');
+  assert.equal(controls.lastElementChild.className,'seek-seconds');
+  assert.equal(t.d.getElementById('youtubeRecovery').hidden,true);
+  assert.equal(t.d.getElementById('youtubeLocalFallback').closest('dialog'),null);
+ }finally{t.close();}
+});
+
+test('embed error exposes direct MP4 picker and preserves owner state on return',async()=>{
+ const t=setup();try{
+  t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0];
+  t.d.getElementById('youtubeClientId').value='12345-test.apps.googleusercontent.com';
+  t.click('youtubeConnect');await tick();
+  const saved=t.w.localStorage.getItem(cache.CACHE_KEY);
+  assert.equal(t.calls.oauth,1);
+  t.d.getElementById('youtubeNote').value='復旧中も残すメモ';
+  assert.equal(t.d.getElementById('youtubeRecovery').hidden,true);
+  player.config.events.onError({target:player,data:101});
+  assert.equal(t.d.getElementById('youtubeRecovery').hidden,false);
+  assert.equal(t.d.getElementById('youtubeSettings').open,false);
+  let picker=0;t.d.getElementById('fileInput').click=()=>picker++;
+  t.click('youtubeLocalFallback');
+  assert.equal(t.d.body.dataset.reviewMode,'local');assert.equal(picker,1);
+  assert.equal(t.w.localStorage.getItem(cache.CACHE_KEY),saved);
+  t.click('youtubeOpen');
+  assert.equal(t.d.getElementById('youtubeNote').value,'復旧中も残すメモ');
+  assert.equal(player.time,42);assert.equal(player.state,2);
+  t.click('youtubeRefresh');await tick();assert.equal(t.calls.oauth,1);
+  assert.equal(t.d.querySelectorAll('.youtube-card').length,2);
+  t.d.querySelectorAll('.youtube-card')[1].click();await tick();
+  assert.equal(t.d.getElementById('youtubeRecovery').hidden,true);
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
 function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
  const errors=[];const console=new VirtualConsole();console.on('jsdomError',e=>errors.push(e));
  const dom=new JSDOM(html,{url:'https://viewer.example/'+hash,runScripts:'dangerously',virtualConsole:console,

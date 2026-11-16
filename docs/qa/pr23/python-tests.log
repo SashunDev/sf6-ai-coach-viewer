@@ -1,0 +1,51 @@
+..SETUP FAILED: Ingress public key already exists; refusing replacement
+If only the secret was created, delete that secret from GitHub settings before retrying.
+.SETUP FAILED: Ingress secret already exists; refusing key rotation
+If only the secret was created, delete that secret from GitHub settings before retrying.
+.SETUP FAILED: Cannot confirm public key is absent
+If only the secret was created, delete that secret from GitHub settings before retrying.
+.........................................NOT VERIFIED: sf6-coach-package-test-001.zip: ValueError: Unsafe
+........./opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/zipfile/__init__.py:1625: UserWarning: Duplicate name: 'test-001.mp4'
+  return self._open_to_write(zinfo, force_zip64=force_zip64)
+.......................................................usage: python3 -m unittest [-h] [--template TEMPLATE] --report REPORT --video
+                           VIDEO --out OUT
+python3 -m unittest: error: MP4 basename and match.id must match exactly
+................
+----------------------------------------------------------------------
+Ran 125 tests in 5.762s
+
+OK
+PASS: private ingress key installed as GitHub Actions secret.
+Public key committed to .github/sf6_dropbox_ingress_public_key.b64 for use by ChatGPT.
+DRY RUN: use --apply for one-time GitHub Actions ingress key setup
+Eligible single-upload packages: 1
+Publishing public SF6 replay package: sf6-coach-package-test-001.zip
+Eligible single-upload packages: 0
+Deleted public staging package: sf6-coach-package-test-001.zip
+Eligible single-upload packages: 1
+Publishing public SF6 replay package: sf6-coach-package-test-001.zip
+PASS Pages site built: 13 HTML pages, 0 MP4(s), 0 video bytes / 800000000 budget, 1 persistent JSON report(s), 607 bytes / 50000000 budget
+PASS Pages site built: 13 HTML pages, 1 MP4(s), 16 video bytes / 800000000 budget, 0 persistent JSON report(s), 0 bytes / 50000000 budget
+Release description corrected: JSON persists, video expires after 14 days
+VERIFIED PUBLIC VIDEO + JSON: https://sashundev.github.io/sf6-ai-coach-viewer/#id=match-01
+Pages build/deploy run: 125
+MP4 is public for up to 14 days; public JSON persists separately.
+Release description corrected: JSON persists, video expires after 14 days
+VERIFIED PUBLIC VIDEO + JSON: https://sashundev.github.io/sf6-ai-coach-viewer/#id=match-01
+Pages build/deploy run: 124
+MP4 is public for up to 14 days; public JSON persists separately.
+DRY RUN PASS: public replay+JSON preflight, id=match-01, report_bytes=557, video_bytes=112
+Existing asset names: none
+PUBLIC: everyone can access gameplay, opponent and coaching observations.
+Release description corrected: JSON persists, video expires after 14 days
+VERIFIED PUBLIC VIDEO + JSON: https://sashundev.github.io/sf6-ai-coach-viewer/#id=match-01
+Pages build/deploy run: 120
+MP4 is public for up to 14 days; public JSON persists separately.
+PASS: /tmp/tmpob8vshpz/bundle.html id=match-001 events=1
+NOTE: downloading HTML retains video locally beyond GitHub's 14-day public retention.
+VERIFIED VIDEO + JSON (GitHub Pages bytes and MIME): https://sashundev.github.io/sf6-ai-coach-viewer/#id=test-replay
+PASS: valid schema/ID and H.264; public MP4 and JSON SHA-256 match Release assets
+Browser playback and seeking on iPhone still require a separate real-device check.
+VERIFIED VIDEO + JSON (GitHub Pages bytes and MIME): https://sashundev.github.io/sf6-ai-coach-viewer/#id=test-replay
+PASS: valid schema/ID and H.264; public MP4 and JSON SHA-256 match Release assets
+Browser playback and seeking on iPhone still require a separate real-device check.

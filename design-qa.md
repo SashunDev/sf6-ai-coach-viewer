@@ -35,7 +35,7 @@ Reference source pixels: 1536 × 1024. It is a concept board with multiple app f
 
 ## Functional checks completed
 
-- Node: 51 passing tests, including six new DOM behavior regressions (jsdom, no layout engine or real Google/YouTube access).
+- Node: 53 passing tests, including eight DOM behavior regressions (jsdom, no layout engine or real Google/YouTube access).
 - Python: 125 passing tests, including Pages packaging, standalone exports and existing report workflows. PyNaCl was installed only into a scratch test-dependency directory to run the existing suite.
 - Mode entry remains first even with a saved library; expired metadata is purged without initiating authentication.
 - Selected replay, API time and memo survive mobile panel switches and navigation through home / local mode.
@@ -57,3 +57,41 @@ No visual comparison completed. Code review addressed an offline-export navigati
 4. Capture source + implementation comparisons and resolve P0/P1/P2 issues. Replace this blocked report with measured evidence before visual acceptance or production merge.
 
 No production merge, staging deployment, or release was performed.
+
+
+## PR #23 corrective review — 2026-11-16 JST
+
+Review: https://github.com/SashunDev/sf6-ai-coach-viewer/pull/23#pullrequestreview-5918139640
+Pre-correction head: `c7f8c3a17f7118896557a37ebfafa4c8125ac1ea`.
+Base: `feature/issue-18-youtube-review` / `ba21d615f4919fd5d00607d5f45aac949eba08b2`.
+
+| Finding | Change | Result |
+|---|---|---|
+| P1-1 fine seek above seconds | DOM places `.seek-fine` before `.seek-seconds`; existing column-flex toolbar preserves this order. Pause remains centered in seconds row. Approximate time offsets are unchanged. | DOM test PASS; actual visual order NOT TESTED |
+| P1-2 browser screen QA | Requested five-size runner attempted. Chromium cannot create its process singleton socket (EPERM). No screenshot obtained. | BLOCKED |
+| P2-1 discoverable recovery | Embed/API startup errors reveal a hidden-by-default direct MP4 button beside playback status, outside settings. New selection/ready/clear hides it. Picker navigates to local and retains video/time/note/cache/token; deactivation attempts to pause even a not-ready/error player. | Synthetic error → file picker → return → token reuse test PASS; real browser picker NOT TESTED |
+| P2-2 layout regressions | Runner checks fine-row bottom above seconds-row top, all backward/forward pairs, all nine controls ≥44×44, aspect ratio, PC player + ALL control bottoms inside viewport, mobile overflow, five-size mode/tab/dialog/focus/scroll flows. Captures screenshots, geometry JSON and console exceptions/errors when it can run. PC player height reserve increased from 300 to 360px to leave space for both rows in compact windows. | Syntax PASS; browser execution BLOCKED before layout checks |
+
+### Current browser attempt and evidence
+
+Command: `CHROME_BIN=/usr/bin/chromium SF6_QA_DIR="$PWD/docs/qa/pr23" npm run test:browser`.
+The first attempt encountered a Node/undici local HTTP parsing assertion. The runner's loopback control requests were changed to Node's built-in `http.request` (proxy configuration unchanged). On the subsequent attempt the HTTP server became reachable but Chromium aborted with `socket() failed: Operation not permitted (1)` in `process_singleton_posix.cc`. The runner exited 1 at new-tab acquisition. No further browser workaround, alternate browser surface or escalation was attempted.
+
+- [Browser invocation / failure](docs/qa/pr23/browser-test.log)
+- [Chromium startup diagnostic](docs/qa/pr23/browser-startup.log)
+- [Node tests: 53 PASS](docs/qa/pr23/node-tests.log)
+- [Python suite / packaging builds: 125 PASS](docs/qa/pr23/python-tests.log)
+
+| Target | Rendering / screenshots | Controls / bounds / overflow | Mode / tabs / dialog / keyboard / scroll | Browser console |
+|---|---|---|---|---|
+| iPhone-size 375×812 | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+| iPhone-size 390×844 | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+| PC 1280×720 | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+| PC 1440×1024 | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+| PC 1366×600 | NOT TESTED | NOT TESTED | NOT TESTED | NOT TESTED |
+
+The runner uses Chromium viewport emulation, not physical iPhone Safari. Even a future runner PASS does not prove Safari or real Google/YouTube video behavior. No fabricated screenshot or previous/source image is substituted as implementation evidence. No geometry JSON was produced because startup failed.
+
+Build checks: existing Pages builder and canonical standalone HTML tests run actual packaging on synthetic/mocked inputs in the 125-test Python suite; this is not a live Release fetch or deployment. JavaScript syntax, Python compile and `git diff --check` PASS. No OAuth/client/cache/seek-core/guest-route implementation, secret, owner data or production state was changed.
+
+**Status: BLOCKED / MERGE HOLD / Draft maintained.** Code changes are ready for independent source re-review; P1-2 and the execution/visual portions of P1-1/P2-2 remain unresolved until a permitted browser environment is available.
