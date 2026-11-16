@@ -60,6 +60,11 @@ async function main(){
  await until(async()=>await ev('!document.querySelector("#youtubeReviewPanel").hidden'));
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
+ const remembered=await ev('window.localStorage.getItem("sf6-coach-public-google-oauth-client-id-v1")');
+ if(remembered!=="1234567890-abcd.apps.googleusercontent.com")throw Error("Public client ID was not retained");
+ const onlyKeys=await ev('Object.keys(window.localStorage)');
+ if(onlyKeys.length!==1||onlyKeys[0]!=="sf6-coach-public-google-oauth-client-id-v1")throw Error("Sensitive data persisted in storage");
+
  const library=await ev('({titles:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent),apiCalls:window.__syntheticCalls})');
  if(library.titles.some(x=>x.includes("Private")))throw Error("Private video displayed");
  await ev('document.querySelector("#youtubeQuery").value="Ed";document.querySelector("#youtubeQuery").dispatchEvent(new Event("input",{bubbles:true}));true');
@@ -112,7 +117,17 @@ async function main(){
  await ev('document.querySelector("#youtubeClear").click()');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===0 && document.querySelector("#youtubePlayer").childElementCount===0'));
  const cleared=await ev('({tokenField:document.querySelector("#youtubeClientId").value,selected:document.querySelector("#youtubeCurrentTitle").textContent})');
- if(cleared.tokenField)throw Error("Clear left OAuth client input populated");
+ if(cleared.tokenField!==remembered)throw Error("Clear lost the saved public client ID");
+ await ev('document.querySelector("#youtubeBack").click()');
+ await ev('document.querySelector("#youtubeOpen").click()');
+ const reused=await ev('document.querySelector("#youtubeClientId").value');
+ if(reused!==remembered)throw Error("Returning to owner mode required Client ID reentry");
+ await ev('document.querySelector("#youtubeForgetClientId").click()');
+ const forgotten=await ev('({field:document.querySelector("#youtubeClientId").value,saved:window.localStorage.getItem("sf6-coach-public-google-oauth-client-id-v1")})');
+ if(forgotten.field||forgotten.saved)throw Error("Forget ID did not clear browser storage and input");
+ await ev('document.querySelector(\'meta[name="sf6-youtube-oauth-client-id"]\').content="1234567890-site.apps.googleusercontent.com";document.querySelector("#youtubeBack").click();document.querySelector("#youtubeOpen").click()');
+ const configured=await ev('({field:document.querySelector("#youtubeClientId").value,hidden:document.querySelector("#youtubeClientIdRow").hidden,forgetHidden:document.querySelector("#youtubeForgetClientId").hidden})');
+ if(!configured.hidden||!configured.forgetHidden||configured.field!=="1234567890-site.apps.googleusercontent.com")throw Error("Site-wide OAuth ID not auto-configured");
  await ev('document.querySelector("#youtubeBack").click()');
  const finish=await ev('({local:!document.querySelector("#viewer").hidden,youtubeHidden:document.querySelector("#youtubeReviewPanel").hidden,source:document.querySelector("#sourceBadge").textContent})');
  if(!finish.local||!finish.youtubeHidden||!finish.source.includes("LOCAL VIDEO"))throw Error("Local reviewer not restored");
