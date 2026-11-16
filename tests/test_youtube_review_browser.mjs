@@ -12,7 +12,7 @@ async function until(f,ms=16000){
 }
 async function main(){
  for(const file of ["index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
-  const input=readFileSync(new URL("./"+file,import.meta.url),"utf8");
+  const input=readFileSync(new URL("../"+file,import.meta.url),"utf8");
   writeFileSync(join(dir,file),input);
  }
  launch("python3",["-m","http.server","18777","--bind","127.0.0.1"],{cwd:dir});
