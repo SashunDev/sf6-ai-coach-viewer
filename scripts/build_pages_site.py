@@ -51,7 +51,7 @@ def inject_public_oauth_client_id(index_file: Path, client_id: str) -> bool:
 SITE_FILES = (
     "index.html", "demo.html", "release-smoke.html", "video-diagnostics.html",
     "pages-video-smoke.html", "pages-integration-smoke.html",
-    "youtube-review.mjs", "youtube-library-core.mjs", "youtube-seek-core.mjs", "youtube-privacy.html",
+    "youtube-review.mjs", "youtube-library-core.mjs", "youtube-library-cache.mjs", "youtube-seek-core.mjs", "youtube-privacy.html",
 )
 
 
