@@ -32,6 +32,7 @@ NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I | r
 SITE_FILES = (
     "index.html", "demo.html", "release-smoke.html", "video-diagnostics.html",
     "pages-video-smoke.html", "pages-integration-smoke.html",
+    "youtube-review.mjs", "youtube-library-core.mjs", "youtube-seek-core.mjs", "youtube-privacy.html",
 )
 
 
