@@ -53,7 +53,8 @@ async function main(){
  if(!start.viewer||!start.youtube||!start.hasFile)throw Error("Local reviewer changed by B3");
  // Inject synthetic Google/YT browser APIs only after load; no real OAuth, uploads or CDN.
  await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:()=>callback({access_token:"SYNTHETIC_ONLY"})}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
- await ev('window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.events=config.events;this.time=5;this.state=2;host.textContent="SYNTHETIC YT PLAYER";setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}pauseVideo(){this.state=2;this.events.onStateChange({target:this,data:2})}cueVideoById(_id){this.time=5;this.state=2;this.events.onStateChange({target:this,data:2})}seekTo(v){this.time=v}destroy(){this.host.remove()}}};true');
+ // Delayed API time intentionally emulates the asynchronous official YouTube iframe.
+ await ev('window.__ytPlayers=[];window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.events=config.events;this.time=5;this.state=2;this.requests=[];this.generation=0;window.__ytPlayers.push(this);host.textContent="SYNTHETIC YT PLAYER";setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}pauseVideo(){this.state=2;this.events.onStateChange({target:this,data:2})}cueVideoById(_id){this.generation++;this.time=5;this.state=2;this.events.onStateChange({target:this,data:2})}seekTo(v){this.requests.push(v);const gen=this.generation;setTimeout(()=>{if(gen===this.generation)this.time=v},120)}destroy(){this.generation++;this.host.remove()}}};true');
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
  await ev('document.querySelector("#youtubeOpen").click()');
  await until(async()=>await ev('!document.querySelector("#youtubeReviewPanel").hidden'));
@@ -67,10 +68,45 @@ async function main(){
  await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
  await ev('document.querySelector("#youtubeNext").click()');
  await until(async()=>await ev('document.querySelector("#youtubeSeekLog").textContent.includes("未証明")'),5000);
+ // Ten rapid taps arrive before getCurrentTime reflects any seek; every target
+ // must accumulate instead of repeating the identical 1/30s request.
+ const base=await ev('window.__ytPlayers[0].getCurrentTime()');
+ await ev('(()=>{for(let i=0;i<10;i++)document.querySelector("#youtubeNext").click();return true})()');
+ const forward=await ev('window.__ytPlayers[0].requests.slice(-10)');
+ for(let i=0;i<10;i++){
+   if(Math.abs(forward[i]-(base+(i+1)/30))>0.001)throw Error("Rapid +seek did not accumulate at step "+i);
+ }
+ await ev('(()=>{for(let i=0;i<10;i++)document.querySelector("#youtubePrev").click();return true})()');
+ const reverse=await ev('window.__ytPlayers[0].requests.slice(-10)');
+ for(let i=0;i<10;i++){
+   if(Math.abs(reverse[i]-(base+(9-i)/30))>0.001)throw Error("Rapid -seek did not reverse at step "+i);
+ }
+ await until(async()=>await ev('Math.abs(window.__ytPlayers[0].getCurrentTime()-'+JSON.stringify(base)+')<0.001'));
+ if(!(await ev('window.__ytPlayers[0].getPlayerState()===2')))throw Error("Rapid seek resumed playback");
+ // Verify 10-step and five-second presets use time offsets without frame claims.
+ await ev('document.querySelector("#youtubeNextTen").click()');
+ let target=await ev('window.__ytPlayers[0].requests.at(-1)');
+ if(Math.abs(target-(base+10/30))>0.001)throw Error("10-step preset wrong");
+ await ev('document.querySelector("#youtubePrevTen").click()');
+ target=await ev('window.__ytPlayers[0].requests.at(-1)');
+ if(Math.abs(target-base)>0.001)throw Error("reverse 10-step preset wrong");
+ await ev('document.querySelector("#youtubeNextFive").click()');
+ target=await ev('window.__ytPlayers[0].requests.at(-1)');
+ if(Math.abs(target-(base+5))>0.001)throw Error("+5s preset wrong");
+ await ev('document.querySelector("#youtubePrevFive").click()');
+ target=await ev('window.__ytPlayers[0].requests.at(-1)');
+ if(Math.abs(target-base)>0.001)throw Error("-5s preset wrong");
+ await ev('document.querySelector("#youtubeNext").click()');
+ await until(async()=>await ev('Math.abs(window.__ytPlayers[0].getCurrentTime()-'+JSON.stringify(base+1/30)+')<0.001'));
  await ev('document.querySelector("#youtubeNote").value="対空の確認";document.querySelector("#youtubeCopy").click()');
  await until(async()=>await ev('document.querySelector("#youtubeHandoff").value.includes("対空の確認")'));
  const handoff=await ev('document.querySelector("#youtubeHandoff").value');
  if(!handoff.includes("Mock Ed Match")||!handoff.includes("AI"))throw Error("Manual copy handoff missing");
+ const expectedMs=Math.round((base+1/30)*1000);
+ const expectedTime="00:"+String(Math.floor(expectedMs/1000)).padStart(2,"0")+"."+String(expectedMs%1000).padStart(3,"0");
+ if(!handoff.includes("時刻: "+expectedTime))throw Error("Subsecond handoff lost: "+handoff);
+ if(!handoff.includes("URLの再生開始は秒単位"))throw Error("Coarse YouTube URL not labeled");
+ if(!handoff.includes("直近のシーク要求"))throw Error("Seek request not distinguished from API time");
  await ev('document.querySelector("#youtubeQuery").value="";document.querySelector("#youtubeQuery").dispatchEvent(new Event("input",{bubbles:true}));document.querySelectorAll("#youtubeList .youtube-card")[1].click();true');
  await until(async()=>await ev('document.querySelector("#youtubeCurrentTitle").textContent==="Mock Alex Match"'));
  await ev('document.querySelector("#youtubeClear").click()');
