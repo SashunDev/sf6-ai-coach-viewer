@@ -1,6 +1,32 @@
-# Workbench UI — review pending
+# Workbench UI — hosted Chromium QA passed / owner acceptance pending
 
-final result: blocked
+final result: **SYNTHETIC CHROMIUM QA PASS / REAL iPHONE SAFARI + OWNER GOOGLE/YOUTUBE PENDING / MERGE HOLD**
+
+## 2026-11-16 — GitHub-hosted browser validation (newest evidence)
+
+Tested product/workflow commit: `f994e2bd4e5c6438bbe8bd477b19d5d4aac6c593` (the following documentation update does not modify app/test/workflow code).
+
+- [B3 Chromium + DOM QA: SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43851771014): pinned `npm ci`, **53/53 Node PASS**, Pages/standalone targeted Python regressions PASS, and synthetic real-Chromium browser suite PASS.
+- [P4 standalone viewer QA: SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43851771115).
+- [Browser QA artifact — 5 resolutions, screenshots and geometry JSON](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43851771014/artifacts/14218515952). 14-day retention; no private owner videos or OAuth credentials; UI uses mocked YouTube/Google, mock video titles and a mock iframe.
+- GitHub-hosted Linux Chromium was permitted to launch. Installed `fonts-noto-cjk` before the final pass to capture actual Japanese glyphs and realistic text wrapping. Earlier agent-local `socket() EPERM` blocker is avoided for this **synthetic hosted run only**.
+- Reviewed generated screenshots of entry, owner workbench, local mode, mobile library and settings at all five viewports; no obvious text-glyph boxes, horizontal clipping, seek-bar overlaps or obscured fixed controls observed. This is human review of **synthetic screenshots**, not physical iPhone or visual comparison against the original concept source.
+
+| Viewport | Video px (W×H, approx.) | Lowest seek control Y | Horizontal overflow | Synthetic UI/geometry |
+|---|---|---:|---|---|
+| Mobile 375×812 | 343×193 | 558 px | none | PASS |
+| Mobile 390×844 | 358×201 | 567 px | none | PASS |
+| Desktop 1280×720 | 640×360 | 711 px | none | PASS |
+| Desktop 1440×1024 | 838×471 | 822 px | none | PASS |
+| Desktop 1366×600 | 427×240 | 591 px | none | PASS |
+
+The Chromium runner exercised fine-seek row above seconds, directionality, all nine controls at least 44×44 CSS px, 16:9 video, desktop seek row through bottom of viewport, mobile overflow, mode choice/local/YouTube isolation, mobile tabs, settings dialog focus, and scroll reset. Captured runtime console errors **0**. Note: on 720px and 600px desktops the last seek row ends roughly **9 px** before the viewport edge; browser zoom, custom font and OS display scaling still warrant owner acceptance.
+
+**Prior hosted attempt (diagnostic):** [B3 job failure](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43851330280) reached Chromium and collected screenshots but failed a stale expectation requiring the home header to still say `LOCAL VIDEO`. Test fixed to expect `リプレイレビュー` after returning to home, without modifying functional UI; [follow-up PASS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/43851493468). A subsequent Japanese-font-enabled pass above also succeeded.
+
+**Still NOT TESTED / release gates:** actual iPhone Safari (not equivalent to Chromium mobile viewport emulation); owner Google OAuth, real unlisted video and official iframe playback; phone OS video/file-picker UX; owner screenshot/design acceptance; source-concept versus implementation fidelity. No production Pages deployment, PR merge or Draft status changes. The user earlier accepted the *older staging design*, not this PR #23 redesign.
+
+## Historical local-environment blocker and original design notes
 
 Source visual truth path: `/workspace/scratch/8e380c5cd6eb/generated_images/exec-78e6628e-78ca-4993-ae19-7cc2de159341.png` (the user's selected second design, 「ワークベンチ式 — 一覧と再生を行き来する」).
 
@@ -8,7 +34,7 @@ The selected reference is available in the design conversation; it is not a runt
 
 Implementation: `index.html`, `youtube-review.mjs` on `design/workbench-ui`.
 
-Implementation screenshot path: unavailable. No rendered screenshot of this implementation was obtained.
+Historical note: before the hosted runs, no implementation screenshots were available. The newer CI artifact linked above contains synthetic rendered screenshots at all five viewports.
 
 ## Blocking evidence
 
@@ -43,16 +69,16 @@ Reference source pixels: 1536 × 1024. It is a concept board with multiple app f
 - Initial consent, token reuse for refresh, revocation, cache deletion and existing URL validators remain covered with synthetic data.
 - Syntax checks and `git diff --check` pass.
 
-Browser console errors checked: **not completed**; there was no successful rendered implementation session. jsdom emitted no execution errors in the behavioral fixtures; this is not a browser-console pass.
+Historical agent-local session had no browser console coverage. The subsequent **hosted Chromium synthetic run** reported **0 console errors**. Real Safari/Google/YouTube network-console checks are still NOT TESTED.
 
 ## Comparison history
 
-No visual comparison completed. Code review addressed an offline-export navigation trap, hidden local keyboard shortcuts affecting other modes, first-entry exposure of sample report data, and cache expiry at the mode selector. These are functional fixes, **not** visual-QA iterations.
+No source-reference-to-implementation pixel comparison completed. Hosted implementation screenshots were visually inspected for gross layout/overflow issues as stated above. Code review addressed an offline-export navigation trap, hidden local keyboard shortcuts affecting other modes, first-entry exposure of sample report data, and cache expiry at the mode selector. These are functional fixes, **not** visual-QA iterations.
 
 ## Required before acceptance
 
-1. Open the actual branch in a working local HTTP preview; compare entry, selected-video workbench and local report states against the reference.
-2. Verify PC and iPhone Safari layouts, all touch targets, keyboard / dialog focus, pane switching, scroll position and browser console.
+1. Compare the captured synthetic browser screenshots against the actual selected design source with an accessible reference image, then request Owner visual acceptance of the redesigned workbench.
+2. Verify on physical PC Chrome and iPhone Safari; Chromium viewport/tab/dialog/geometry/console checks passed synthetically but do not substitute for physical device behavior.
 3. With the owner's existing authorized environment, check real Google connection, cached revisit / refresh, three owned videos, pause / approximate seeking, manual copy and an anonymous friend link.
 4. Capture source + implementation comparisons and resolve P0/P1/P2 issues. Replace this blocked report with measured evidence before visual acceptance or production merge.
 
