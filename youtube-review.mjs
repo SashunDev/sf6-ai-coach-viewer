@@ -7,7 +7,7 @@ const $=id=>document.getElementById(id);
 const state={
  active:false,epoch:0,token:null,controller:null,videos:[],partial:false,
  gisPromise:null,ytPromise:null,player:null,playerReady:false,
- selected:null,selectionSerial:0
+ selected:null,selectionSerial:0,savedFootnote:null
 };
 const status=message=>{ $("youtubeStatus").textContent=message; };
 const playback=message=>{ $("youtubePlaybackStatus").textContent=message; };
@@ -41,6 +41,7 @@ function clearSession(message="YouTube接続と一覧を消去しました。"){
  $("youtubeClientId").value="";
  $("youtubeConsent").checked=false;
  $("youtubeQuery").value="";
+ $("youtubeNote").value="";
  clearPlayer();render();
  status(message);
 }
@@ -53,6 +54,8 @@ function activate(){
  $("youtubeReviewPanel").hidden=false;
  $("sourceBadge").textContent="YOUTUBE公式プレイヤー · 外部通信あり";
  $("youtubeReviewTitle").focus();
+ const footnote=$("reviewFootnote");
+ if(footnote){state.savedFootnote=footnote.textContent;footnote.textContent="YouTubeモードはGoogle/YouTube公式サービスへ通信します。動画はAIへ自動送信されません。";}
  // Preload Google's official GIS script only after the owner opens this mode.
  // Actual OAuth access still requires a separate explicit consent and user click.
  if(!window.google?.accounts?.oauth2?.initTokenClient){
@@ -72,6 +75,7 @@ function deactivate(){
  $("youtubeReviewPanel").hidden=true;
  $("viewer").hidden=false;
  $("sourceBadge").textContent="LOCAL VIDEO · NO UPLOAD";
+ if(state.savedFootnote!==null){$("reviewFootnote").textContent=state.savedFootnote;state.savedFootnote=null;}
  $("youtubeOpen").focus();
 }
 $("youtubeOpen").addEventListener("click",activate);
@@ -238,18 +242,18 @@ function mountPlayer(video,serial){
    playerVars:{playsinline:1,origin:location.origin,controls:1,rel:0},
    events:{
      onReady:event=>{
-       if(serial!==state.selectionSerial||state.player!==event.target||!state.active)return;
+       if(state.player!==event.target||!state.active)return;
        state.playerReady=true;buttons();
        playback("公式プレイヤー準備完了。映像を再生した後、一時停止してください。");
      },
      onError:event=>{
-       if(serial!==state.selectionSerial||state.player!==event.target)return;
+       if(state.player!==event.target||!state.active)return;
        state.playerReady=false;buttons();
        playback("YouTube埋め込み再生エラー "+String(event.data).slice(0,4)+
          "。動画の埋め込み制限を確認するか、端末内MP4を選択してください。");
      },
      onStateChange:event=>{
-       if(serial!==state.selectionSerial||state.player!==event.target)return;
+       if(state.player!==event.target||!state.active)return;
        if(event.data===window.YT.PlayerState?.PAUSED)playback("停止中：細かい時刻移動ができます（近似）。");
        else if(event.data===window.YT.PlayerState?.PLAYING)playback("再生中：細かい時刻移動の前に停止してください。");
      }
