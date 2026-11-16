@@ -6,6 +6,7 @@ import {readCache,writeCache,removeCache} from "./youtube-library-cache.mjs";
 
 const $=id=>document.getElementById(id);
 const PUBLIC_ID_KEY="sf6-coach-public-google-oauth-client-id-v1";
+const localStore=()=>{try{return window.localStorage;}catch{return null;}};
 // The OAuth Web Client ID is a public identifier, not a client secret.
 // Only that ID may be remembered. Tokens, the YouTube library and video IDs
 // are still strictly tab-memory-only.
@@ -51,7 +52,7 @@ function cacheStatus(){
    cacheNote("端末への一覧保存は無効です。保存を有効にして同期すると次回は自動表示します。");
 }
 function restoreCachedList(){
- const saved=readCache(window.localStorage);
+ const saved=readCache(localStore());
  if(!saved){
    $("youtubeKeepList").checked=false;
    cacheStatus();
@@ -98,7 +99,7 @@ function clearSession(message="YouTube接続・一覧・保存分を消去しま
  state.controller=null;
  state.token=null;state.videos=[];state.partial=false;
  state.cachedView=false;state.lastSyncedAt=null;
- if(eraseSaved)removeCache(window.localStorage);
+ if(eraseSaved)removeCache(localStore());
  $("youtubeKeepList").checked=false;
  $("youtubeClientId").value="";
  setupClientId();
@@ -136,6 +137,7 @@ function activate(){
      if(state.active)status("Google認証の準備に失敗しました。保存一覧は閲覧できます。ネットワーク・コンテンツブロックを確認してください。");
    });
  }
+ buttons();
 }
 function deactivate(){
  if(!state.active)return;
@@ -156,7 +158,7 @@ $("youtubeLocalFallback").addEventListener("click",()=>{
 });
 $("youtubeClear").addEventListener("click",()=>clearSession());
 $("youtubeForgetList").addEventListener("click",()=>{
- removeCache(window.localStorage);
+ removeCache(localStore());
  $("youtubeKeepList").checked=false;
  state.lastSyncedAt=null;
  if(state.cachedView&&!state.token){
@@ -168,13 +170,13 @@ $("youtubeForgetList").addEventListener("click",()=>{
 });
 $("youtubeKeepList").addEventListener("change",()=>{
  if(!$("youtubeKeepList").checked){
-   removeCache(window.localStorage);
+   removeCache(localStore());
    if(!state.cachedView)state.lastSyncedAt=null;
    cacheStatus();
    return;
  }
  if(state.token&&!state.cachedView){
-   const ok=writeCache(window.localStorage,state.videos,state.partial);
+   const ok=writeCache(localStore(),state.videos,state.partial);
    if(ok)state.lastSyncedAt=Date.now();
    else status("一覧をこの端末に保存できませんでした。プライベートブラウズ・空き容量をご確認ください。");
  }
@@ -256,10 +258,10 @@ async function listOwnVideos(epoch,token){
    state.cachedView=false;state.lastSyncedAt=Date.now();
    if(state.selected&&!result.items.some(v=>v.id===state.selected.id))clearPlayer();
    if($("youtubeKeepList").checked){
-     if(!writeCache(window.localStorage,result.items,result.partial,state.lastSyncedAt))
+     if(!writeCache(localStore(),result.items,result.partial,state.lastSyncedAt))
        cacheNote("ブラウザへの保存に失敗しました。表示中の一覧はこのタブだけで利用できます。");
      else cacheStatus();
-   }else{removeCache(window.localStorage);cacheStatus();}
+   }else{removeCache(localStore());cacheStatus();}
    render();
    status("本人限定公開 "+result.items.length+"件を表示 / 候補 "+result.candidateCount+
      "件 / "+result.requests+" API要求"+(result.partial?"。取得上限により一部のみ。":"。"));
@@ -542,4 +544,4 @@ window.setInterval(()=>{
 render();buttons();
 // Only a locally opted-in, non-expired saved owner list triggers opening
 // this panel on plain page visits. Report links using # remain unaffected.
-if(!window.location.hash&&readCache(window.localStorage))activate();
+if(!window.location.hash&&readCache(localStore()))activate();
