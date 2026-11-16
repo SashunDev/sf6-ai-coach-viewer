@@ -30,7 +30,7 @@ REPORT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,79}\.json$", re.A
 
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I | re.ASCII)
 CLIENT_ID_MARKER = '<meta name="sf6-youtube-oauth-client-id" content="">'
-CLIENT_ID_PATTERN = re.compile(r"^[0-9]+-[a-zA-Z0-9_-]+\\.apps\\.googleusercontent\\.com$".replace("\\\\.", "\\."))
+CLIENT_ID_PATTERN = re.compile(r"^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$")
 # The identifier is public. Reject any markup/quotes rather than HTML-escaping
 # a potentially-secret or malformed environment value into a public artifact.
 def inject_public_oauth_client_id(index_file: Path, client_id: str) -> bool:
