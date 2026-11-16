@@ -106,7 +106,13 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <p class="ytr-warning">±10×1/30秒は約0.333秒の時刻指定で、実動画10コマの表示を保証しません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
       </div>
       <div class="ytr-group">
-        <h3>4. ChatGPTへの手動引き継ぎ</h3>
+        <h3>4. 友人への動画共有（リンクを知っている人が視聴可能）</h3>
+        <p class="ytr-note">共有する動画を自分で選び、明示的にボタンを押した場合だけ、動画1本のIDと現在の再生秒数を含む視聴専用リンクを作ります。本人のGoogle認証・動画一覧・振り返りメモは共有しません。限定公開リンクは転送可能です。</p>
+        <div class="ytr-actions"><button id="youtubeShare" type="button" disabled>友人向け視聴リンクをコピー</button></div>
+        <label for="youtubeShareLink">共有URL（自動コピーできない場合はこちら）</label>
+        <input id="youtubeShareLink" type="text" readonly autocomplete="off" spellcheck="false" placeholder="動画を選択して共有ボタンを押してください">
+      </div>
+      <div class="ytr-group"><h3>5. ChatGPTへの手動引き継ぎ</h3>
         <label for="youtubeNote">振り返りたい内容（任意）</label>
         <textarea id="youtubeNote" rows="2" placeholder="例：対空の判断が遅れた"></textarea>
         <div class="ytr-actions"><button id="youtubeCopy" type="button" disabled>動画・時刻・メモをコピー</button></div>
