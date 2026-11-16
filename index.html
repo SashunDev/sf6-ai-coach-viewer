@@ -25,6 +25,19 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
 .ytr-actions{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}
 .ytr-actions button,.ytr-actions a{min-height:44px;padding:10px 12px;border-radius:9px;border:1px solid #5c7a9c;background:#243b59;color:#e9f4fc;font-size:12px}
 .ytr-actions button.ytr-main{background:var(--accent);color:#102020;border-color:var(--accent);font-weight:800}
+/* Backwards on the left; forwards on the right, with no flex-wrap reshuffling. */
+.ytr-seek-controls{display:grid;gap:12px;margin:12px 0 15px;min-width:0}
+.ytr-seek-controls button{border:1px solid #58799c;border-radius:11px;background:#233c5c;color:#eaf5ff;font-weight:750;touch-action:manipulation;min-width:0}
+.ytr-seek-controls button:active:not(:disabled){background:#365f85}
+.ytr-seek-pause{min-height:52px;width:100%;font-size:14px}
+.ytr-seek-group{background:#111f33;border:1px solid #344f6e;border-radius:12px;padding:11px;min-width:0}
+.ytr-seek-label{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:3px 10px;margin:0 0 9px;color:#edf5ff;font-size:13px;font-weight:800}
+.ytr-seek-label span{font-size:11px;font-weight:500;color:#9fbbd2}
+.ytr-seek-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;min-width:0}
+.ytr-seek-pair+.ytr-seek-pair{margin-top:9px}
+.ytr-seek-pair button{width:100%;min-height:52px;padding:9px 5px;font-size:clamp(12px,2.5vw,14px);line-height:1.35;white-space:nowrap}
+@media(max-width:380px){.ytr-seek-group{padding:8px}.ytr-seek-pair{gap:7px}.ytr-seek-pair button{font-size:12px}}
+
 .ytr-status{font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;color:#bfd8ee;margin:8px 0}
 .ytr-note{font-size:11px;color:#a3b8ce;line-height:1.6}
 .ytr-note a,.ytr-content a{color:#b9e6ff}
@@ -99,11 +112,35 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
         <h3>3. 公式YouTubeプレイヤーで細かい時刻移動（近似）</h3>
         <p id="youtubeCurrentTitle" class="ytr-status">動画未選択</p>
         <div id="youtubePlayer" aria-label="YouTube公式動画プレイヤー"></div>
-        <div class="ytr-actions"><button id="youtubePause" type="button" disabled>一時停止</button><button id="youtubePrevFive" type="button" disabled>−5秒</button><button id="youtubePrevSec" type="button" disabled>−1秒</button><button id="youtubePrevTen" type="button" disabled>−10×1/30秒（近似）</button><button id="youtubePrev" type="button" disabled>−1/30秒（近似）</button><button id="youtubeNext" type="button" disabled>＋1/30秒（近似）</button><button id="youtubeNextTen" type="button" disabled>＋10×1/30秒（近似）</button><button id="youtubeNextSec" type="button" disabled>＋1秒</button><button id="youtubeNextFive" type="button" disabled>＋5秒</button></div>
+        <div class="ytr-seek-controls" role="group" aria-label="動画の停止と時刻移動">
+          <button id="youtubePause" class="ytr-seek-pause" type="button" disabled>⏸ 一時停止</button>
+          <div class="ytr-seek-group" role="group" aria-label="秒単位の移動">
+            <p class="ytr-seek-label">秒単位の移動 <span>← 戻る　｜　進む →</span></p>
+            <div class="ytr-seek-pair" role="group" aria-label="5秒単位">
+              <button id="youtubePrevFive" type="button" aria-label="5秒戻る" disabled>← 5秒</button>
+              <button id="youtubeNextFive" type="button" aria-label="5秒進む" disabled>5秒 →</button>
+            </div>
+            <div class="ytr-seek-pair" role="group" aria-label="1秒単位">
+              <button id="youtubePrevSec" type="button" aria-label="1秒戻る" disabled>← 1秒</button>
+              <button id="youtubeNextSec" type="button" aria-label="1秒進む" disabled>1秒 →</button>
+            </div>
+          </div>
+          <div class="ytr-seek-group" role="group" aria-label="細かい時刻移動（近似）">
+            <p class="ytr-seek-label">細かい時刻移動 <span>1/30秒基準・近似</span></p>
+            <div class="ytr-seek-pair" role="group" aria-label="約0.33秒単位（10倍）">
+              <button id="youtubePrevTen" type="button" aria-label="約0.33秒戻る（近似）" disabled>← 約0.33秒</button>
+              <button id="youtubeNextTen" type="button" aria-label="約0.33秒進む（近似）" disabled>約0.33秒 →</button>
+            </div>
+            <div class="ytr-seek-pair" role="group" aria-label="約0.033秒単位">
+              <button id="youtubePrev" type="button" aria-label="約0.033秒戻る（近似）" disabled>← 約0.033秒</button>
+              <button id="youtubeNext" type="button" aria-label="約0.033秒進む（近似）" disabled>約0.033秒 →</button>
+            </div>
+          </div>
+        </div>
         <p id="youtubePlaybackStatus" class="ytr-status" role="status">先に本人の動画を一覧から選択してください。</p>
         <p id="youtubePlaybackTime" class="ytr-note">--:--.---</p>
         <div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div>
-        <p class="ytr-warning">±10×1/30秒は約0.333秒の時刻指定で、実動画10コマの表示を保証しません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
+        <p class="ytr-warning">「約0.33秒」は10×1/30秒、「約0.033秒」は1/30秒の時刻指定です。実動画の10コマ・1コマ移動を保証しません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
       </div>
       <div class="ytr-group">
         <h3>4. 友人への動画共有（リンクを知っている人が視聴可能）</h3>
