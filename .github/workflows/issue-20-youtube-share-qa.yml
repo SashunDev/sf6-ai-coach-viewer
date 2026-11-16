@@ -1,0 +1,29 @@
+name: B4 guest YouTube share QA
+on:
+  pull_request:
+    paths:
+      - 'youtube-share.html'
+      - 'youtube-share.mjs'
+      - 'tests/test_youtube_share.mjs'
+      - 'scripts/build_pages_site.py'
+      - '.github/workflows/pages-video-site.yml'
+      - '.github/workflows/issue-20-youtube-share-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  guest-share-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify guest URL validation, lazy official embed, and OAuth isolation
+        run: |
+          node --check youtube-share.mjs
+          node --test tests/test_youtube_share.mjs
+      - name: Verify existing Pages release builder
+        run: |
+          python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
