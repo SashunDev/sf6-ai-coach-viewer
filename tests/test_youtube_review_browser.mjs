@@ -11,7 +11,7 @@ async function until(f,ms=16000){
  throw Error("Timeout in B0 mock browser smoke");
 }
 async function main(){
- for(const file of ["index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
+ for(const file of ["index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
   const input=readFileSync(new URL("../"+file,import.meta.url),"utf8");
   writeFileSync(join(dir,file),input);
  }
@@ -99,13 +99,29 @@ async function main(){
  if(observedDesktop[1].videoWidth<=observedDesktop[0].videoWidth+200)
    throw Error("Desktop player did not respond to available height: "+JSON.stringify(observedDesktop));
  await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
+ if(await ev('document.querySelector("#youtubeKeepList").checked'))throw Error("Owner storage opt-in must start disabled");
+ await ev('document.querySelector("#youtubeKeepList").checked=true;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
  if((await ev('window.__lastOAuthPrompt'))!=="")throw Error("OAuth must reuse prior consent without forced select_account");
  const remembered=await ev('window.localStorage.getItem("sf6-coach-public-google-oauth-client-id-v1")');
  if(remembered!=="1234567890-abcd.apps.googleusercontent.com")throw Error("Public client ID was not retained");
- const onlyKeys=await ev('Object.keys(window.localStorage)');
- if(onlyKeys.length!==1||onlyKeys[0]!=="sf6-coach-public-google-oauth-client-id-v1")throw Error("Sensitive data persisted in storage");
+ const cachedSnapshot=await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")');
+ if(!cachedSnapshot)throw Error("Opted-in owner list was not stored");
+ const cachedMetadata=JSON.parse(cachedSnapshot);
+ if(cachedMetadata.items.length!==2||
+    cachedMetadata.items.some(x=>x.title==="Private fixture"||Object.keys(x).some(k=>!["id","title","publishedAt","thumbnail"].includes(k)))||
+    cachedSnapshot.includes("SYNTHETIC_ONLY")||cachedSnapshot.includes("token"))
+   throw Error("Private or credential-like data entered local cache");
+ const onlyKeys=await ev('Object.keys(window.localStorage).sort()');
+ if(onlyKeys.length!==2||onlyKeys[0]!=="sf6-coach-owner-unlisted-list-v1"||
+    onlyKeys[1]!=="sf6-coach-public-google-oauth-client-id-v1")
+   throw Error("Unexpected persistent browser keys: "+JSON.stringify(onlyKeys));
+ const beforeRefresh=await ev('window.__syntheticCalls');
+ await ev('document.querySelector("#youtubeRefresh").click()');
+ await until(async()=>await ev('window.__syntheticCalls >= '+(beforeRefresh+3)));
+ if((await ev('window.__lastOAuthPrompt'))!=="")throw Error("Refresh with active token unnecessarily changed OAuth prompt");
+
 
  const library=await ev('({titles:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent),apiCalls:window.__syntheticCalls})');
  if(library.titles.some(x=>x.includes("Private")))throw Error("Private video displayed");
@@ -166,6 +182,8 @@ async function main(){
  await until(async()=>await ev('document.querySelector("#youtubeCurrentTitle").textContent==="Mock Alex Match"'));
  await ev('document.querySelector("#youtubeClear").click()');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===0 && document.querySelector("#youtubePlayer").childElementCount===0'));
+ if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null'))
+   throw Error("Logout did not immediately clear persisted YouTube list");
  const cleared=await ev('({tokenField:document.querySelector("#youtubeClientId").value,selected:document.querySelector("#youtubeCurrentTitle").textContent})');
  if(cleared.tokenField!==remembered)throw Error("Clear lost the saved public client ID");
  if(await ev('document.querySelector("#youtubeShareLink").value!==""'))throw Error("Shared URL survived logout");
@@ -183,7 +201,30 @@ async function main(){
  const finish=await ev('({local:!document.querySelector("#viewer").hidden,youtubeHidden:document.querySelector("#youtubeReviewPanel").hidden,source:document.querySelector("#sourceBadge").textContent})');
  if(!finish.local||!finish.youtubeHidden||!finish.source.includes("LOCAL VIDEO"))throw Error("Local reviewer not restored");
  if(apiRequests.length||external.length)throw Error("Mock browser unexpectedly sent real private Google/YouTube network requests");
- console.log("B3 OWNER MODE BROWSER PASS",JSON.stringify({start,library,cleared,finish,externalCalls:external.length}));
+ // A subsequent visit to this device MUST show the previous owner list
+ // without clicking Google OAuth. Reuse the cache created by the real opt-in path.
+ await ev('window.localStorage.setItem("sf6-coach-owner-unlisted-list-v1",'+JSON.stringify(cachedSnapshot)+');window.localStorage.setItem("sf6-coach-public-google-oauth-client-id-v1",'+JSON.stringify("1234567890-abcd.apps.googleusercontent.com")+');true');
+ const beforeReloadApiCalls=apiRequests.length;
+ await send("Page.enable");
+ await send("Page.reload",{ignoreCache:true});
+ await until(async()=>await ev('document.readyState==="complete"&&document.querySelector("#youtubeReviewPanel")&&!document.querySelector("#youtubeReviewPanel").hidden&&document.querySelectorAll("#youtubeList .youtube-card").length===2'));
+ const restored=await ev('({cachedLabel:document.querySelector("#youtubeCount").textContent,notice:document.querySelector("#youtubeCacheNotice").textContent,keep:document.querySelector("#youtubeKeepList").checked,consent:document.querySelector("#youtubeConsent").checked,items:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent)})');
+ if(!restored.cachedLabel.includes("前回保存")||!restored.notice.includes("最終同期")||
+    !restored.keep||!restored.consent||restored.items.length!==2)
+   throw Error("Returning visitor cache not shown or not labeled stale: "+JSON.stringify(restored));
+ if(apiRequests.length!==beforeReloadApiCalls)throw Error("Cached visit made an authenticated YouTube Data API request");
+ // Loading the cached video needs NO owner Google token. Stub the official player
+ // only for synthetic verification; don't contact real YouTube.
+ await ev('window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.time=5;this.state=2;this.events=config.events;setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}pauseVideo(){this.state=2}seekTo(v){this.time=v}cueVideoById(){}destroy(){this.host.remove()}}};true');
+ await ev('document.querySelector("#youtubeList .youtube-card").click()');
+ await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
+ await ev('document.querySelector("#youtubeShare").click()');
+ const cachedShare=await ev('document.querySelector("#youtubeShareLink").value');
+ if(!cachedShare.includes("v=AAAAAAAAAAA"))throw Error("Cached video failed share-link handoff");
+ await ev('document.querySelector("#youtubeForgetList").click()');
+ if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null||document.querySelectorAll("#youtubeList .youtube-card").length!==0'))
+   throw Error("Forget saved list left persistent or visible owner metadata");
+ console.log("B3 OWNER CACHE BROWSER PASS",JSON.stringify({restored,friendShareHasUrl:!!cachedShare}));
  ws.close();
 }
 try{await main();}finally{for(const p of procs){try{p.kill("SIGTERM");}catch{}}try{rmSync(dir,{recursive:true,force:true});}catch{}}
