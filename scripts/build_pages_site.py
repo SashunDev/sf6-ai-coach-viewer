@@ -29,11 +29,29 @@ REPORT_MAX_COUNT = 2000
 REPORT_NAME_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,79}\.json$", re.ASCII)
 
 NAME_PATTERN = re.compile(r"^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}\.mp4$", re.I | re.ASCII)
+CLIENT_ID_MARKER = '<meta name="sf6-youtube-oauth-client-id" content="">'
+CLIENT_ID_PATTERN = re.compile(r"^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$")
+# The identifier is public. Reject any markup/quotes rather than HTML-escaping
+# a potentially-secret or malformed environment value into a public artifact.
+def inject_public_oauth_client_id(index_file: Path, client_id: str) -> bool:
+    if not client_id:
+        return False
+    if CLIENT_ID_PATTERN.fullmatch(client_id) is None:
+        raise ValueError("Invalid public Google OAuth Client ID configuration")
+    source = index_file.read_text(encoding="utf-8")
+    if source.count(CLIENT_ID_MARKER) != 1:
+        raise ValueError("OAuth Client ID meta marker changed or ambiguous")
+    index_file.write_text(source.replace(
+        CLIENT_ID_MARKER,
+        '<meta name="sf6-youtube-oauth-client-id" content="' + client_id + '">',
+        1
+    ), encoding="utf-8")
+    return True
+
 SITE_FILES = (
     "index.html", "demo.html", "release-smoke.html", "video-diagnostics.html",
     "pages-video-smoke.html", "pages-integration-smoke.html",
-    # OAuth-free, watch-only guest route. No private owner library is published.
-    "youtube-share.html", "youtube-share.mjs",
+    "youtube-review.mjs", "youtube-library-core.mjs", "youtube-library-cache.mjs", "youtube-seek-core.mjs", "youtube-privacy.html", "youtube-share.html", "youtube-share.mjs",
 )
 
 
@@ -172,6 +190,11 @@ def build(out_dir: Path, source_dir: Path, assets: list[Asset], token: str,
         if not origin.is_file():
             raise FileNotFoundError(f"Required page missing: {filename}")
         shutil.copyfile(origin, out_dir / filename)
+    # A GitHub Actions Repository Variable may supply the *public* Web Client ID
+    # once for all devices. Never include Client Secret or access tokens here.
+    inject_public_oauth_client_id(
+        out_dir / "index.html", os.environ.get("SF6_YOUTUBE_OAUTH_CLIENT_ID", "").strip()
+    )
     media_dir = out_dir / "media"
     media_dir.mkdir()
     for asset in assets:

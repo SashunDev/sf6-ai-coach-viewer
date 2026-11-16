@@ -1,0 +1,44 @@
+name: B3 owner YouTube review integration QA
+on:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'youtube-*.mjs'
+      - 'youtube-privacy.html'
+      - 'scripts/build_pages_site.py'
+      - 'scripts/build_standalone_report.py'
+      - 'tests/test_youtube_*'
+      - 'tests/test_viewer_pages.cjs'
+      - '.github/workflows/issue-18-youtube-review-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  owner-youtube-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: New owner-library and seek JS modules parse
+        run: |
+          node --check youtube-library-core.mjs
+          node --check youtube-library-cache.mjs
+          node --check youtube-seek-core.mjs
+          node --check youtube-review.mjs
+          node --check tests/test_youtube_review_browser.mjs
+          python3 -m py_compile scripts/build_pages_site.py scripts/build_standalone_report.py
+      - name: Product integration, existing review, and read-only API regression
+        run: |
+          node --test tests/test_youtube_library_core.mjs tests/test_youtube_cache.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_viewer_pages.cjs
+      - name: Legacy Pages build and canonical offline bundle regressions
+        run: |
+          python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
+          python3 -m unittest discover -s tests -p 'test_standalone_report.py' -v
+          python3 -m unittest discover -s tests -p 'test_youtube_standalone.py' -v
+      - name: Synthetic Chromium product review flow (no Google auth or user videos)
+        run: |
+          command -v google-chrome
+          node tests/test_youtube_review_browser.mjs
