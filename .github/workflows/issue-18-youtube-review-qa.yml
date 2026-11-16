@@ -39,6 +39,11 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_pages_build.py' -v
           python3 -m unittest discover -s tests -p 'test_standalone_report.py' -v
           python3 -m unittest discover -s tests -p 'test_youtube_standalone.py' -v
+      - name: Install Japanese fonts for realistic UI geometry and screenshots
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends fonts-noto-cjk
+          fc-list :lang=ja family | head -n 8
       - name: Synthetic Chromium PR #23 workbench geometry and interaction QA
         env:
           SF6_QA_DIR: ${{ runner.temp }}/sf6-pr23-browser-qa
