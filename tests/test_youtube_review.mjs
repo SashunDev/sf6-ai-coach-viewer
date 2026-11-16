@@ -83,6 +83,14 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
  const seekSection=html.slice(html.indexOf('class="ytr-seek-controls"'),html.indexOf('id="youtubePlaybackStatus"'));
  assert.ok(seekSection.includes('class="ytr-seek-pause"'));
  assert.equal((seekSection.match(/class="ytr-seek-pair"/g)||[]).length,4);
+ for(const [id,label] of [
+   ["youtubePrevTen","← 10F"],["youtubeNextTen","10F →"],
+   ["youtubePrev","← 1F"],["youtubeNext","1F →"]
+ ]){
+   assert.ok(seekSection.includes('id="'+id+'"'),"seek control missing: "+id);
+   assert.ok(seekSection.includes('disabled>'+label+'</button>'),"label missing: "+label);
+ }
+ assert.ok(html.includes('厳密なフレーム送り（10コマ・1コマの移動）ではありません。'));
  assert.equal((seekSection.match(/class="ytr-seek-group"/g)||[]).length,2);
  for(const [previous,next] of ids){
    const start=seekSection.indexOf('id="'+previous+'"');
