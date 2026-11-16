@@ -127,20 +127,20 @@ body.youtube-review-active .right-col,body.youtube-review-active #insight{displa
           </div>
           <div class="ytr-seek-group" role="group" aria-label="細かい時刻移動（近似）">
             <p class="ytr-seek-label">細かい時刻移動 <span>1/30秒基準・近似</span></p>
-            <div class="ytr-seek-pair" role="group" aria-label="約0.33秒単位（10倍）">
-              <button id="youtubePrevTen" type="button" aria-label="約0.33秒戻る（近似）" disabled>← 約0.33秒</button>
-              <button id="youtubeNextTen" type="button" aria-label="約0.33秒進む（近似）" disabled>約0.33秒 →</button>
+            <div class="ytr-seek-pair" role="group" aria-label="10F相当（約0.33秒、近似）">
+              <button id="youtubePrevTen" type="button" aria-label="10F相当戻る（約0.33秒の近似時刻移動）" disabled>← 10F</button>
+              <button id="youtubeNextTen" type="button" aria-label="10F相当進む（約0.33秒の近似時刻移動）" disabled>10F →</button>
             </div>
-            <div class="ytr-seek-pair" role="group" aria-label="約0.033秒単位">
-              <button id="youtubePrev" type="button" aria-label="約0.033秒戻る（近似）" disabled>← 約0.033秒</button>
-              <button id="youtubeNext" type="button" aria-label="約0.033秒進む（近似）" disabled>約0.033秒 →</button>
+            <div class="ytr-seek-pair" role="group" aria-label="1F相当（約0.033秒、近似）">
+              <button id="youtubePrev" type="button" aria-label="1F相当戻る（約0.033秒の近似時刻移動）" disabled>← 1F</button>
+              <button id="youtubeNext" type="button" aria-label="1F相当進む（約0.033秒の近似時刻移動）" disabled>1F →</button>
             </div>
           </div>
         </div>
         <p id="youtubePlaybackStatus" class="ytr-status" role="status">先に本人の動画を一覧から選択してください。</p>
         <p id="youtubePlaybackTime" class="ytr-note">--:--.---</p>
         <div id="youtubeSeekLog" aria-label="時刻移動の診断ログ"></div>
-        <p class="ytr-warning">「約0.33秒」は10×1/30秒、「約0.033秒」は1/30秒の時刻指定です。実動画の10コマ・1コマ移動を保証しません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
+        <p class="ytr-warning">ボタン表記の「10F」は10×1/30秒、「1F」は1/30秒の近似的な時刻指定を意味します。厳密なフレーム送り（10コマ・1コマの移動）ではありません。時刻の変化と実際のコマの変化は同じではありません。動作が不安定なら、上の「端末内MP4を選択して戻る」を利用してください。</p>
       </div>
       <div class="ytr-group">
         <h3>4. 友人への動画共有（リンクを知っている人が視聴可能）</h3>
