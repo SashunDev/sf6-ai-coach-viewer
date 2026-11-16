@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'youtube-review.mjs'
+      - 'youtube-library-core.mjs'
+      - 'youtube-seek-core.mjs'
+      - 'youtube-privacy.html'
       - 'demo.html'
       - 'release-smoke.html'
       - 'video-diagnostics.html'
@@ -17,6 +21,8 @@ on:
       - 'scripts/publish_coaching_report.py'
       - 'tests/test_publish_report.py'
       - 'tests/test_viewer_pages.cjs'
+      - 'tests/test_youtube_*'
+      - 'scripts/build_standalone_report.py'
       - 'scripts/verify_public_match.py'
       - 'tests/test_verify_public_match.py'
       - '.github/workflows/pages-video-site.yml'
@@ -56,6 +62,8 @@ jobs:
           python3 -m unittest discover -s tests -p 'test_cleanup_release_videos.py' -v
           python3 -m unittest discover -s tests -p 'test_verify_public_match.py' -v
           node --test tests/test_viewer_pages.cjs
+          node --test tests/test_youtube_library_core.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs
+          python3 -m unittest discover -s tests -p 'test_youtube_standalone.py' -v
       - name: Build with only eligible public MP4s
         env:
           GITHUB_TOKEN: ${{ github.token }}
