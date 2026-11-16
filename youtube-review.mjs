@@ -42,7 +42,8 @@ const cacheNote=message=>{$("youtubeCacheNotice").textContent=message;};
 const lastUpdated=ms=>new Date(ms).toLocaleString("ja-JP",{dateStyle:"short",timeStyle:"short"});
 function cacheStatus(){
  if(state.cachedView&&state.lastSyncedAt)
-   cacheNote("前回保存した一覧（最終同期 "+lastUpdated(state.lastSyncedAt)+
+   cacheNote(($("youtubeKeepList").checked?"前回保存した一覧":"前回取得した一覧（この端末への保存は解除済み）")+
+     "（最終同期 "+lastUpdated(state.lastSyncedAt)+
      "）。最新の公開状態は未確認です。更新するには「最新一覧を再取得」を押してください。"+
      (state.partial?" 保存件数または取得件数が上限に達しています。":""));
  else if(state.lastSyncedAt&&$("youtubeKeepList").checked)
@@ -175,9 +176,14 @@ $("youtubeKeepList").addEventListener("change",()=>{
    cacheStatus();
    return;
  }
- if(state.token&&!state.cachedView){
-   const ok=writeCache(localStore(),state.videos,state.partial);
-   if(ok)state.lastSyncedAt=Date.now();
+ if(state.cachedView&&state.lastSyncedAt){
+   // Do not reset the retention clock by re-saving previously cached data.
+   if(!writeCache(localStore(),state.videos,state.partial,state.lastSyncedAt))
+     status("前回の一覧を再保存できませんでした。ブラウザの容量・設定を確認してください。");
+ }else if(state.token&&!state.cachedView){
+   const now=Date.now();
+   const ok=writeCache(localStore(),state.videos,state.partial,now);
+   if(ok)state.lastSyncedAt=now;
    else status("一覧をこの端末に保存できませんでした。プライベートブラウズ・空き容量をご確認ください。");
  }
  cacheStatus();
