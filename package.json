@@ -1,0 +1,12 @@
+{
+  "name": "sf6-ai-coach-viewer",
+  "private": true,
+  "scripts": {
+    "dev": "python3 scripts/preview_site.py",
+    "test": "node --test tests/test_youtube_library_core.mjs tests/test_youtube_cache.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_youtube_share.mjs tests/test_viewer_pages.cjs tests/test_workbench.mjs",
+    "test:browser": "node tests/test_youtube_review_browser.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "26.1.0"
+  }
+}

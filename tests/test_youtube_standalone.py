@@ -19,6 +19,8 @@ class StandaloneYouTubeIsolationTests(unittest.TestCase):
         self.assertNotIn('id="youtubeReviewPanel"', result)
         self.assertNotIn('id="youtubeOpen"', result)
         self.assertNotIn('youtube-review.mjs', result)
+        self.assertNotIn('id="modeEntry"', result)
+        self.assertNotIn('<button type="button" data-home>', result)
         self.assertNotIn('window.addEventListener(\'sf6:youtube-review-open\'', result)
         self.assertEqual(result.count('id="insight"'), 1)
         self.assertEqual(result.count('id="viewer"'), 1)

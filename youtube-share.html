@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'none'; img-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SF6 AI Coach | リプレイ視聴</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;color-scheme:dark;background:#0d1525;color:#e6f0ff}
+*{box-sizing:border-box}body{margin:0;padding:0 16px 40px;line-height:1.7}
+header{max-width:940px;margin:0 auto;padding:26px 0 16px;border-bottom:1px solid #2c3951}
+h1{font-size:clamp(1.3rem,3.2vw,1.8rem);margin:4px 0}h2{font-size:1.08rem}
+.tag{font-size:.77rem;letter-spacing:.14em;color:#79c9ff;font-weight:700}
+main{max-width:940px;margin:24px auto 0}.panel{background:#142138;border:1px solid #2d4568;border-radius:14px;padding:clamp(16px,3.5vw,26px)}
+.frame{position:relative;width:100%;aspect-ratio:16/9;background:#09111e;border-radius:12px;overflow:hidden;display:grid;place-items:center}
+.frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+button,a.action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:9px;padding:10px 16px;font-size:1rem;font-weight:600;touch-action:manipulation}
+button{background:#2989d7;color:#fff;border:1px solid #64bcff;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
+a.action{color:#c1e5ff;background:#1d324e;border:1px solid #476686;text-decoration:none}
+a.action:focus,button:focus{outline:3px solid #fff;outline-offset:2px}
+.note{color:#b9c8da;font-size:.9rem}.warn{color:#ffcb88}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="tag">SF6 / AI COACH</div><h1>共有リプレイ視聴</h1></header>
+<main>
+ <section class="panel" aria-labelledby="reviewHeading">
+  <h2 id="reviewHeading">YouTube公式プレイヤーで視聴</h2>
+  <p id="shareStatus" role="status" aria-live="polite">共有リンクを確認中です。</p>
+  <div id="shareValid" hidden>
+   <div class="frame" id="shareFrame"><p class="note">動画は「動画を開く」を押すまで読み込まれません。</p></div>
+   <div class="actions"><button id="shareStart" type="button">動画を開く</button><a id="shareYoutube" class="action" href="#" target="_blank" rel="noopener noreferrer">YouTubeで直接見る</a></div>
+   <p class="note" id="shareStartTime"></p>
+   <p class="note">YouTube公式の操作バーで再生・一時停止・シークできます。埋め込み表示が制限される場合は「YouTubeで直接見る」をお使いください。</p>
+  </div>
+ </section>
+ <p class="warn">限定公開動画は、リンクを知っている人なら再共有・視聴できます。「友人限定」のアクセス制限ではありません。</p>
+ <p class="note">この画面ではGoogleログイン、動画一覧の取得、視聴履歴・メモの保存、動画のダウンロードを行いません。動画を開くとYouTubeに通信が発生します。</p>
+</main>
+<script type="module" src="./youtube-share.mjs"></script>
+</body>
+</html>

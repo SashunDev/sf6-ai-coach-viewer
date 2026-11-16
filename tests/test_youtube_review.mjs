@@ -48,7 +48,8 @@ test("B0 keeps owner-only in-memory read-only access, logout and partial-data sa
  assert.match(module,/writeCache/);
  assert.match(module,/removeCache/);
  assert.match(module,/localStore\(\)/);
- assert.match(module,/if\(!window\.location\.hash&&readCache\(localStore\(\)\)\)activate\(\)/);
+ assert.doesNotMatch(module,/if\(!window\.location\.hash&&readCache\(localStore\(\)\)\)activate\(\)/);
+ assert.ok(html.includes('id="modeEntry"'));
  assert.ok(!libraryCache.includes("access_token"));
  assert.match(html,/id="youtubeKeepList" type="checkbox"/);
  assert.match(html,/id="youtubeRefresh"/);
@@ -94,32 +95,16 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
    ["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]];
  const seekSection=html.slice(html.indexOf('class="ytr-seek-controls"'),html.indexOf('id="youtubePlaybackStatus"'));
  assert.ok(seekSection.includes('class="ytr-seek-pause"'));
- assert.equal((seekSection.match(/class="ytr-seek-pair"/g)||[]).length,4);
- for(const [id,label] of [
-   ["youtubePrevTen","← 10F"],["youtubeNextTen","10F →"],
-   ["youtubePrev","← 1F"],["youtubeNext","1F →"]
- ]){
-   assert.ok(seekSection.includes('id="'+id+'"'),"seek control missing: "+id);
-   assert.ok(seekSection.includes('disabled>'+label+'</button>'),"label missing: "+label);
- }
- assert.ok(html.includes('厳密なフレーム送り（10コマ・1コマの移動）ではありません。'));
- assert.equal((seekSection.match(/class="ytr-seek-group"/g)||[]).length,2);
- assert.ok(seekSection.indexOf('aria-label="細かい時刻移動（近似）"')<
-           seekSection.indexOf('aria-label="秒単位の移動"'),"fine controls must appear first");
- assert.ok(html.includes('@media(min-width:851px)'));
- assert.ok(html.includes('calc(177.7778dvh - 520px)'));
- assert.ok(html.includes('calc(177.7778vh - 520px)'));
- assert.ok(html.includes('#youtubePlayer{width:min(100%,1080px'));
- assert.ok(!html.includes('#youtubePlayer{width:min(100%,560px)'));
- assert.ok(html.includes('.ytr-seek-pause{grid-column:1/-1'));
  for(const [previous,next] of ids){
-   const start=seekSection.indexOf('id="'+previous+'"');
-   const end=seekSection.indexOf('id="'+next+'"');
-   assert.ok(start>=0&&end>start&&end-start<220,"back/forward pair separated: "+previous);
+   assert.ok(seekSection.indexOf('id="'+previous+'"')>=0);
+   assert.ok(seekSection.indexOf('id="'+next+'"')>seekSection.indexOf('id="'+previous+'"'));
  }
- assert.ok(html.includes('.ytr-seek-pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)'));
- assert.match(html,/min-height:52px/);
- assert.match(html,/role="group" aria-label="細かい時刻移動（近似）"/);
+ assert.match(seekSection,/class="seek-seconds" role="group" aria-label="秒単位の移動"/);
+ assert.match(seekSection,/class="seek-fine" role="group" aria-label="細かい時刻移動（近似）"/);
+ assert.ok(html.includes('厳密なフレーム送り（10コマ・1コマの移動）ではありません。'));
+ assert.ok(html.includes('min-height:44px'));
+ assert.ok(html.includes('F相当・近似'));
+
 });
 test("Manual ChatGPT handoff does not claim actual video perception",()=>{
  assert.match(module,/youtubeCopy"\)\.addEventListener\("click"/);

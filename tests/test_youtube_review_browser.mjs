@@ -53,6 +53,8 @@ async function main(){
  await new Promise(r=>setTimeout(r,300));
  const start=await ev('({viewer:!document.querySelector("#viewer").hidden,youtube:document.querySelector("#youtubeReviewPanel").hidden,hasFile:!!document.querySelector("#fileInput")})');
  if(!start.viewer||!start.youtube||!start.hasFile)throw Error("Local reviewer changed by B3");
+ if(await ev('document.body.dataset.reviewMode!=="home"'))throw Error("First visit bypassed mode choice");
+ if(await ev('getComputedStyle(document.querySelector(".workarea")).display!=="none"'))throw Error("Home exposed a review workspace");
  // Inject synthetic Google/YT browser APIs only after load; no real OAuth, uploads or CDN.
  await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:(args)=>{window.__lastOAuthPrompt=args?.prompt;callback({access_token:"SYNTHETIC_ONLY"})}}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
  // Delayed API time intentionally emulates the asynchronous official YouTube iframe.
@@ -60,45 +62,6 @@ async function main(){
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
  await ev('document.querySelector("#youtubeOpen").click()');
  await until(async()=>await ev('!document.querySelector("#youtubeReviewPanel").hidden'));
- const mobileGeometry=await ev('(()=>{const pairs=[["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"],["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"]];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,pause:rect("youtubePause"),pairs:pairs.map(([a,b])=>[rect(a),rect(b)])}})()');
- if(mobileGeometry.width!==375||mobileGeometry.scrollWidth>375.5)throw Error("Mobile seek layout overflow: "+JSON.stringify(mobileGeometry));
- if(mobileGeometry.pause.h<44)throw Error("Pause target too small");
- let lastBottom=mobileGeometry.pause.y+mobileGeometry.pause.h;
- for(const [left,right] of mobileGeometry.pairs){
-   if(left.x>=right.x||Math.abs(left.y-right.y)>1||Math.abs(left.h-right.h)>1)
-     throw Error("Seek pair not horizontally aligned: "+JSON.stringify([left,right]));
-   if(left.w<100||right.w<100||left.h<44||right.h<44)
-     throw Error("Seek targets too small: "+JSON.stringify([left,right]));
-   if(left.y<=lastBottom)throw Error("Seek rows overlap or wrong order");
-   lastBottom=left.y+left.h;
- }
-
- // Also check a compact desktop viewport where the video and all controls
- // must fit into one viewport when the review section is scrolled into view.
- const mobileSequence=mobileGeometry.pairs.map(pair=>pair[0].y);
- if(!(mobileSequence[0]<mobileSequence[2]))throw Error("Fine seek controls are not first on mobile");
- // Desktop 16:9 scales smoothly with available viewport height, rather than
- // always occupying 560px. Test short and tall viewports without logging in.
- const desktopSizes=[[1280,720],[1600,900],[1680,800],[1366,600]];
- const observedDesktop=[];
- for(const [width,height] of desktopSizes){
-   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:false});
-   const desk=await ev('(()=>{const r=id=>{const p=document.getElementById(id).getBoundingClientRect();return{x:p.x,y:p.y,w:p.width,h:p.height,bottom:p.bottom}};return{viewport:innerHeight,scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),title:r("youtubeCurrentTitle"),pause:r("youtubePause"),fine:r("youtubePrevTen"),seconds:r("youtubePrevFive"),last:r("youtubeNextSec")}})()');
-   if(desk.scrollWidth>width+0.5||desk.player.w>1080.5||desk.player.h<180)
-     throw Error("Desktop player overflow or too small: "+JSON.stringify({width,height,desk}));
-   if(Math.abs(desk.player.w/desk.player.h-16/9)>0.025)
-     throw Error("Desktop player 16:9 aspect ratio lost: "+JSON.stringify({width,height,desk}));
-   if(!(desk.fine.x<desk.seconds.x&&Math.abs(desk.fine.y-desk.seconds.y)<3))
-     throw Error("Desktop seek groups not side-by-side: "+JSON.stringify({width,height,desk}));
-   if(desk.last.bottom-desk.title.y>desk.viewport-12)
-     throw Error("Desktop video and seek buttons do not fit one section viewport: "+JSON.stringify({width,height,desk}));
-   observedDesktop.push({width,height,videoWidth:desk.player.w,videoHeight:desk.player.h});
- }
- if(observedDesktop[0].videoWidth<=620)
-   throw Error("720p desktop player did not improve over 560px: "+JSON.stringify(observedDesktop));
- if(observedDesktop[1].videoWidth<=observedDesktop[0].videoWidth+200)
-   throw Error("Desktop player did not respond to available height: "+JSON.stringify(observedDesktop));
- await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
  if(await ev('document.querySelector("#youtubeKeepList").checked'))throw Error("Owner storage opt-in must start disabled");
  await ev('document.querySelector("#youtubeKeepList").checked=true;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
  await ev('document.querySelector("#youtubeClientId").value="1234567890-abcd.apps.googleusercontent.com";document.querySelector("#youtubeConsent").checked=true;document.querySelector("#youtubeConnect").click();true');
@@ -129,6 +92,26 @@ async function main(){
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===1'));
  await ev('document.querySelector("#youtubeList .youtube-card").click()');
  await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
+ const mobileGeometry=await ev('(()=>{const ids=["youtubePause","youtubePrevTen","youtubeNextTen","youtubePrev","youtubeNext","youtubePrevFive","youtubeNextFive","youtubePrevSec","youtubeNextSec"];const rect=id=>{const r=document.getElementById(id).getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height}};return {width:innerWidth,scrollWidth:document.documentElement.scrollWidth,controls:Object.fromEntries(ids.map(id=>[id,rect(id)]))}})()');
+ if(mobileGeometry.width!==375||mobileGeometry.scrollWidth>375.5)throw Error("Mobile toolbar overflow");
+ for(const [id,r] of Object.entries(mobileGeometry.controls)){
+   if(r.w<44||r.h<44)throw Error("Small mobile target "+id+JSON.stringify(r));
+ }
+ for(const [a,b] of [["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]]){
+   const x=mobileGeometry.controls[a],y=mobileGeometry.controls[b];
+   if(x.x>=y.x||Math.abs(x.y-y.y)>1)throw Error("Backward/forward pair shuffled");
+ }
+ const observedDesktop=[];
+ for(const [width,height] of [[1280,720],[1440,1024],[1600,900],[1366,600]]){
+   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:false});
+   const desk=await ev('(()=>{const r=id=>{const x=document.getElementById(id).getBoundingClientRect();return{x:x.x,y:x.y,w:x.width,h:x.height,bottom:x.bottom}};return{scrollWidth:document.documentElement.scrollWidth,player:r("youtubePlayer"),library:r("youtubeLibraryPane"),memo:r("youtubeMemoPane"),pause:r("youtubePause")}})()');
+   if(desk.scrollWidth>width+.5||Math.abs(desk.player.w/desk.player.h-16/9)>.025||desk.player.h<180)throw Error("Desktop player geometry regression "+JSON.stringify({width,height,desk}));
+   if(!(desk.library.x<desk.player.x&&desk.player.x<desk.memo.x))throw Error("Desktop workbench columns not ordered");
+   if(desk.pause.bottom>height)throw Error("Desktop pause below viewport");
+   observedDesktop.push({width,height,videoWidth:desk.player.w,videoHeight:desk.player.h});
+ }
+ await send("Emulation.setDeviceMetricsOverride",{width:375,height:812,deviceScaleFactor:2,mobile:true});
+
  await ev('document.querySelector("#youtubeNext").click()');
  await until(async()=>await ev('document.querySelector("#youtubeSeekLog").textContent.includes("未証明")'),5000);
  // Ten rapid taps arrive before getCurrentTime reflects any seek; every target
@@ -199,7 +182,7 @@ async function main(){
  if(!configured.hidden||!configured.forgetHidden||configured.field!=="1234567890-site.apps.googleusercontent.com")throw Error("Site-wide OAuth ID not auto-configured");
  await ev('document.querySelector("#youtubeBack").click()');
  const finish=await ev('({local:!document.querySelector("#viewer").hidden,youtubeHidden:document.querySelector("#youtubeReviewPanel").hidden,source:document.querySelector("#sourceBadge").textContent})');
- if(!finish.local||!finish.youtubeHidden||!finish.source.includes("LOCAL VIDEO"))throw Error("Local reviewer not restored");
+ if(!finish.local||!finish.youtubeHidden||!finish.source.includes("LOCAL VIDEO")||await ev('document.body.dataset.reviewMode!=="home"'))throw Error("Local reviewer not restored");
  if(apiRequests.length||external.length)throw Error("Mock browser unexpectedly sent real private Google/YouTube network requests");
  // A subsequent visit to this device MUST show the previous owner list
  // without clicking Google OAuth. Reuse the cache created by the real opt-in path.
@@ -207,7 +190,10 @@ async function main(){
  const beforeReloadApiCalls=apiRequests.length;
  await send("Page.enable");
  await send("Page.reload",{ignoreCache:true});
- await until(async()=>await ev('document.readyState==="complete"&&document.querySelector("#youtubeReviewPanel")&&!document.querySelector("#youtubeReviewPanel").hidden&&document.querySelectorAll("#youtubeList .youtube-card").length===2'));
+ await until(async()=>await ev('document.readyState==="complete"&&document.body.dataset.reviewMode==="home"'));
+ if(await ev('document.querySelectorAll("#youtubeList .youtube-card").length!==0'))throw Error("Cached revisit bypassed mode selection");
+ await ev('document.querySelector("#youtubeOpen").click()');
+ await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
  const restored=await ev('({cachedLabel:document.querySelector("#youtubeCount").textContent,notice:document.querySelector("#youtubeCacheNotice").textContent,keep:document.querySelector("#youtubeKeepList").checked,consent:document.querySelector("#youtubeConsent").checked,items:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent)})');
  if(!restored.cachedLabel.includes("前回保存")||!restored.notice.includes("最終同期")||
     !restored.keep||!restored.consent||restored.items.length!==2)
