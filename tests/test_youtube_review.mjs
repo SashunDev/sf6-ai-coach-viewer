@@ -5,6 +5,7 @@ import {spawnSync} from "node:child_process";
 const read=file=>readFileSync(new URL("../"+file,import.meta.url),"utf8");
 const html=read("index.html");
 const module=read("youtube-review.mjs");
+const libraryCache=read("youtube-library-cache.mjs");
 const privacy=read("youtube-privacy.html");
 const builder=read("scripts/build_pages_site.py");
 const standalone=read("scripts/build_standalone_report.py");
@@ -43,6 +44,15 @@ test("CSP allows only required Google/YouTube endpoints without media extraction
 });
 test("B0 keeps owner-only in-memory read-only access, logout and partial-data safeguards",()=>{
  assert.match(module,/gatherOwnUnlisted/);
+ assert.match(module,/readCache/);
+ assert.match(module,/writeCache/);
+ assert.match(module,/removeCache/);
+ assert.match(module,/localStore\(\)/);
+ assert.match(module,/if\(!window\.location\.hash&&readCache\(localStore\(\)\)\)activate\(\)/);
+ assert.ok(!libraryCache.includes("access_token"));
+ assert.match(html,/id="youtubeKeepList" type="checkbox"/);
+ assert.match(html,/id="youtubeRefresh"/);
+ assert.match(html,/id="youtubeForgetList"/);
  assert.match(module,/scope:SCOPE/);
  assert.match(module,/hasGrantedAllScopes/);
  assert.ok(module.includes('requestAccessToken({prompt:""})'));
@@ -127,7 +137,7 @@ test("Manual ChatGPT handoff does not claim actual video perception",()=>{
  assert.match(html,/既存レポートはこのYouTube動画に自動同期しません/);
 });
 test("Pages includes all four assets and standalone strips web mode",()=>{
- for(const name of ["youtube-review.mjs","youtube-library-core.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
+ for(const name of ["youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
   assert.ok(builder.includes('"'+name+'"'),"missing Pages "+name);
  }
  assert.match(standalone,/def strip_external_youtube_mode\(template: str\)/);
@@ -135,11 +145,13 @@ test("Pages includes all four assets and standalone strips web mode",()=>{
  assert.match(standalone,/result = result\.replace\(YT_CSP, LOCAL_CSP, 1\)/);
  assert.match(privacy,/YouTube連携に関するデータ取扱説明/);
  assert.match(privacy,/Googleアカウントの連携管理/);
+ assert.match(privacy,/最大30日間保存/);
+ assert.match(privacy,/最新一覧に更新するには/);
  assert.match(privacy,/公開識別子/);
  assert.match(builder,/SF6_YOUTUBE_OAUTH_CLIENT_ID/);
 });
 test("Node syntax check for new modules",()=>{
- for(const path of ["youtube-review.mjs","youtube-library-core.mjs","youtube-seek-core.mjs"]){
+ for(const path of ["youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs"]){
   const p=spawnSync(process.execPath,["--check",new URL("../"+path,import.meta.url).pathname],{encoding:"utf8"});
   assert.equal(p.status,0,p.stderr);
  }
