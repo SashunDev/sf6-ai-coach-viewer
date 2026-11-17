@@ -6,6 +6,7 @@ import {JSDOM,VirtualConsole} from 'jsdom';
 import * as library from '../youtube-library-core.mjs';
 import * as seek from '../youtube-seek-core.mjs';
 import * as cache from '../youtube-library-cache.mjs';
+import * as studio from '../youtube-studio-support.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8')
@@ -14,6 +15,47 @@ const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8
 const videos=[{id:'AAAAAAAAAAA',title:'合成テスト：対空の確認',publishedAt:'2026-11-15T00:00:00Z',thumbnail:''},
  {id:'BBBBBBBBBBB',title:'合成テスト：起き攻め',publishedAt:'2026-11-14T00:00:00Z',thumbnail:''}];
 const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
+test('Studio support is disabled before selection, updates safely, and preserves playback and memo',async()=>{
+ const t=setup();try{
+  const saved=JSON.parse(t.w.localStorage.getItem(cache.CACHE_KEY));
+  saved.items[0].title='2026-11-16 21:26｜Sample Match｜#01';
+  saved.items[1].title='<img src=x onerror=alert(1)> Sample';
+  t.w.localStorage.setItem(cache.CACHE_KEY,JSON.stringify(saved));
+  assert.equal(t.d.getElementById('youtubeStudioOpen').disabled,true);
+  t.click('youtubeOpen');assert.equal(t.d.getElementById('youtubeStudioOpen').disabled,true);
+  t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0];player.state=1;
+  t.d.getElementById('youtubeNote').value='keep this memo';
+  const cacheBefore=t.w.localStorage.getItem(cache.CACHE_KEY);
+  t.click('youtubeStudioOpen');
+  assert.equal(t.d.getElementById('youtubeStudioDialog').open,true);
+  assert.equal(t.d.getElementById('youtubeStudioKeyword').value,'2026-11-16 21:26');
+  assert.equal(t.d.getElementById('youtubeStudioFullTitle').value,saved.items[0].title);
+  t.click('youtubeStudioCopyKeyword');await tick();t.click('youtubeStudioCopyTitle');await tick();
+  assert.deepEqual(t.calls.copies,['2026-11-16 21:26',saved.items[0].title]);
+  assert.ok(t.d.getElementById('youtubeStudioStatus').textContent.includes('コピーしました'));
+  assert.equal(player.state,1);assert.equal(player.time,42);
+  assert.equal(t.d.getElementById('youtubeNote').value,'keep this memo');
+  assert.equal(t.w.localStorage.getItem(cache.CACHE_KEY),cacheBefore);
+  t.d.querySelectorAll('.youtube-card')[1].click();await tick();
+  assert.equal(t.d.getElementById('youtubeStudioFullTitle').value,saved.items[1].title);
+  assert.equal(t.d.getElementById('youtubeStudioKeyword').value,saved.items[1].title);
+  assert.equal(t.d.querySelector('#youtubeStudioDialog img'),null);
+  assert.equal(t.d.getElementById('youtubeStudioStatus').textContent,'');
+  assert.equal(t.d.getElementById('youtubeStudioLink').href,'https://studio.youtube.com/');
+  Object.defineProperty(t.w.navigator,'clipboard',{value:{writeText:async()=>{throw Error('denied');}}});
+  t.click('youtubeStudioCopyKeyword');await tick();
+  const field=t.d.getElementById('youtubeStudioKeyword');
+  assert.equal(t.d.activeElement,field);assert.equal(field.selectionStart,0);assert.equal(field.selectionEnd,field.value.length);
+  assert.ok(t.d.getElementById('youtubeStudioStatus').textContent.includes('手動コピー'));
+  t.d.querySelector('#youtubeStudioDialog [data-close-dialog]').click();
+  assert.equal(t.d.getElementById('youtubeStudioDialog').open,false);
+  assert.equal(t.d.body.dataset.reviewMode,'youtube');
+  t.click('youtubeClear');assert.equal(t.d.getElementById('youtubeStudioOpen').disabled,true);
+  assert.equal(t.d.getElementById('youtubeStudioFullTitle').value,'');
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
 test('fine controls precede seconds and recovery is outside settings, hidden by default',()=>{
  const t=setup();try{
   const controls=t.d.querySelector('.ytr-seek-controls');
@@ -60,7 +102,7 @@ function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
    w.HTMLDialogElement.prototype.close=function(){this.open=false;};
   }});
  const w=dom.window,d=w.document,calls={oauth:0,api:0,copies:[],players:[]};
- w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache};
+ w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache,'youtube-studio-support.mjs':studio};
  if(saved)cache.writeCache(w.localStorage,videos,false,savedAt);
  w.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:()=>{
   calls.oauth++;callback({access_token:'SYNTHETIC_ONLY'});

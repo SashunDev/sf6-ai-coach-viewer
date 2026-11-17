@@ -137,3 +137,12 @@ The Owner explicitly confirmed that **all six specified checks PASS on both PC a
 **Evidence class:** Owner self-report from PC and physical iPhone usage; this is acceptance evidence, not independently captured device screenshots, network traces or access-token inspection. The specific simulated iframe error → native MP4 chooser flow was verified by synthetic DOM tests but was not separately reported as exercised during the owner’s six checks. Prior historical sections above record the situation before the later hosted Chromium and owner acceptance, and should not be read as the current release gate.
 
 Release prerequisite: preserve the separate friend-only guest route and owner OAuth/cache workflows when merging the stacked PRs. Recheck CI against the integrated head and validate GitHub Pages deployment; source acceptance alone does not confirm production deployment.
+
+
+## Issue #25 — Studio保存補助（2026-11-17）
+
+Scoped visual target: existing workbench header and native workbench-dialog styles; see docs/design/studio-save-support.md. Only the header action row and new dialog change; seek/player regions stay intact. The dialog explicitly says Viewer does not directly download MP4s. No fabricated implementation image is used.
+
+Local rendering result: blocked (Chromium socket EPERM). Screenshots, physical iPhone Studio navigation/search/save and Safari behavior are NOT TESTED locally. 58 Node / 125 Python tests PASS; these are not browser layout proof. Local logs: docs/qa/studio-save-support/.
+
+The existing GitHub Actions browser runner has dialog/screenshot/geometry checks for 375x812, 390x844, 1280x720, 1440x1024 and the existing compact desktop target. CI evidence and any remaining visual limitations will be linked in the feature PR. This section does not replace or retroactively change prior PR #23 acceptance records.

@@ -84,6 +84,9 @@ body[data-has-report="false"] .local-overview,body[data-has-report="false"] #ins
 @media(max-width:760px){.workbench-heading h1{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);margin:0}.heading-actions{margin-left:auto}#youtubeNote{height:96px;min-height:96px}#youtubeReviewPanel[data-has-video="false"] .youtube-stage,#youtubeReviewPanel[data-has-video="false"] .mobile-tabs{display:none}}
 @media(min-width:761px){#youtubePlayer{width:min(100%,max(320px,calc((100vh - 360px)*1.777778)));width:min(100%,max(320px,calc((100dvh - 360px)*1.777778)));margin:0 auto}}
 body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{display:none}
+
+/* Studio support stays in the header; playback/seek layout is unchanged. */
+.heading-actions{flex-wrap:wrap}.studio-copy-actions{display:grid;gap:10px;margin:16px 0}#youtubeStudioDialog textarea{font-size:16px;resize:vertical;overflow-wrap:anywhere}#youtubeStudioDialog label{overflow-wrap:anywhere}#youtubeStudioDialog ol{padding-left:24px;font-size:14px;line-height:1.8}#youtubeStudioLink{display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px 14px;background:#243b59;border:1px solid #5c7a9c;border-radius:8px;text-decoration:none;overflow-wrap:anywhere}#youtubeStudioStatus{min-height:24px;overflow-wrap:anywhere}@media(max-width:760px){.heading-actions{width:100%;display:grid;grid-template-columns:1fr auto auto}.heading-actions button{min-width:44px;white-space:normal}#youtubeStudioDialog .dialog-heading{align-items:flex-start}#youtubeStudioDialog .dialog-heading h2{font-size:18px}#youtubeStudioDialog textarea{min-height:64px}}
 </style></head><body>
 <div class="layout">
 <main class="main">
@@ -113,7 +116,7 @@ body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{d
   <div class="uploadrow"><div class="uploadinfo"><strong id="localName">動画未選択</strong><span id="fileStatus">動画を選ぶと実映像に切り替わります。ファイルは外部送信されません。</span></div><div class="upload-actions"><button class="uploadbtn" data-select-file>端末の動画を選択</button><button class="uploadbtn reportbtn" id="selectReport">レポートJSONを読込</button></div><input id="fileInput" type="file" accept="video/*,.mp4,.mov,.webm" style="display:none" aria-label="動画を選択"><input id="reportInput" type="file" accept="application/json,.json" style="display:none" aria-label="Chatで生成したレポートJSONを選択"></div></section>
 
   <section class="panel" id="youtubeReviewPanel" hidden data-has-video="false" aria-labelledby="youtubeReviewTitle">
-   <div class="workbench-heading"><button id="youtubeBack" type="button">モード選択</button><h1 id="youtubeReviewTitle" tabindex="-1">YouTubeレビュー</h1><div class="heading-actions"><button id="workbenchShare" type="button" disabled>共有</button><button type="button" data-settings>接続・保存設定</button></div></div>
+   <div class="workbench-heading"><button id="youtubeBack" type="button">モード選択</button><h1 id="youtubeReviewTitle" tabindex="-1">YouTubeレビュー</h1><div class="heading-actions"><button id="youtubeStudioOpen" type="button" disabled>動画を保存する</button><button id="workbenchShare" type="button" disabled>共有</button><button type="button" data-settings>接続・保存設定</button></div></div>
    <div class="ytr-content" data-mobile-pane="library">
     <aside class="library-pane" id="youtubeLibraryPane" aria-label="動画一覧">
      <div class="library-heading"><h2>動画一覧</h2><button id="youtubeRefresh" type="button" disabled>再取得</button></div>
@@ -155,6 +158,17 @@ body[data-has-report="false"] #viewer[data-has-video="false"] .player-controls{d
         <p class="ytr-note">データ取扱説明：<a href="./youtube-privacy.html" target="_blank" rel="noopener noreferrer">SF6 AI Coach YouTube連携</a>／<a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube利用規約</a>／<a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Googleのアプリ連携管理</a></p>
       </div>
 <p class="ytr-note">既存レポートはこのYouTube動画に自動同期しません。本人の動画一覧の取得は最大20ページ×50件までです。上限到達時は一部のみと表示します。</p></dialog>
+   <dialog id="youtubeStudioDialog" class="workbench-dialog" aria-labelledby="youtubeStudioTitle" aria-describedby="youtubeStudioDescription">
+    <div class="dialog-heading"><h2 id="youtubeStudioTitle">動画を保存する</h2><button type="button" data-close-dialog>閉じる</button></div>
+    <p id="youtubeStudioDescription">YouTube Studioでの保存操作を補助します。Viewerが直接MP4をダウンロードする機能ではありません。</p>
+    <label for="youtubeStudioFullTitle">選択中の動画タイトル（全文）</label><textarea id="youtubeStudioFullTitle" rows="3" readonly></textarea>
+    <label for="youtubeStudioKeyword">検索用キーワード</label><textarea id="youtubeStudioKeyword" rows="2" readonly></textarea>
+    <div class="studio-copy-actions"><button id="youtubeStudioCopyKeyword" type="button" class="ytr-main" disabled>検索キーワードをコピー</button><button id="youtubeStudioCopyTitle" type="button" disabled>タイトル全文をコピー</button></div>
+    <p id="youtubeStudioStatus" role="status" aria-live="polite"></p>
+    <a id="youtubeStudioLink" href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">YouTube Studioを開く</a>
+    <ol><li>検索用キーワードをコピー</li><li>YouTube Studioを開き、「コンテンツ」で対象動画を検索</li><li>対象動画のメニューから「デバイスに保存」（PCでは「ダウンロード」）を選択</li><li>保存したMP4をChatGPTに添付</li></ol>
+    <p class="ytr-note">キーワードで見つからない場合はタイトル全文でも検索してください。検索成功は未検証です。アプリやOSのバージョンにより表示・保存可否が異なります。リンクからアプリが開くことや、特定画面への移動は保証できません。</p>
+   </dialog>
    <dialog id="youtubeShareDialog" class="workbench-dialog" aria-labelledby="youtubeShareTitle"><div class="dialog-heading"><h2 id="youtubeShareTitle">友人に動画を共有</h2><button type="button" data-close-dialog>閉じる</button></div><p>選択中の動画と現在の時刻だけを含む視聴専用リンクを作ります。リンクを知っている人は視聴・再共有できます。</p><p class="ytr-note">Google認証、動画一覧、振り返りメモは共有しません。</p><button id="youtubeShare" type="button" disabled>友人向け視聴リンクをコピー</button><label for="youtubeShareLink">共有URL</label><input id="youtubeShareLink" type="text" readonly autocomplete="off" spellcheck="false"><p id="youtubeShareStatus" role="status" aria-live="polite"></p></dialog>
   </section>
   <section class="panel" id="insight"><div class="panel-head"><h2>この場面をどう見るか</h2><span class="detail-id" id="detailId">E01</span></div><div class="insight-body"><div class="insight-titleline"><span class="tag good" id="detailTag">良いプレイ</span><span style="color:#8a9cb3;font-size:10px">OBSERVATION → ACTION</span></div><h3 class="detail-title" id="detailTitle">対空を成功させた場面</h3><div class="detail-time" id="detailTime">R1 · 00:15–00:19</div><div class="detail-grid"><div class="detail-cell"><span class="number">01 / 観察できたこと</span><p id="detailObserved"></p></div><div class="detail-cell"><span class="number">02 / 評価・留保</span><p id="detailJudgment"></p></div><div class="detail-cell action"><span class="number">03 / 次に選ぶ行動</span><p id="detailAction"></p></div><div class="detail-cell"><span class="number">04 / 成功の確認条件</span><p id="detailSuccess"></p></div></div></div></section>
