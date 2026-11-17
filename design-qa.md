@@ -145,4 +145,18 @@ Scoped visual target: existing workbench header and native workbench-dialog styl
 
 Local rendering result: blocked (Chromium socket EPERM). Screenshots, physical iPhone Studio navigation/search/save and Safari behavior are NOT TESTED locally. 58 Node / 125 Python tests PASS; these are not browser layout proof. Local logs: docs/qa/studio-save-support/.
 
-The existing GitHub Actions browser runner has dialog/screenshot/geometry checks for 375x812, 390x844, 1280x720, 1440x1024 and the existing compact desktop target. CI evidence and any remaining visual limitations will be linked in the feature PR. This section does not replace or retroactively change prior PR #23 acceptance records.
+Hosted Chromium subsequently ran successfully on `a62938b68877435c1281d8a4b13fc208e6f4816f`. [B3 browser + owner integration SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/44077015058); [B4 guest SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/44077015062). The first attempt failed Escape/focus restoration; the opener focus and asynchronous test wait were corrected before this successful run.
+
+| Chromium viewport | Review/player/seek regression | Studio bounds / no horizontal overflow / targets ≥44px | Open / copy feedback / Escape / restored selection-time-state | Console |
+|---|---|---|---|---|
+| 375×812 | PASS | PASS | PASS | 0 captured errors |
+| 390×844 | PASS | PASS | PASS | 0 captured errors |
+| 1280×720 | PASS | PASS | PASS | 0 captured errors |
+| 1440×1024 | PASS | PASS | PASS | 0 captured errors |
+| 1366×600 | PASS | PASS | PASS | 0 captured errors |
+
+Screenshots and layout JSON are saved in the run's `pr23-workbench-browser-qa` artifact (existing name, 14-day retention). Downloaded screenshots were visually inspected for all five review layouts and four Studio layouts (375/390/1280/1440). The action row fits on mobile and retains the fine/seconds arrangement. The dialog scrolls vertically on short screens; this is intentional. `375x812-studio.png` shows clipboard-denial fallback with selected text; 390/desktop screenshots show copy-success feedback. Node tests additionally verify both exact copy strings, selection/title changes, HTML-safe display and unchanged cache/memo/playback.
+
+Final test extension persists Studio geometry and bottom-scroll measurements, captures `WIDTHxHEIGHT-studio-guide.png`, checks Tab focus containment and explicit close-button restoration. Exact final HEAD runs and review request are linked in [Draft PR #26](https://github.com/SashunDev/sf6-ai-coach-viewer/pull/26). Synthetic Google/YT fixtures prove application behavior only; real OAuth, official iframe playback, physical iPhone Safari and Studio app opening/search/save are NOT TESTED in this change. No account/owner data was used, and no new scopes or persistent keys were added.
+
+This section does not replace or retroactively change prior PR #23 acceptance records.
