@@ -25,6 +25,17 @@ def raw(name="clip.mp4", size=100, age=1, state="uploaded"):
 
 
 class PagesMirrorTests(TestCase):
+    def test_published_js_modules_trigger_pages_push_deployment(self):
+        workflow = (Path(__file__).resolve().parents[1] /
+                    ".github/workflows/pages-video-site.yml").read_text(encoding="utf-8")
+        # Check this workflow's explicit push path list without a YAML dependency.
+        push = workflow.split("\n  push:\n", 1)[1].split("\n  schedule:", 1)[0]
+        paths = push.split("\n    paths:\n", 1)[1].splitlines()
+        self.assertIn("youtube-studio-support.mjs", SITE_FILES)
+        for module in (name for name in SITE_FILES if name.endswith(".mjs")):
+            with self.subTest(module=module):
+                self.assertIn("      - '" + module + "'", paths)
+
     def test_newest_first(self):
         chosen=select_assets([item(1, 3, 9), item(2, 2, 9), item(3, 1, 9)], NOW)
         self.assertEqual([a.id for a in chosen], [3, 2, 1])
