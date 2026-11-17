@@ -137,3 +137,26 @@ The Owner explicitly confirmed that **all six specified checks PASS on both PC a
 **Evidence class:** Owner self-report from PC and physical iPhone usage; this is acceptance evidence, not independently captured device screenshots, network traces or access-token inspection. The specific simulated iframe error → native MP4 chooser flow was verified by synthetic DOM tests but was not separately reported as exercised during the owner’s six checks. Prior historical sections above record the situation before the later hosted Chromium and owner acceptance, and should not be read as the current release gate.
 
 Release prerequisite: preserve the separate friend-only guest route and owner OAuth/cache workflows when merging the stacked PRs. Recheck CI against the integrated head and validate GitHub Pages deployment; source acceptance alone does not confirm production deployment.
+
+
+## Issue #25 — Studio保存補助（2026-11-17）
+
+Scoped visual target: existing workbench header and native workbench-dialog styles; see docs/design/studio-save-support.md. Only the header action row and new dialog change; seek/player regions stay intact. The dialog explicitly says Viewer does not directly download MP4s. No fabricated implementation image is used.
+
+Local rendering result: blocked (Chromium socket EPERM). Screenshots, physical iPhone Studio navigation/search/save and Safari behavior are NOT TESTED locally. 58 Node / 125 Python tests PASS; these are not browser layout proof. Local logs: docs/qa/studio-save-support/.
+
+Hosted Chromium subsequently ran successfully on `a62938b68877435c1281d8a4b13fc208e6f4816f`. [B3 browser + owner integration SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/44077015058); [B4 guest SUCCESS](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/44077015062). The first attempt failed Escape/focus restoration; the opener focus and asynchronous test wait were corrected before this successful run.
+
+| Chromium viewport | Review/player/seek regression | Studio bounds / no horizontal overflow / targets ≥44px | Open / copy feedback / Escape / restored selection-time-state | Console |
+|---|---|---|---|---|
+| 375×812 | PASS | PASS | PASS | 0 captured errors |
+| 390×844 | PASS | PASS | PASS | 0 captured errors |
+| 1280×720 | PASS | PASS | PASS | 0 captured errors |
+| 1440×1024 | PASS | PASS | PASS | 0 captured errors |
+| 1366×600 | PASS | PASS | PASS | 0 captured errors |
+
+Screenshots and layout JSON are saved in the run's `pr23-workbench-browser-qa` artifact (existing name, 14-day retention). Downloaded screenshots were visually inspected for all five review layouts and four Studio layouts (375/390/1280/1440). The action row fits on mobile and retains the fine/seconds arrangement. The dialog scrolls vertically on short screens; this is intentional. `375x812-studio.png` shows clipboard-denial fallback with selected text; 390/desktop screenshots show copy-success feedback. Node tests additionally verify both exact copy strings, selection/title changes, HTML-safe display and unchanged cache/memo/playback.
+
+Final test extension persists Studio geometry and bottom-scroll measurements, captures `WIDTHxHEIGHT-studio-guide.png`, checks Tab focus containment and explicit close-button restoration. Exact final HEAD runs and review request are linked in [Draft PR #26](https://github.com/SashunDev/sf6-ai-coach-viewer/pull/26). Synthetic Google/YT fixtures prove application behavior only; real OAuth, official iframe playback, physical iPhone Safari and Studio app opening/search/save are NOT TESTED in this change. No account/owner data was used, and no new scopes or persistent keys were added.
+
+This section does not replace or retroactively change prior PR #23 acceptance records.

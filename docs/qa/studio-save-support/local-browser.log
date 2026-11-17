@@ -1,0 +1,15 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test:browser
+> node tests/test_youtube_review_browser.mjs
+
+file:///workspace/scratch/8e380c5cd6eb/sf6-ai-coach-viewer/tests/test_youtube_review_browser.mjs:16
+ throw Error("Timeout in B0 mock browser smoke");
+       ^
+
+Error: Timeout in B0 mock browser smoke
+    at until (file:///workspace/scratch/8e380c5cd6eb/sf6-ai-coach-viewer/tests/test_youtube_review_browser.mjs:16:8)
+    at async main (file:///workspace/scratch/8e380c5cd6eb/sf6-ai-coach-viewer/tests/test_youtube_review_browser.mjs:29:12)
+    at async file:///workspace/scratch/8e380c5cd6eb/sf6-ai-coach-viewer/tests/test_youtube_review_browser.mjs:280:5
+
+Node.js v24.22.1

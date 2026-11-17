@@ -1,3 +1,4 @@
+import {STUDIO_URL,studioSearchCandidate} from "./youtube-studio-support.mjs";
 // Issue #18: optional owner-only YouTube review mode.
 // No OAuth secrets or Google access tokens are persisted; no YouTube media extraction.
 import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail} from "./youtube-library-core.mjs";
@@ -78,12 +79,54 @@ const info=message=>{
  while(log.childElementCount>8)log.lastChild.remove();
 };
 function buttons(){
+ renderStudioSupport();
  const ready=state.active&&state.player&&state.playerReady;
  for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
  if($("workbenchShare"))$("workbenchShare").disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
  $("youtubeRefresh").disabled=!state.active||!window.google?.accounts?.oauth2?.initTokenClient;
 }
+
+let studioSelectionKey="";
+function renderStudioSupport(){
+ const title=typeof state.selected?.title==="string"?state.selected.title:"";
+ const keyword=studioSearchCandidate(title);
+ const enabled=!!(state.active&&isVideoId(state.selected?.id)&&keyword);
+ $("youtubeStudioOpen").disabled=!enabled;
+ $("youtubeStudioCopyKeyword").disabled=!enabled;
+ $("youtubeStudioCopyTitle").disabled=!enabled;
+ $("youtubeStudioFullTitle").value=title;
+ $("youtubeStudioKeyword").value=keyword;
+ $("youtubeStudioLink").href=STUDIO_URL;
+ const key=(state.selected?.id||"")+"\n"+title;
+ if(key!==studioSelectionKey){$("youtubeStudioStatus").textContent="";studioSelectionKey=key;}
+}
+$("youtubeStudioOpen").addEventListener("click",()=>{
+ renderStudioSupport();
+ if($("youtubeStudioOpen").disabled)return;
+ const dialog=$("youtubeStudioDialog");
+ if(!dialog.open){
+   // Native dialog restores focus to the element active before showModal.
+   $("youtubeStudioOpen").focus({preventScroll:true});
+   dialog.showModal();
+ }
+});
+async function copyStudioText(fieldId,label){
+ if(!state.active||$("youtubeStudioOpen").disabled)return;
+ const field=$(fieldId),text=field.value,key=studioSelectionKey;
+ if(!text)return;
+ try{
+   await navigator.clipboard.writeText(text);
+   if(key===studioSelectionKey)$("youtubeStudioStatus").textContent=label+"をコピーしました。";
+ }catch{
+   if(key!==studioSelectionKey)return;
+   $("youtubeStudioStatus").textContent="自動コピーできませんでした。表示欄の文字列を選択して手動コピーしてください。";
+   field.focus();field.select();
+ }
+}
+$("youtubeStudioCopyKeyword").addEventListener("click",()=>void copyStudioText("youtubeStudioKeyword","検索キーワード"));
+$("youtubeStudioCopyTitle").addEventListener("click",()=>void copyStudioText("youtubeStudioFullTitle","タイトル全文"));
+
 function showRecovery(show){ $("youtubeRecovery").hidden=!show; }
 function clearPlayer(){
  showRecovery(false);
@@ -442,6 +485,7 @@ async function selectVideo(video){
  state.seekPlan=null;
  const serial=state.selectionSerial;
  state.selected=video;
+ renderStudioSupport();
  $("youtubeReviewPanel").dataset.hasVideo="true";
  render();window.SF6Workbench?.pane("memo");
  $("youtubeCurrentTitle").textContent=video.title;

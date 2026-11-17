@@ -16,7 +16,7 @@ async function until(f,ms=16000){
  throw Error("Timeout in B0 mock browser smoke");
 }
 async function main(){
- for(const file of ["index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
+ for(const file of ["youtube-studio-support.mjs","index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
   const input=readFileSync(new URL("../"+file,import.meta.url),"utf8");
   writeFileSync(join(dir,file),input);
  }
@@ -121,6 +121,32 @@ async function main(){
    if(Math.abs(g.player.w/g.player.h-16/9)>.025)throw Error("Player aspect ratio changed");
    if(!mobile&&(g.player.y<0||Math.max(...Object.values(g.controls).map(r=>r.bottom))>height))throw Error("Player or LAST control below viewport "+JSON.stringify(g));
    await screenshot(width+"x"+height+"-review");geometry.push(g);
+   const beforeStudio=await ev('({time:window.__ytPlayers[0].getCurrentTime(),state:window.__ytPlayers[0].getPlayerState(),title:document.querySelector("#youtubeCurrentTitle").textContent})');
+   await ev('document.querySelector("#youtubeStudioOpen").click();true');
+   if(!(await ev('document.querySelector("#youtubeStudioDialog").open&&document.querySelector("#youtubeStudioDialog").contains(document.activeElement)')))throw Error("Studio dialog focus missing");
+   const studioGeometry=await ev('(()=>{const d=document.querySelector("#youtubeStudioDialog"),r=d.getBoundingClientRect();return{x:r.x,y:r.y,right:r.right,bottom:r.bottom,overflow:d.scrollWidth>d.clientWidth+1,targets:[...d.querySelectorAll("button,a")].map(el=>{const r=el.getBoundingClientRect();return{w:r.width,h:r.height}})}})()');
+   if(studioGeometry.x<0||studioGeometry.y<0||studioGeometry.right>width+.5||studioGeometry.bottom>height+.5||studioGeometry.overflow||studioGeometry.targets.some(r=>r.w<44||r.h<44))throw Error("Studio dialog overflow/target regression "+JSON.stringify(studioGeometry));
+   g.studio=studioGeometry;
+   await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
+   await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
+   if(!(await ev('document.querySelector("#youtubeStudioDialog").contains(document.activeElement)')))throw Error("Studio dialog focus escaped");
+   if(await ev('document.querySelector("#youtubeStudioLink").href!=="https://studio.youtube.com/"'))throw Error("Studio destination changed");
+   await ev('document.querySelector("#youtubeStudioCopyKeyword").click();true');
+   await until(async()=>await ev('document.querySelector("#youtubeStudioStatus").textContent.length>0'));
+   await screenshot(width+"x"+height+"-studio");
+   await ev('document.querySelector("#youtubeStudioLink").focus();document.querySelector("#youtubeStudioDialog").scrollTop=document.querySelector("#youtubeStudioDialog").scrollHeight;true');
+   const studioBottom=await ev('(()=>{const d=document.querySelector("#youtubeStudioDialog");return{scrollTop:d.scrollTop,remaining:d.scrollHeight-d.clientHeight-d.scrollTop}})()');
+   if(studioBottom.remaining>1)throw Error("Studio guide could not be scrolled into view");
+   g.studioScroll=studioBottom;
+   await screenshot(width+"x"+height+"-studio-guide");
+   await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+   await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
+   await until(async()=>await ev('!document.querySelector("#youtubeStudioDialog").open&&document.activeElement.id==="youtubeStudioOpen"'));
+   await ev('document.querySelector("#youtubeStudioOpen").click();document.querySelector("#youtubeStudioDialog [data-close-dialog]").click();true');
+   await until(async()=>await ev('!document.querySelector("#youtubeStudioDialog").open&&document.activeElement.id==="youtubeStudioOpen"'));
+   const afterStudio=await ev('({time:window.__ytPlayers[0].getCurrentTime(),state:window.__ytPlayers[0].getPlayerState(),title:document.querySelector("#youtubeCurrentTitle").textContent})');
+   if(JSON.stringify(beforeStudio)!==JSON.stringify(afterStudio))throw Error("Studio changed replay state");
+
    // Tab switching preserves the selected replay and note, without mounting a new player.
    if(mobile){
      await ev('document.querySelector("#youtubeNote").value="layout-test-note";document.querySelector("#youtubeLibraryTab").click();true');

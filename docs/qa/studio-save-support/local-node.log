@@ -1,0 +1,71 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> test
+> node --test tests/test_youtube_library_core.mjs tests/test_youtube_cache.mjs tests/test_youtube_seek_core.mjs tests/test_youtube_review.mjs tests/test_youtube_share.mjs tests/test_viewer_pages.cjs tests/test_workbench.mjs tests/test_youtube_studio_support.mjs
+
+✔ Pages MP4 accepted without transformation (10.698029ms)
+✔ Legacy Release URL maps to same-origin Pages (0.906228ms)
+✔ Reject third-party host and lookalikes (0.475593ms)
+✔ Reject alternate repo, release, or directory (0.743035ms)
+✔ Reject query, fragment and userinfo (0.716469ms)
+✔ Reject traversal, percent encoding and unsafe extensions (0.798955ms)
+✔ Reject HTTP, port, excessive length and non-string (0.521734ms)
+✔ CSP permits same-origin media only (0.561348ms)
+✔ Original file chooser is retained (0.673509ms)
+✔ Normal report link and compressed JSON still supported (0.707589ms)
+✔ Error provides local fallback for expired Pages video (1.445339ms)
+✔ Synthetic one-tap report links to Pages MP4 (1.095918ms)
+✔ Short ID links fetch only sanitized same-origin reports (0.666604ms)
+✔ Short ID links refuse reports that declare another match ID (0.696085ms)
+✔ Short ID link retains report after video expiration (0.893325ms)
+✔ Previous compressed / raw URL modes stay supported (0.962777ms)
+✔ Studio support is disabled before selection, updates safely, and preserves playback and memo (435.208722ms)
+✔ fine controls precede seconds and recovery is outside settings, hidden by default (282.303622ms)
+✔ embed error exposes direct MP4 picker and preserves owner state on return (234.431901ms)
+✔ plain and cached visits always start at mode choice, without OAuth or API calls (176.74658ms)
+✔ expired cache is purged even when the visitor remains at mode choice (97.492719ms)
+✔ home, local mode, and mobile panes preserve selected YouTube video, time and note (185.558052ms)
+✔ sharing and manual handoff keep separate payloads; copy denial exposes manual fallback (105.887535ms)
+✔ initial connection still requires consent, refresh reuses the in-memory token and revoke clears cache (189.294458ms)
+✔ report deep links enter local mode and local playback shortcuts do not run in YouTube or home (153.898518ms)
+✔ only explicitly saved whitelisted metadata, never tokens or other owner fields (4.263459ms)
+✔ opt-in cache is bounded to <=30 days; older and future cache is deleted (0.921006ms)
+✔ read fail-closed for malformed, duplicate, non-video, extra or unsafe URL data (1.120881ms)
+✔ reject invalid API payloads and never serialize arbitrary objects (0.360421ms)
+✔ quota/security restrictions are safe; voluntary deletion always works (0.492579ms)
+✔ limit stored entries, restrict titles and thumbnails and mark incomplete list (61.819072ms)
+✔ only youtube.readonly and valid web OAuth client IDs (2.308038ms)
+✔ strict, HTTPS-only official thumbnail hosts, never unknown sites (2.716031ms)
+✔ playlist yields own unlisted only, de-duplicates, sorts, handles absent fields (20.690229ms)
+✔ mock list is local synthetic and contains no private or public entries (0.732567ms)
+✔ paged uploads path reads channel-owned uploads then batch videos, without search API (1.428429ms)
+✔ pagination stops at cap and explicitly warns incomplete (1.806266ms)
+✔ looping page continuation token is rejected instead of indefinite fetching (1.578623ms)
+✔ no uploads playlist returns an explicit absence, not mock data (0.742316ms)
+✔ invalid response fails closed (1.979208ms)
+✔ YouTube mode is hidden by default and original MP4/reports remain intact (7.257067ms)
+✔ CSP allows only required Google/YouTube endpoints without media extraction (0.854043ms)
+✔ B0 keeps owner-only in-memory read-only access, logout and partial-data safeguards (1.035538ms)
+✔ Official IFrame player is user-selected, paused-only approximate seek (1.653372ms)
+✔ Manual ChatGPT handoff does not claim actual video perception (1.072489ms)
+✔ Pages includes all four assets and standalone strips web mode (0.931715ms)
+✔ Node syntax check for new modules (529.111656ms)
+✔ validated video ID only (2.392404ms)
+✔ 30fps time seek bounded; not a step command (0.391568ms)
+✔ reported IFrame seek time does not claim actual frame changed (0.408684ms)
+✔ strict one-video share parsing and start time bounds (5.437745ms)
+✔ generated watch links contain one video only, not owner data (2.805676ms)
+✔ no iframe or network before guest deliberately opens video (1.381618ms)
+✔ invalid links fail closed without embedding or OAuth (0.755574ms)
+✔ Studio root is HTTPS only, without video, search, auth or custom schemes (3.185152ms)
+✔ valid leading date/time is a search suggestion, never a search guarantee (0.851847ms)
+✔ other formats and invalid dates fall back to the entire original title (0.745414ms)
+✔ empty or non-string titles safely disable copying (0.381619ms)
+ℹ tests 58
+ℹ suites 0
+ℹ pass 58
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2905.865126
