@@ -104,7 +104,12 @@ function renderStudioSupport(){
 $("youtubeStudioOpen").addEventListener("click",()=>{
  renderStudioSupport();
  if($("youtubeStudioOpen").disabled)return;
- const dialog=$("youtubeStudioDialog");if(!dialog.open)dialog.showModal();
+ const dialog=$("youtubeStudioDialog");
+ if(!dialog.open){
+   // Native dialog restores focus to the element active before showModal.
+   $("youtubeStudioOpen").focus({preventScroll:true});
+   dialog.showModal();
+ }
 });
 async function copyStudioText(fieldId,label){
  if(!state.active||$("youtubeStudioOpen").disabled)return;

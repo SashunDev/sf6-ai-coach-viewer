@@ -132,7 +132,7 @@ async function main(){
    await screenshot(width+"x"+height+"-studio");
    await send("Input.dispatchKeyEvent",{type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
    await send("Input.dispatchKeyEvent",{type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
-   if(!(await ev('!document.querySelector("#youtubeStudioDialog").open&&document.activeElement.id==="youtubeStudioOpen"')))throw Error("Studio close/focus restoration failed");
+   await until(async()=>await ev('!document.querySelector("#youtubeStudioDialog").open&&document.activeElement.id==="youtubeStudioOpen"'));
    const afterStudio=await ev('({time:window.__ytPlayers[0].getCurrentTime(),state:window.__ytPlayers[0].getPlayerState(),title:document.querySelector("#youtubeCurrentTitle").textContent})');
    if(JSON.stringify(beforeStudio)!==JSON.stringify(afterStudio))throw Error("Studio changed replay state");
 
