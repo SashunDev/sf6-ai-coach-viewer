@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'unsafe-inline'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'none'; img-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://www.youtube.com; style-src 'unsafe-inline'; frame-src https://www.youtube-nocookie.com https://www.youtube.com; connect-src 'none'; img-src 'none'; media-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>SF6 AI Coach | リプレイ視聴</title>
 <style>
 :root{font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif;color-scheme:dark;background:#0d1525;color:#e6f0ff}
@@ -18,6 +18,12 @@ main{max-width:940px;margin:24px auto 0}.panel{background:#142138;border:1px sol
 .frame{position:relative;width:100%;aspect-ratio:16/9;background:#09111e;border-radius:12px;overflow:hidden;display:grid;place-items:center}
 .frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
+.share-controls{display:grid;gap:10px;margin:16px 0 10px;min-width:0}
+.share-fine,.share-seconds{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;align-items:center}
+.share-controls button{min-width:0;min-height:48px;padding:9px 3px;font-size:clamp(11px,2.7vw,14px);white-space:nowrap;background:#1d324e;border-color:#476686}
+.share-controls .share-pause{background:#71c6a1;color:#10291e;font-weight:800}
+.share-fine span{text-align:center;font-size:11px;color:#b9c8da}
+@media(max-width:390px){.share-fine,.share-seconds{gap:4px}.share-controls button{padding:9px 1px;font-size:12px}}
 button,a.action{display:inline-flex;align-items:center;justify-content:center;min-height:44px;border-radius:9px;padding:10px 16px;font-size:1rem;font-weight:600;touch-action:manipulation}
 button{background:#2989d7;color:#fff;border:1px solid #64bcff;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
 a.action{color:#c1e5ff;background:#1d324e;border:1px solid #476686;text-decoration:none}
@@ -35,8 +41,24 @@ a.action:focus,button:focus{outline:3px solid #fff;outline-offset:2px}
   <div id="shareValid" hidden>
    <div class="frame" id="shareFrame"><p class="note">動画は「動画を開く」を押すまで読み込まれません。</p></div>
    <div class="actions"><button id="shareStart" type="button">動画を開く</button><a id="shareYoutube" class="action" href="#" target="_blank" rel="noopener noreferrer">YouTubeで直接見る</a></div>
-   <p class="note" id="shareStartTime"></p>
-   <p class="note">YouTube公式の操作バーで再生・一時停止・シークできます。埋め込み表示が制限される場合は「YouTubeで直接見る」をお使いください。</p>
+   <div class="share-controls" id="shareControls" hidden aria-label="共有リプレイの動画操作">
+     <div class="share-fine" role="group" aria-label="近似的なフレーム移動">
+      <button id="sharePrevTen" type="button" disabled>−10F</button>
+      <button id="sharePrev" type="button" disabled>−1F</button>
+      <span>F相当・近似</span>
+      <button id="shareNext" type="button" disabled>＋1F</button>
+      <button id="shareNextTen" type="button" disabled>＋10F</button>
+     </div>
+     <div class="share-seconds" role="group" aria-label="秒単位の移動">
+      <button id="sharePrevFive" type="button" disabled>−5秒</button>
+      <button id="sharePrevSec" type="button" disabled>−1秒</button>
+      <button id="sharePause" class="share-pause" type="button" disabled>再生</button>
+      <button id="shareNextSec" type="button" disabled>＋1秒</button>
+      <button id="shareNextFive" type="button" disabled>＋5秒</button>
+     </div>
+    </div>
+    <p class="note" id="shareStartTime"></p>
+   <p class="note">外側の操作ボタンから再生／一時停止を切替できます。時刻移動は一時停止中のみ可能。1F相当＝1/30秒の近似時刻指定であり、表示フレームは保証されません。埋め込みが制限される場合は「YouTubeで直接見る」をお使いください。</p>
   </div>
  </section>
  <p class="warn">限定公開動画は、リンクを知っている人なら再共有・視聴できます。「友人限定」のアクセス制限ではありません。</p>

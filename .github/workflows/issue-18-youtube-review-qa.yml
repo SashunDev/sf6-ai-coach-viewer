@@ -28,6 +28,7 @@ jobs:
           node --check youtube-library-cache.mjs
           node --check youtube-seek-core.mjs
           node --check youtube-review.mjs
+          node --check youtube-player-controls.mjs
           node --check tests/test_youtube_review_browser.mjs
           python3 -m py_compile scripts/build_pages_site.py scripts/build_standalone_report.py
       - name: Install pinned UI test dependencies

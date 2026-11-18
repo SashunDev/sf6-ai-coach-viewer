@@ -1,4 +1,5 @@
 import {STUDIO_URL,studioSearchCandidate} from "./youtube-studio-support.mjs";
+import {playbackAction,playbackLabel,seekAnchor} from "./youtube-player-controls.mjs";
 // Issue #18: optional owner-only YouTube review mode.
 // No OAuth secrets or Google access tokens are persisted; no YouTube media extraction.
 import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail} from "./youtube-library-core.mjs";
@@ -78,10 +79,21 @@ const info=message=>{
  const row=document.createElement("div");row.textContent=message;log.prepend(row);
  while(log.childElementCount>8)log.lastChild.remove();
 };
+function refreshPlaybackToggle(){
+ const button=$("youtubePause");
+ let action=null;
+ if(state.active&&state.player&&state.playerReady){
+   try{action=playbackAction(state.player.getPlayerState());}catch{}
+ }
+ button.disabled=!action;
+ button.textContent=playbackLabel(action);
+ button.setAttribute("aria-label",button.textContent);
+}
 function buttons(){
  renderStudioSupport();
  const ready=state.active&&state.player&&state.playerReady;
- for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
+ for(const id of ["youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
+ refreshPlaybackToggle();
  if($("workbenchShare"))$("workbenchShare").disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
  $("youtubeRefresh").disabled=!state.active||!window.google?.accounts?.oauth2?.initTokenClient;
@@ -468,6 +480,7 @@ function mountPlayer(video,serial){
      },
      onStateChange:event=>{
        if(state.player!==event.target||!state.active)return;
+       refreshPlaybackToggle();
        if(event.data===window.YT.PlayerState?.PAUSED)playback("停止中：細かい時刻移動ができます（近似）。");
        else if(event.data===window.YT.PlayerState?.PLAYING){
          state.seekPlan=null;
@@ -509,8 +522,22 @@ async function selectVideo(video){
  }
 }
 $("youtubePause").addEventListener("click",()=>{
- if(!state.playerReady)return;
- state.player.pauseVideo();playback("停止を要求しました。映像が止まったことを確認してください。");
+ if(!state.active||!state.playerReady||!state.player)return;
+ const player=state.player;
+ let action=null;
+ try{action=playbackAction(player.getPlayerState());}catch{}
+ if(!action){refreshPlaybackToggle();return;}
+ try{
+   if(action==="pause"){
+     player.pauseVideo();
+     playback("一時停止を要求しました。実際の状態はプレイヤーで確認してください。");
+   }else{
+     state.seekPlan=null;
+     player.playVideo();
+     playback("再生を要求しました。実際の状態はプレイヤーで確認してください。");
+   }
+ }catch(e){playback("再生操作に失敗："+String(e?.message||"不明").slice(0,70));}
+ refreshPlaybackToggle();
 });
 // Short tap bursts should accumulate targets even when YT.getCurrentTime() lags seekTo().
  // Never treat the optimistic target as proof of the frame that was displayed.
@@ -528,9 +555,7 @@ function fineSeek(delta){
  const previous=state.seekPlan;
  // A burst shares one optimistic anchor for <=1.5s between taps. A new video,
  // a resumed player, or a longer gap starts from the player's reported time.
- const valid=previous&&previous.player===player&&previous.serial===serial&&
-   now>=previous.at&&now-previous.at<=1500;
- const baseline=valid?previous.target:current;
+ const baseline=seekAnchor(previous,player,serial,current,now);
  const goal=targetSeconds(baseline,delta,Number(player.getDuration()));
  if(goal===null){playback("時刻移動の値が不正です。");return;}
  if(Math.abs(goal-baseline)<.001){playback("動画の冒頭または終端です。");return;}

@@ -7,6 +7,7 @@ import * as library from '../youtube-library-core.mjs';
 import * as seek from '../youtube-seek-core.mjs';
 import * as cache from '../youtube-library-cache.mjs';
 import * as studio from '../youtube-studio-support.mjs';
+import * as controls from '../youtube-player-controls.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8')
@@ -15,6 +16,21 @@ const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8
 const videos=[{id:'AAAAAAAAAAA',title:'合成テスト：対空の確認',publishedAt:'2026-11-15T00:00:00Z',thumbnail:''},
  {id:'BBBBBBBBBBB',title:'合成テスト：起き攻め',publishedAt:'2026-11-14T00:00:00Z',thumbnail:''}];
 const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
+test('Owner video button alternates pause and play using actual player state',async()=>{
+ const t=setup();try{
+  assert.equal(t.d.getElementById('youtubePause').disabled,true);
+  t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0],button=t.d.getElementById('youtubePause');
+  assert.equal(button.textContent,'再生');
+  t.click('youtubePause');assert.equal(player.state,1);assert.equal(button.textContent,'一時停止');
+  t.click('youtubePause');assert.equal(player.state,2);assert.equal(button.textContent,'再生');
+  t.click('youtubeNext');assert.ok(player.requests.length>0);
+  t.click('youtubePause');assert.equal(player.state,1);
+  const prevCount=player.requests.length;t.click('youtubeNext');assert.equal(player.requests.length,prevCount);
+  t.click('youtubeBack');assert.equal(button.disabled,true);
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
 test('Studio support is disabled before selection, updates safely, and preserves playback and memo',async()=>{
  const t=setup();try{
   const saved=JSON.parse(t.w.localStorage.getItem(cache.CACHE_KEY));
@@ -102,7 +118,7 @@ function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
    w.HTMLDialogElement.prototype.close=function(){this.open=false;};
   }});
  const w=dom.window,d=w.document,calls={oauth:0,api:0,copies:[],players:[]};
- w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache,'youtube-studio-support.mjs':studio};
+ w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache,'youtube-studio-support.mjs':studio,'youtube-player-controls.mjs':controls};
  if(saved)cache.writeCache(w.localStorage,videos,false,savedAt);
  w.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:()=>{
   calls.oauth++;callback({access_token:'SYNTHETIC_ONLY'});
@@ -113,7 +129,8 @@ function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
    w.setTimeout(()=>config.events.onReady({target:this}),0);
   }
   getCurrentTime(){return this.time;}getDuration(){return 130;}getPlayerState(){return this.state;}
-  pauseVideo(){this.state=2;this.config.events.onStateChange({target:this,data:2});}
+  playVideo(){this.state=1;this.config.events.onStateChange({target:this,data:1});}
+   pauseVideo(){this.state=2;this.config.events.onStateChange({target:this,data:2});}
   seekTo(time){this.time=time;this.requests.push(time);}
   cueVideoById(){this.time=0;this.state=2;}destroy(){this.host.remove();}
  }};
