@@ -52,6 +52,9 @@ async function main(){
   if(r.exceptionDetails)throw Error("Browser JS exception: "+JSON.stringify(r.exceptionDetails).slice(0,300));
   return r.result?.value;
  }
+ async function mockGoogle(){
+  await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:(args)=>{window.__lastOAuthPrompt=args?.prompt;callback({access_token:"SYNTHETIC_ONLY"})}}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
+ }
  await send("Runtime.enable");await send("Network.enable");await send("Page.enable");
 
  await until(async()=>await ev('document.readyState==="complete" && !!document.querySelector("#youtubeOpen")'));
@@ -63,7 +66,7 @@ async function main(){
  if(await ev('document.body.dataset.reviewMode!=="home"'))throw Error("First visit bypassed mode choice");
  if(await ev('getComputedStyle(document.querySelector(".workarea")).display!=="none"'))throw Error("Home exposed a review workspace");
  // Inject synthetic Google/YT browser APIs only after load; no real OAuth, uploads or CDN.
- await ev('window.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:(args)=>{window.__lastOAuthPrompt=args?.prompt;callback({access_token:"SYNTHETIC_ONLY"})}}),hasGrantedAllScopes:()=>true,revoke:(_t,cb)=>cb({successful:true})}}};true');
+ await mockGoogle();
  // Delayed API time intentionally emulates the asynchronous official YouTube iframe.
  await ev('window.__ytPlayers=[];window.YT={PlayerState:{PLAYING:1,PAUSED:2},Player:class{constructor(host,config){this.host=host;this.events=config.events;this.time=5;this.state=2;this.requests=[];this.generation=0;window.__ytPlayers.push(this);host.textContent="SYNTHETIC YT PLAYER";setTimeout(()=>config.events.onReady({target:this}),5)}getPlayerState(){return this.state}getCurrentTime(){return this.time}getDuration(){return 120}playVideo(){this.state=1;this.events.onStateChange({target:this,data:1})}pauseVideo(){this.state=2;this.events.onStateChange({target:this,data:2})}cueVideoById(_id){this.generation++;this.time=5;this.state=2;this.events.onStateChange({target:this,data:2})}seekTo(v){this.requests.push(v);const gen=this.generation;setTimeout(()=>{if(gen===this.generation)this.time=v},120)}destroy(){this.generation++;this.host.remove()}}};true');
  await ev('window.__syntheticCalls=0;const originalFetch=window.fetch.bind(window);window.fetch=(url,opts)=>{const x=String(url);if(!x.startsWith("https://www.googleapis.com/youtube/v3/"))return originalFetch(url,opts);window.__syntheticCalls++;const u=new URL(x),op=u.pathname.split("/").pop();let d;if(op==="channels")d={items:[{contentDetails:{relatedPlaylists:{uploads:"UUdemo"}}}]};else if(op==="playlistItems")d={items:[{contentDetails:{videoId:"AAAAAAAAAAA"}},{contentDetails:{videoId:"BBBBBBBBBBB"}},{contentDetails:{videoId:"CCCCCCCCCCC"}}]};else if(op==="videos")d={items:[{id:"AAAAAAAAAAA",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Ed Match",publishedAt:"2026-11-15T02:00:00Z"}},{id:"BBBBBBBBBBB",status:{privacyStatus:"unlisted"},snippet:{title:"Mock Alex Match",publishedAt:"2026-11-14T02:00:00Z"}},{id:"CCCCCCCCCCC",status:{privacyStatus:"private"},snippet:{title:"Private fixture"}}]};else throw Error("Unknown mock API "+op);return Promise.resolve(new Response(JSON.stringify(d),{status:200,headers:{"Content-Type":"application/json"}}))};true');
@@ -262,13 +265,17 @@ async function main(){
  await send("Page.reload",{ignoreCache:true});
  await until(async()=>await ev('document.readyState==="complete"&&document.body.dataset.reviewMode==="home"'));
  if(await ev('document.querySelectorAll("#youtubeList .youtube-card").length!==0'))throw Error("Cached revisit bypassed mode selection");
+ // Reload discards the mock. Reinstall it before opening the owner mode, which
+ // otherwise preloads GIS even if no OAuth request is made.
+ await mockGoogle();
  await ev('document.querySelector("#youtubeOpen").click()');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===2'));
  const restored=await ev('({cachedLabel:document.querySelector("#youtubeCount").textContent,notice:document.querySelector("#youtubeCacheNotice").textContent,keep:document.querySelector("#youtubeKeepList").checked,consent:document.querySelector("#youtubeConsent").checked,items:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent)})');
  if(!restored.cachedLabel.includes("前回保存")||!restored.notice.includes("最終同期")||
     !restored.keep||!restored.consent||restored.items.length!==2)
    throw Error("Returning visitor cache not shown or not labeled stale: "+JSON.stringify(restored));
- if(apiRequests.length!==beforeReloadApiCalls)throw Error("Cached visit made an authenticated YouTube Data API request");
+ if(apiRequests.length!==beforeReloadApiCalls||await ev('window.__lastOAuthPrompt!==undefined'))
+   throw Error("Cached visit requested OAuth or made a YouTube Data API request");
  // Disabling/re-enabling local cache must preserve the original synchronizedAt;
  // it must never silently extend the 30-day authorized-data retention window.
  await ev('document.querySelector("#youtubeKeepList").checked=false;document.querySelector("#youtubeKeepList").dispatchEvent(new Event("change",{bubbles:true}));true');
@@ -291,6 +298,7 @@ async function main(){
  await ev('document.querySelector("#youtubeForgetList").click()');
  if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null||document.querySelectorAll("#youtubeList .youtube-card").length!==0'))
    throw Error("Forget saved list left persistent or visible owner metadata");
+ if(external.length)throw Error("Owner cache scenario opened external resources: "+JSON.stringify(external));
  // Guest layout is visually measured across the same five viewport sizes.
  // Do not click "open video" in the network-isolated browser: API behavior is
  // independently exercised with synthetic Node mocks and needs real Safari QA.

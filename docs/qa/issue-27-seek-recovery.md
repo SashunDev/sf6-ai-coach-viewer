@@ -12,4 +12,6 @@ Local Node: 76 PASS. Owner and guest mocks control state events and seek checks 
 
 Local Python: 126 PASS with the existing test dependency directory on PYTHONPATH, including mocked Pages/standalone builds. Changed JavaScript files passed syntax checks and the correction passed `git diff --check`. Local Chromium exited before rendering: the startup log reports `socket() failed: Operation not permitted` in the process singleton. Final-head CI outcomes are recorded in the PR conversation.
 
+The [first corrective B3 run](https://github.com/SashunDev/sf6-ai-coach-viewer/actions/runs/44220781266) passed Node and Pages/standalone, then failed the Chromium external-request assertion. The owner reload discarded the Google mock and opening the cached owner view preloaded GIS. The accumulated owner request surfaced at the end of the guest check. The browser fixture now reinstalls the mock before the cached owner view, checks for unexpected OAuth there, and checks external requests before guest navigation as well as after guest layout checks. Product network behavior is unchanged by this fixture correction.
+
 Owner Acceptance remains pending for real IFrame API communication, iPhone Safari playback and seek, guest CSP compatibility with the live API, and displayed-frame behavior. The P2 correction uses synthetic players and approximate timestamps.
