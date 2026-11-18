@@ -1,4 +1,5 @@
 import {STUDIO_URL,studioSearchCandidate} from "./youtube-studio-support.mjs";
+import {playbackAction,playbackLabel,seekAnchor,restorePausedSeek} from "./youtube-player-controls.mjs";
 // Issue #18: optional owner-only YouTube review mode.
 // No OAuth secrets or Google access tokens are persisted; no YouTube media extraction.
 import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail} from "./youtube-library-core.mjs";
@@ -78,10 +79,21 @@ const info=message=>{
  const row=document.createElement("div");row.textContent=message;log.prepend(row);
  while(log.childElementCount>8)log.lastChild.remove();
 };
+function refreshPlaybackToggle(){
+ const button=$("youtubePause");
+ let action=null;
+ if(state.active&&state.player&&state.playerReady){
+   try{action=playbackAction(state.player.getPlayerState());}catch{}
+ }
+ button.disabled=!action;
+ button.textContent=playbackLabel(action);
+ button.setAttribute("aria-label",button.textContent);
+}
 function buttons(){
  renderStudioSupport();
  const ready=state.active&&state.player&&state.playerReady;
- for(const id of ["youtubePause","youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
+ for(const id of ["youtubePrev","youtubeNext","youtubePrevSec","youtubeNextSec","youtubePrevTen","youtubeNextTen","youtubePrevFive","youtubeNextFive","youtubeCopy","youtubeShare"])$(id).disabled=!ready;
+ refreshPlaybackToggle();
  if($("workbenchShare"))$("workbenchShare").disabled=!ready;
  $("youtubeRevoke").disabled=!state.token;
  $("youtubeRefresh").disabled=!state.active||!window.google?.accounts?.oauth2?.initTokenClient;
@@ -195,6 +207,7 @@ function activate(){
 }
 function deactivate(){
  if(!state.active)return;
+ state.seekPlan=null;
  // Navigation is reversible; only explicit clear/revoke erases notes or state.
  if(state.player){try{state.player.pauseVideo();}catch{}}
  state.epoch++;
@@ -462,15 +475,17 @@ function mountPlayer(video,serial){
      },
      onError:event=>{
        if(state.player!==event.target||!state.active)return;
+       state.seekPlan=null;
        state.playerReady=false;showRecovery(true);buttons();
        playback("YouTube埋め込み再生エラー "+String(event.data).slice(0,4)+
          "。動画の埋め込み制限を確認するか、端末内MP4を選択してください。");
      },
      onStateChange:event=>{
-       if(state.player!==event.target||!state.active)return;
+       if(state.player!==event.target||!state.active||!state.playerReady)return;
+       refreshPlaybackToggle();
        if(event.data===window.YT.PlayerState?.PAUSED)playback("停止中：細かい時刻移動ができます（近似）。");
        else if(event.data===window.YT.PlayerState?.PLAYING){
-         state.seekPlan=null;
+         if(recoverPausedSeek())return;
          playback("再生中：細かい時刻移動の前に停止してください。");
        }
      }
@@ -509,16 +524,40 @@ async function selectVideo(video){
  }
 }
 $("youtubePause").addEventListener("click",()=>{
- if(!state.playerReady)return;
- state.player.pauseVideo();playback("停止を要求しました。映像が止まったことを確認してください。");
+ if(!state.active||!state.playerReady||!state.player)return;
+ const player=state.player;
+ let action=null;
+ try{action=playbackAction(player.getPlayerState());}catch{}
+ if(!action){refreshPlaybackToggle();return;}
+ state.seekPlan=null;
+ try{
+   if(action==="pause"){
+     player.pauseVideo();
+     playback("一時停止を要求しました。実際の状態はプレイヤーで確認してください。");
+   }else{
+     player.playVideo();
+     playback("再生を要求しました。実際の状態はプレイヤーで確認してください。");
+   }
+ }catch(e){playback("再生操作に失敗："+String(e?.message||"不明").slice(0,70));}
+ refreshPlaybackToggle();
 });
+function recoverPausedSeek(){
+ try{
+   if(!restorePausedSeek(state.seekPlan,state.player,state.selectionSerial,Date.now()))return false;
+   refreshPlaybackToggle();
+   info("シーク後に再生されたため停止を要求しました。");
+   return true;
+ }catch{
+   info("シーク後の停止要求に失敗しました。");
+   return false;
+ }
+}
 // Short tap bursts should accumulate targets even when YT.getCurrentTime() lags seekTo().
- // Never treat the optimistic target as proof of the frame that was displayed.
+// Never treat the optimistic target as proof of the frame that was displayed.
 function fineSeek(delta){
- if(!state.playerReady||!state.player||!state.selected)return;
+ if(!state.active||!state.playerReady||!state.player||!state.selected)return;
  const player=state.player;
  if(player.getPlayerState()!==window.YT.PlayerState?.PAUSED){
-   state.seekPlan=null;
    playback("一時停止してから細かい時刻移動を行ってください。");return;
  }
  const current=Number(player.getCurrentTime());
@@ -528,29 +567,31 @@ function fineSeek(delta){
  const previous=state.seekPlan;
  // A burst shares one optimistic anchor for <=1.5s between taps. A new video,
  // a resumed player, or a longer gap starts from the player's reported time.
- const valid=previous&&previous.player===player&&previous.serial===serial&&
-   now>=previous.at&&now-previous.at<=1500;
- const baseline=valid?previous.target:current;
+ const baseline=seekAnchor(previous,player,serial,current,now);
  const goal=targetSeconds(baseline,delta,Number(player.getDuration()));
  if(goal===null){playback("時刻移動の値が不正です。");return;}
  if(Math.abs(goal-baseline)<.001){playback("動画の冒頭または終端です。");return;}
  const plan={player,serial,target:goal,at:now};
- try{player.seekTo(goal,true);}
- catch(e){playback("時刻移動に失敗："+String(e?.message||"不明").slice(0,70));return;}
+ // Install the plan before seekTo, which can immediately emit a state event.
  state.seekPlan=plan;
+ try{player.seekTo(goal,true);}
+ catch(e){
+   if(state.seekPlan===plan)state.seekPlan=null;
+   playback("時刻移動に失敗："+String(e?.message||"不明").slice(0,70));return;
+ }
+ if(state.seekPlan!==plan)return;
  playback("時刻移動 "+(delta>0?"+":"-")+secondsDisplay(Math.abs(delta))+
    "："+secondsDisplay(baseline)+" → "+secondsDisplay(goal)+"（時刻指定・表示フレーム未保証）");
  setTimeout(()=>{
    if(!state.active||serial!==state.selectionSerial||player!==state.player||
        !state.playerReady||state.seekPlan!==plan)return;
-   const reported=Number(player.getCurrentTime());
-   const stateNow=player.getPlayerState();
-   if(stateNow===window.YT.PlayerState?.PLAYING){
-     player.pauseVideo();
-     info("シーク後に再生されたため停止を要求しました。");
-   }
-   info("要求 "+secondsDisplay(goal)+" / API時刻 "+secondsDisplay(reported)+
-      "：" + classifyReportedSeek(baseline,goal,reported));
+   recoverPausedSeek();
+   if(state.seekPlan!==plan)return;
+   try{
+     const reported=Number(player.getCurrentTime());
+     info("要求 "+secondsDisplay(goal)+" / API時刻 "+secondsDisplay(reported)+
+        "：" + classifyReportedSeek(baseline,goal,reported));
+   }catch{info("移動後の時刻を確認できませんでした。");}
  },1000);
 }
 for(const [id,delta] of [["youtubePrevFive",-5],["youtubePrevSec",-1],

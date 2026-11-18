@@ -4,6 +4,8 @@ on:
     paths:
       - 'youtube-share.html'
       - 'youtube-share.mjs'
+      - 'youtube-player-controls.mjs'
+      - 'youtube-seek-core.mjs'
       - 'tests/test_youtube_share.mjs'
       - 'scripts/build_pages_site.py'
       - '.github/workflows/pages-video-site.yml'
@@ -23,7 +25,8 @@ jobs:
       - name: Verify guest URL validation, lazy official embed, and OAuth isolation
         run: |
           node --check youtube-share.mjs
-          node --test tests/test_youtube_share.mjs
+          node --check youtube-player-controls.mjs
+          node --test tests/test_youtube_share.mjs tests/test_youtube_player_controls.mjs
       - name: Verify existing Pages release builder
         run: |
           python3 -m unittest discover -s tests -p 'test_pages_build.py' -v

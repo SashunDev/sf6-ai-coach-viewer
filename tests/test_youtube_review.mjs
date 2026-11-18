@@ -5,6 +5,7 @@ import {spawnSync} from "node:child_process";
 const read=file=>readFileSync(new URL("../"+file,import.meta.url),"utf8");
 const html=read("index.html");
 const module=read("youtube-review.mjs");
+const playbackCore=read("youtube-player-controls.mjs");
 const libraryCache=read("youtube-library-cache.mjs");
 const privacy=read("youtube-privacy.html");
 const builder=read("scripts/build_pages_site.py");
@@ -89,7 +90,8 @@ test("Official IFrame player is user-selected, paused-only approximate seek",()=
    assert.match(module,new RegExp('"'+id+'"'));
  }
  assert.ok(module.includes('state.seekPlan=plan'));
- assert.ok(module.includes('now-previous.at<=1500'));
+ assert.ok(module.includes('seekAnchor(previous,player,serial,current,now)'));
+ assert.ok(playbackCore.includes('now-plan.at<=1500'));
  assert.ok(html.includes('10×1/30秒'));
  const ids=[["youtubePrevFive","youtubeNextFive"],["youtubePrevSec","youtubeNextSec"],
    ["youtubePrevTen","youtubeNextTen"],["youtubePrev","youtubeNext"]];

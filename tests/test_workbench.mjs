@@ -7,6 +7,7 @@ import * as library from '../youtube-library-core.mjs';
 import * as seek from '../youtube-seek-core.mjs';
 import * as cache from '../youtube-library-cache.mjs';
 import * as studio from '../youtube-studio-support.mjs';
+import * as controls from '../youtube-player-controls.mjs';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8')
@@ -15,6 +16,82 @@ const module=readFileSync(new URL('../youtube-review.mjs',import.meta.url),'utf8
 const videos=[{id:'AAAAAAAAAAA',title:'合成テスト：対空の確認',publishedAt:'2026-11-15T00:00:00Z',thumbnail:''},
  {id:'BBBBBBBBBBB',title:'合成テスト：起き攻め',publishedAt:'2026-11-14T00:00:00Z',thumbnail:''}];
 const tick=()=>new Promise(resolve=>setTimeout(resolve,10));
+test('Owner video button alternates pause and play using actual player state',async()=>{
+ const t=setup();try{
+  assert.equal(t.d.getElementById('youtubePause').disabled,true);
+  t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0],button=t.d.getElementById('youtubePause');
+  assert.equal(button.textContent,'再生');
+  t.click('youtubePause');assert.equal(player.state,1);assert.equal(button.textContent,'一時停止');
+  t.click('youtubePause');assert.equal(player.state,2);assert.equal(button.textContent,'再生');
+  t.click('youtubeNext');assert.ok(player.requests.length>0);
+  t.click('youtubePause');assert.equal(player.state,1);
+  const prevCount=player.requests.length;t.click('youtubeNext');assert.equal(player.requests.length,prevCount);
+  t.click('youtubeBack');assert.equal(button.disabled,true);
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
+for(const transition of ['inline PLAYING','PLAYING before checkpoint','BUFFERING then PLAYING','PLAYING without event']){
+ test('Owner restores paused seek after '+transition,async()=>{
+  const t=setup({controlSeekTimers:true});try{
+   t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+   const player=t.calls.players[0],toggle=t.d.getElementById('youtubePause');
+   assert.equal(player.state,2);
+   if(transition==='inline PLAYING')player.afterSeek=()=>player.emitState(1);
+   t.click('youtubeNextTen');
+   assert.ok(Math.abs(player.requests[0]-(42+10/30))<.00001);
+   if(transition==='PLAYING before checkpoint')player.emitState(1);
+   if(transition==='BUFFERING then PLAYING'){
+    player.emitState(3);t.runSeekChecks();
+    assert.equal(player.pauseCalls,0);
+    player.emitState(1);
+   }else if(transition==='PLAYING without event')player.state=1;
+   t.runSeekChecks();
+   assert.equal(player.pauseCalls,1);
+   assert.equal(player.state,2);assert.equal(toggle.textContent,'再生');
+   player.config.events.onStateChange({target:player,data:1});
+   assert.equal(player.pauseCalls,1);
+   assert.equal(t.errors.length,0);
+  }finally{t.close();}
+ });
+}
+test('Owner explicit Play invalidates all previous seek checks',async()=>{
+ const t=setup({controlSeekTimers:true});try{
+  t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0];
+  t.click('youtubeNext');t.click('youtubeNextSec');
+  assert.ok(Math.abs(player.requests[1]-(43+1/30))<.00001);
+  t.click('youtubePause');t.runSeekChecks();
+  assert.equal(player.playCalls,1);assert.equal(player.pauseCalls,0);
+  assert.equal(player.state,1);
+  assert.equal(t.d.getElementById('youtubePause').textContent,'一時停止');
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
+test('Owner old seek checks cannot pause a switched video or an errored player',async()=>{
+ const t=setup({controlSeekTimers:true});try{
+  t.click('youtubeOpen');t.d.querySelector('.youtube-card').click();await tick();
+  const player=t.calls.players[0];
+  t.click('youtubeNext');t.d.querySelectorAll('.youtube-card')[1].click();
+  player.emitState(1);t.runSeekChecks();
+  assert.equal(player.pauseCalls,0);
+  player.emitState(2);t.click('youtubeNext');
+  player.config.events.onError({target:player,data:101});
+  player.emitState(1);
+  assert.equal(player.pauseCalls,0);
+  assert.equal(t.d.getElementById('youtubePause').disabled,true);
+  assert.equal(t.d.getElementById('youtubeNext').disabled,true);
+  t.d.querySelectorAll('.youtube-card')[0].click();await tick();
+  const replacement=t.calls.players[1];
+  replacement.emitState(1);player.emitState(1);t.runSeekChecks();
+  assert.equal(player.pauseCalls,0);assert.equal(replacement.pauseCalls,0);
+  replacement.emitState(2);
+  t.click('youtubeNext');t.click('youtubeClear');
+  replacement.emitState(1);t.runSeekChecks();
+  assert.equal(replacement.pauseCalls,0);
+  assert.equal(t.errors.length,0);
+ }finally{t.close();}
+});
 test('Studio support is disabled before selection, updates safely, and preserves playback and memo',async()=>{
  const t=setup();try{
   const saved=JSON.parse(t.w.localStorage.getItem(cache.CACHE_KEY));
@@ -93,7 +170,7 @@ test('embed error exposes direct MP4 picker and preserves owner state on return'
   assert.equal(t.errors.length,0);
  }finally{t.close();}
 });
-function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
+function setup({saved=true,hash='',savedAt=Date.now()-1000,controlSeekTimers=false}={}){
  const errors=[];const console=new VirtualConsole();console.on('jsdomError',e=>errors.push(e));
  const dom=new JSDOM(html,{url:'https://viewer.example/'+hash,runScripts:'dangerously',virtualConsole:console,
   beforeParse(w){w.scrollTo=()=>{};w.Element.prototype.scrollIntoView=()=>{};
@@ -102,19 +179,27 @@ function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
    w.HTMLDialogElement.prototype.close=function(){this.open=false;};
   }});
  const w=dom.window,d=w.document,calls={oauth:0,api:0,copies:[],players:[]};
- w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache,'youtube-studio-support.mjs':studio};
+ const seekChecks=[];
+ if(controlSeekTimers){
+  const schedule=w.setTimeout.bind(w);
+  w.setTimeout=(fn,delay,...args)=>delay===1000
+   ?seekChecks.push(()=>fn(...args)):schedule(fn,delay,...args);
+ }
+ w.__dependencies={'youtube-library-core.mjs':library,'youtube-seek-core.mjs':seek,'youtube-library-cache.mjs':cache,'youtube-studio-support.mjs':studio,'youtube-player-controls.mjs':controls};
  if(saved)cache.writeCache(w.localStorage,videos,false,savedAt);
  w.google={accounts:{oauth2:{initTokenClient:({callback})=>({requestAccessToken:()=>{
   calls.oauth++;callback({access_token:'SYNTHETIC_ONLY'});
  }}),hasGrantedAllScopes:()=>true,revoke:(_token,cb)=>cb({successful:true})}}};
  w.YT={PlayerState:{PAUSED:2,PLAYING:1},Player:class{
-  constructor(host,config){this.host=host;this.config=config;this.time=42;this.state=2;this.requests=[];
+  constructor(host,config){this.host=host;this.config=config;this.time=42;this.state=2;this.requests=[];this.pauseCalls=0;this.playCalls=0;
    calls.players.push(this);host.textContent='合成テストプレイヤー';
    w.setTimeout(()=>config.events.onReady({target:this}),0);
   }
   getCurrentTime(){return this.time;}getDuration(){return 130;}getPlayerState(){return this.state;}
-  pauseVideo(){this.state=2;this.config.events.onStateChange({target:this,data:2});}
-  seekTo(time){this.time=time;this.requests.push(time);}
+  emitState(state){this.state=state;this.config.events.onStateChange({target:this,data:state});}
+  playVideo(){this.playCalls++;this.emitState(1);}
+  pauseVideo(){this.pauseCalls++;this.emitState(2);}
+  seekTo(time){this.time=time;this.requests.push(time);this.afterSeek?.();}
   cueVideoById(){this.time=0;this.state=2;}destroy(){this.host.remove();}
  }};
  w.fetch=async url=>{calls.api++;const resource=new URL(url).pathname.split('/').at(-1);
@@ -126,7 +211,7 @@ function setup({saved=true,hash='',savedAt=Date.now()-1000}={}){
  Object.defineProperty(w.navigator,'clipboard',{configurable:true,value:{writeText:async text=>calls.copies.push(text)}});
  w.eval('(()=>{'+module+'\n})();');
  const click=id=>d.getElementById(id).click();
- return {dom,w,d,calls,errors,click,close:()=>dom.window.close()};
+ return {dom,w,d,calls,errors,click,runSeekChecks:()=>seekChecks.splice(0).forEach(fn=>fn()),close:()=>dom.window.close()};
 }
 
 test('plain and cached visits always start at mode choice, without OAuth or API calls',()=>{

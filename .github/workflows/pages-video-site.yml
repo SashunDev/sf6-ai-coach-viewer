@@ -7,6 +7,7 @@ on:
       - 'index.html'
       - 'youtube-review.mjs'
       - 'youtube-studio-support.mjs'
+      - 'youtube-player-controls.mjs'
       - 'youtube-library-core.mjs'
       - 'youtube-library-cache.mjs'
       - 'youtube-seek-core.mjs'
