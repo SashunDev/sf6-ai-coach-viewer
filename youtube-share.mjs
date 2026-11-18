@@ -1,6 +1,6 @@
 // Issue #20/#27: guest-only YouTube watch, no owner OAuth/persistence.
 import {SEEK_SMALL,targetSeconds,secondsDisplay,classifyReportedSeek} from "./youtube-seek-core.mjs";
-import {playbackAction,playbackLabel,seekAnchor} from "./youtube-player-controls.mjs";
+import {playbackAction,playbackLabel,seekAnchor,restorePausedSeek} from "./youtube-player-controls.mjs";
 export const MAX_START_SECONDS=43200; // 12 hours, refuse unbounded query inputs.
 export function isYouTubeVideoId(value){
  return typeof value==="string"&&/^[A-Za-z0-9_-]{11}$/.test(value);
@@ -100,15 +100,29 @@ export function initializeShareView(doc,href,env=typeof window!=="undefined"?win
  pause.addEventListener("click",()=>{
    if(!ready||!player)return;
    const action=playbackAction(playState());if(!action)return;
+   seekPlan=null;
    try{
      if(action==="pause"){player.pauseVideo();status.textContent="一時停止を要求しました。";}
-     else{seekPlan=null;player.playVideo();status.textContent="再生を要求しました。";}
+     else{player.playVideo();status.textContent="再生を要求しました。";}
    }catch{status.textContent="操作に失敗しました。YouTubeで直接開いてください。";}
    refresh();
  });
+ function recoverPausedSeek(){
+   const plan=seekPlan;
+   try{
+     if(!restorePausedSeek(plan,player,1,Date.now()))return false;
+     if(seekPlan===plan){
+       refresh();
+       status.textContent="移動後に再生されたため停止を要求しました。";
+     }
+   }catch{
+     if(seekPlan===plan)status.textContent="移動後の停止要求に失敗しました。";
+   }
+   return true;
+ }
  function seek(delta){
    if(!ready||!player)return;
-   if(playState()!==2){seekPlan=null;status.textContent="時刻移動は一時停止中に操作してください。";return;}
+   if(playState()!==2){status.textContent="時刻移動は一時停止中に操作してください。";return;}
    const current=Number(player.getCurrentTime());
    if(!Number.isFinite(current)||current<0){status.textContent="時刻を取得できません。";return;}
    const baseline=seekAnchor(seekPlan,player,1,current,Date.now());
@@ -116,16 +130,20 @@ export function initializeShareView(doc,href,env=typeof window!=="undefined"?win
    if(goal===null){status.textContent="時刻指定が不正です。";return;}
    if(Math.abs(goal-baseline)<.001){status.textContent="動画の冒頭または終端です。";return;}
    const plan={player,serial:1,target:goal,at:Date.now()};
-   try{player.seekTo(goal,true);}catch{status.textContent="時刻移動に失敗しました。";return;}
    seekPlan=plan;
+   try{player.seekTo(goal,true);}catch{
+     if(seekPlan===plan)seekPlan=null;
+     status.textContent="時刻移動に失敗しました。";return;
+   }
+   if(seekPlan!==plan)return;
    status.textContent="時刻移動 "+secondsDisplay(baseline)+" → "+secondsDisplay(goal)+
       "（時刻指定・表示フレーム未保証）";
    (env?.setTimeout||setTimeout)(()=>{
      if(!ready||seekPlan!==plan||player!==plan.player)return;
+     if(recoverPausedSeek()||seekPlan!==plan)return;
      try{
        const reported=Number(player.getCurrentTime());
-       if(playState()===1){player.pauseVideo();status.textContent="移動後に再生されたため停止を要求しました。";}
-       else status.textContent="要求 "+secondsDisplay(goal)+" / API時刻 "+
+       status.textContent="要求 "+secondsDisplay(goal)+" / API時刻 "+
          secondsDisplay(reported)+"："+classifyReportedSeek(baseline,goal,reported);
      }catch{status.textContent="移動後の状態確認に失敗しました。";}
    },1000);
@@ -182,10 +200,9 @@ export function initializeShareView(doc,href,env=typeof window!=="undefined"?win
            status.textContent="公式プレイヤー準備完了。";
          },
          onStateChange:event=>{
-           if(event.target!==player)return;
-           if(event.data===1)seekPlan=null;
+           if(event.target!==player||!ready)return;
            refresh();
-           if(event.data===1)status.textContent="再生中：時刻移動の前に一時停止してください。";
+           if(event.data===1&&!recoverPausedSeek())status.textContent="再生中：時刻移動の前に一時停止してください。";
            if(event.data===2)status.textContent="一時停止中：近似時刻移動を操作できます。";
          },
          onError:event=>{if(event.target===player)failure("埋め込み再生エラー "+String(event.data).slice(0,4));}

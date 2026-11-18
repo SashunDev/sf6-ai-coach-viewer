@@ -57,40 +57,84 @@ test("no iframe or network before guest deliberately opens video",()=>{
  e.shareStart.click();
  assert.equal(e.shareFrame.children.length,1);
 });
-test("Guest player toggle + paused-only approximate seeks work with synthetic official API",async()=>{
+async function setupGuest(){
  const {doc,elements:e,scripts}=createDoc();
+ const timers=[];
  const env={YT:{Player:class{
   constructor(embed,config){
-   this.embed=embed;this.events=config.events;this.state=2;this.time=24;this.requests=[];
+   this.embed=embed;this.events=config.events;this.state=2;this.time=24;this.requests=[];this.pauseCalls=0;this.playCalls=0;
    env.player=this;queueMicrotask(()=>this.events.onReady({target:this}));
   }
   getPlayerState(){return this.state;}
   getCurrentTime(){return this.time;}
   getDuration(){return 90;}
-  pauseVideo(){this.state=2;this.events.onStateChange({target:this,data:2});}
-  playVideo(){this.state=1;this.events.onStateChange({target:this,data:1});}
-  seekTo(x){this.time=x;this.requests.push(x);}
- }},setTimeout,clearTimeout};
+  emitState(state){this.state=state;this.events.onStateChange({target:this,data:state});}
+  pauseVideo(){this.pauseCalls++;this.emitState(2);}
+  playVideo(){this.playCalls++;this.emitState(1);}
+  seekTo(x){this.time=x;this.requests.push(x);this.afterSeek?.();}
+ }},setTimeout(fn){timers.push(fn);}};
  assert.equal(initializeShareView(doc,"https://example.com/youtube-share.html?v="+ID+"&t=15",env),true);
  assert.equal(scripts.length,0);
  assert.equal(e.shareControls.hidden,true);
  assert.equal(e.sharePause.disabled,true);
  e.shareStart.click();
- await new Promise(resolve=>setTimeout(resolve,0));
+ await Promise.resolve();await Promise.resolve();
+ return {e,player:env.player,scripts,runSeekChecks:()=>timers.splice(0).forEach(fn=>fn())};
+}
+test("Guest player toggle + paused-only approximate seeks work with synthetic official API",async()=>{
+ const {e,player,scripts}=await setupGuest();
  assert.equal(e.shareFrame.children.length,1);
  assert.equal(e.shareFrame.children[0].src.includes("enablejsapi=1"),true);
  assert.equal(e.shareFrame.children[0].src.includes("origin=https%3A%2F%2Fexample.com"),true);
  assert.equal(e.sharePause.disabled,false);
  assert.equal(e.sharePause.textContent,"再生");
- e.sharePause.click();assert.equal(env.player.state,1);assert.equal(e.sharePause.textContent,"一時停止");
- const before=env.player.requests.length;
- e.shareNext.click();assert.equal(env.player.requests.length,before);
- e.sharePause.click();assert.equal(env.player.state,2);assert.equal(e.sharePause.textContent,"再生");
- e.shareNext.click();assert.equal(env.player.requests.length,before+1);
- assert.ok(Math.abs(env.player.time-(24+1/30))<.00001);
- e.shareNextTen.click();assert.equal(env.player.requests.length,before+2);
- assert.ok(Math.abs(env.player.time-(24+11/30))<.00001);
+ e.sharePause.click();assert.equal(player.state,1);assert.equal(e.sharePause.textContent,"一時停止");
+ const before=player.requests.length;
+ e.shareNext.click();assert.equal(player.requests.length,before);
+ e.sharePause.click();assert.equal(player.state,2);assert.equal(e.sharePause.textContent,"再生");
+ e.shareNext.click();assert.equal(player.requests.length,before+1);
+ assert.ok(Math.abs(player.time-(24+1/30))<.00001);
+ e.shareNextTen.click();assert.equal(player.requests.length,before+2);
+ assert.ok(Math.abs(player.time-(24+11/30))<.00001);
+ e.shareNextFive.click();e.sharePrevSec.click();e.sharePrevFive.click();
+ assert.ok(Math.abs(player.time-(23+11/30))<.00001);
  assert.equal(scripts.length,0); // already loaded API, no extra network script
+});
+for(const transition of ["inline PLAYING","PLAYING before checkpoint","BUFFERING then PLAYING","PLAYING without event"]){
+ test("Guest restores paused seek after "+transition,async()=>{
+  const {e,player,runSeekChecks}=await setupGuest();
+  assert.equal(player.state,2);
+  if(transition==="inline PLAYING")player.afterSeek=()=>player.emitState(1);
+  e.shareNextTen.click();
+  assert.ok(Math.abs(player.requests[0]-(24+10/30))<.00001);
+  if(transition==="PLAYING before checkpoint")player.emitState(1);
+  if(transition==="BUFFERING then PLAYING"){
+   player.emitState(3);runSeekChecks();
+   assert.equal(player.pauseCalls,0);
+   player.emitState(1);
+  }else if(transition==="PLAYING without event")player.state=1;
+  runSeekChecks();
+  assert.equal(player.pauseCalls,1);
+  assert.equal(player.state,2);assert.equal(e.sharePause.textContent,"再生");
+  player.events.onStateChange({target:player,data:1});
+  assert.equal(player.pauseCalls,1);
+ });
+}
+test("Guest explicit Play invalidates all previous seek checks",async()=>{
+ const {e,player,runSeekChecks}=await setupGuest();
+ e.shareNext.click();e.shareNextSec.click();
+ assert.ok(Math.abs(player.requests[1]-(25+1/30))<.00001);
+ e.sharePause.click();runSeekChecks();
+ assert.equal(player.playCalls,1);assert.equal(player.pauseCalls,0);
+ assert.equal(player.state,1);assert.equal(e.sharePause.textContent,"一時停止");
+});
+test("Guest errors invalidate pending checks and keep controls disabled",async()=>{
+ const {e,player,runSeekChecks}=await setupGuest();
+ e.shareNext.click();player.events.onError({target:player,data:101});
+ player.emitState(1);runSeekChecks();
+ assert.equal(player.pauseCalls,0);
+ assert.equal(e.sharePause.disabled,true);assert.equal(e.shareNext.disabled,true);
+ assert.match(e.shareStatus.textContent,/埋め込み再生エラー/);
 });
 test("IFrame API is injected only after guest click and CSP permits its official script",()=>{
  const {doc,elements:e,scripts}=createDoc();
