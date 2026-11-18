@@ -16,7 +16,7 @@ async function until(f,ms=16000){
  throw Error("Timeout in B0 mock browser smoke");
 }
 async function main(){
- for(const file of ["youtube-studio-support.mjs","youtube-player-controls.mjs","index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
+ for(const file of ["youtube-studio-support.mjs","youtube-player-controls.mjs","youtube-share.mjs","youtube-share.html","index.html","youtube-review.mjs","youtube-library-core.mjs","youtube-library-cache.mjs","youtube-seek-core.mjs","youtube-privacy.html"]){
   const input=readFileSync(new URL("../"+file,import.meta.url),"utf8");
   writeFileSync(join(dir,file),input);
  }
@@ -99,6 +99,13 @@ async function main(){
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===1'));
  await ev('document.querySelector("#youtubeList .youtube-card").click()');
  await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
+ if(await ev('document.querySelector("#youtubePause").textContent!=="再生"'))throw Error("Paused owner should show play");
+ await ev('document.querySelector("#youtubePause").click()');
+ if(await ev('window.__ytPlayers[0].getPlayerState()!==1||document.querySelector("#youtubePause").textContent!=="一時停止"'))
+   throw Error("Owner pause/play toggle did not play");
+ await ev('document.querySelector("#youtubePause").click()');
+ if(await ev('window.__ytPlayers[0].getPlayerState()!==2||document.querySelector("#youtubePause").textContent!=="再生"'))
+   throw Error("Owner pause/play toggle did not pause");
  const geometry=[];
  const ids=["youtubePause","youtubePrevTen","youtubeNextTen","youtubePrev","youtubeNext","youtubePrevFive","youtubeNextFive","youtubePrevSec","youtubeNextSec"];
  async function screenshot(name){const shot=await send("Page.captureScreenshot",{format:"png"});writeFileSync(join(evidence,name+".png"),Buffer.from(shot.data,"base64"));}
@@ -284,8 +291,25 @@ async function main(){
  await ev('document.querySelector("#youtubeForgetList").click()');
  if(await ev('window.localStorage.getItem("sf6-coach-owner-unlisted-list-v1")!==null||document.querySelectorAll("#youtubeList .youtube-card").length!==0'))
    throw Error("Forget saved list left persistent or visible owner metadata");
+ // Guest layout is visually measured across the same five viewport sizes.
+ // Do not click "open video" in the network-isolated browser: API behavior is
+ // independently exercised with synthetic Node mocks and needs real Safari QA.
+ await send("Page.navigate",{url:"http://127.0.0.1:18777/youtube-share.html?v=AAAAAAAAAAA&t=5"});
+ await until(async()=>await ev('document.readyState==="complete"&&document.querySelector("#shareValid")?.hidden===false'));
+ if(await ev('document.querySelector("#shareFrame iframe")!==null||document.querySelector("#shareControls").hidden!==true'))
+   throw Error("Guest loaded media or enabled controls before user click");
+ await ev('document.querySelector("#shareControls").hidden=false;true');
+ for(const [width,height] of [[375,812],[390,844],[1280,720],[1440,1024],[1366,600]]){
+   await send("Emulation.setDeviceMetricsOverride",{width,height,deviceScaleFactor:1,mobile:width<761});
+   const g=await ev('(()=>({width:innerWidth,scrollWidth:document.documentElement.scrollWidth,targets:[...document.querySelectorAll("#shareControls button")].map(el=>{const r=el.getBoundingClientRect();return{width:r.width,height:r.height,left:r.left,right:r.right}})}))()');
+   if(g.scrollWidth>width+.5||g.targets.length!==9||
+     g.targets.some(x=>x.width<44||x.height<44||x.left<0||x.right>width+.5))
+     throw Error("Guest controls overflow or tap targets too small: "+JSON.stringify(g));
+   await screenshot(width+"x"+height+"-guest-controls");
+ }
+ if(external.length)throw Error("Guest opened external resources without user action: "+JSON.stringify(external));
  if(consoleErrors.length)throw Error("Console errors: "+JSON.stringify(consoleErrors));
- console.log("B3 OWNER CACHE BROWSER PASS",JSON.stringify({restored,friendShareHasUrl:!!cachedShare}));
+ console.log("B3 OWNER CACHE / GUEST LAYOUT BROWSER PASS",JSON.stringify({restored,friendShareHasUrl:!!cachedShare}));
  ws.close();
 }
 try{await main();}finally{for(const p of procs){try{p.kill("SIGTERM");}catch{}}try{rmSync(dir,{recursive:true,force:true});}catch{}}
