@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>SF6 Phase B 検証専用 — B0/B1</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;color-scheme:dark;background:#0e1726;color:#f2f6ff}
+*{box-sizing:border-box}body{margin:0;padding:16px;line-height:1.55;max-width:850px;margin-inline:auto}
+h1{font-size:1.32rem;margin:.2rem 0}h2{font-size:1.08rem;margin:.2rem 0}
+p{margin:.45rem 0}small,.muted{color:#a9b9ce}.warning{color:#ffe1a6}
+.card{border:1px solid #34435c;border-radius:14px;background:#172237;padding:15px;margin:12px 0}
+input,textarea,button,select{font:inherit;border-radius:9px;padding:9px;color:inherit}
+input,textarea,select{background:#091324;border:1px solid #536581;max-width:100%;width:100%}
+button{border:1px solid #6d91bf;background:#273e5f;cursor:pointer}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid #e3ff9d;outline-offset:2px}
+label{display:block;margin:.5rem 0 .2rem}label input[type=checkbox]{width:auto;margin-right:8px}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.row>*{flex-shrink:0} .row input{flex:1;min-width:140px}
+#library{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px}
+.video-item{text-align:left;background:#0e1c31;border:1px solid #354b6a;padding:7px;min-width:0}
+.video-item img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#22344d}
+.video-item strong{display:block;font-size:.9rem;overflow-wrap:anywhere}
+.video-item small{display:block}
+#player{width:100%;aspect-ratio:16/9;background:#000}
+#player iframe{width:100%!important;height:100%!important}
+#log{white-space:pre-wrap;overflow-wrap:anywhere;max-height:170px;overflow-y:auto;background:#061020;padding:10px;border-radius:8px;font:12px ui-monospace,monospace}
+.tag{display:inline-block;background:#3e2e1d;color:#ffe2a6;border-radius:5px;padding:2px 7px;font-size:.75rem}
+footer{font-size:.8rem;color:#a9b9ce}
+</style>
+</head>
+<body>
+<header>
+<h1>SF6 Phase B 検証専用 <span class="tag">未検証・本番利用不可</span></h1>
+<p>目的：B0「自分の限定公開アップロード一覧」とB1「細かいシーク」を切り分けて検証する。YouTubeの単なる再生ページを製品化するための画面ではない。</p>
+<p class="warning">目標は、動画を停止したまま1コマずつ前後に移動することです。ゲームの1Fとの一致は不要。下の1/60秒・1/6秒ボタンは単なる時刻シークの試験であり、実際のコマ送りではありません。iPhoneでの実コマ送り機能は未実装・未検証です。</p>
+</header>
+<section class="card" aria-labelledby="auth-title">
+<h2 id="auth-title">B0 — 限定公開動画の一覧取得</h2>
+<p>Google OAuth で本人のYouTube動画リストを読み取り専用で確認します。Google CloudでYouTube Data API有効化と<strong>Webアプリ用OAuthクライアントID</strong>の作成・このサイトのJavaScriptオリジン登録が必要です。</p>
+<label for="clientId">OAuth クライアントID（公開識別子。シークレットは入力禁止）</label>
+<input id="clientId" autocomplete="off" spellcheck="false" placeholder="xxxxx.apps.googleusercontent.com">
+<label><input type="checkbox" id="consent">説明を確認し、読み取り専用のYouTubeデータアクセスに同意する</label>
+<p class="muted"><small>取得する情報：本人のアップロード済み動画ID・タイトル・サムネイル・投稿日時・公開状態。ブラウザ内で限定公開だけに絞り、サーバー保存・ブラウザ永続保存は行いません。アクセストークンはメモリだけに保持します。Google側でいつでも権限を取り消せます。利用には <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener">YouTube利用規約</a> と <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Googleプライバシーポリシー</a> が適用されます。</small></p>
+<div class="row"><button id="auth">Googleと連携して一覧取得</button><button id="disconnect" type="button">連携解除 / 表示消去</button></div>
+<p id="authStatus" role="status">未接続（OAuth ID未設定）</p>
+<label for="filter">動画名で絞り込み（取得後、ブラウザ内のみ）</label>
+<input id="filter" placeholder="例：エド・ランクマ">
+<div id="library" aria-label="本人の限定公開動画"></div>
+<p class="muted"><small>上限：最大20ページ×50本/チャンネルの試験用取得。上限到達時は「一部のみ」と明示します。APIクォータやOAuth設定による失敗は未検証として報告します。</small></p>
+</section>
+<section class="card" aria-labelledby="seek-title">
+<h2 id="seek-title">B1 — 詳細シークの実機検証</h2>
+<p>自分の動画URLを入力するか、上の一覧で動画を選んでください。OAuth設定なしでも、ここだけ試せます。</p>
+<label for="manualUrl">YouTube URL / 動画ID</label>
+<div class="row"><input id="manualUrl" placeholder="https://www.youtube.com/watch?v=..."><button id="load" type="button">動画を開く</button></div>
+<p id="selected" role="status">動画未選択</p>
+<div id="player" aria-label="YouTube公式プレイヤー"></div>
+<p id="time" aria-live="off">現在位置：--:--.---</p>
+<div class="row">
+<button data-delta="-5">-5秒</button><button data-delta="-1">-1秒</button>
+<button data-delta="-0.1666666667">-1/6秒（試験）</button><button data-delta="-0.0166666667">-1/60秒（試験）</button>
+<button data-delta="0.0166666667">+1/60秒（試験）</button><button data-delta="0.1666666667">+1/6秒（試験）</button>
+<button data-delta="1">+1秒</button><button data-delta="5">+5秒</button>
+</div>
+<label for="target">時刻へ移動：秒数または MM:SS.mmm</label>
+<div class="row"><input id="target" placeholder="01:34.500"><button id="jump">移動（近似）</button><button id="pause">一時停止</button></div>
+<div class="row"><button id="slow">0.5倍速を試す</button><button id="normal">1倍速へ</button></div>
+<p class="muted"><small>操作後に指定時刻とAPI報告時刻を記録します。「現在時刻が変わった」≠「動画の実際の1コマ送りができた」。iPhone上で目視確認してください。</small></p>
+<label for="observed">1/60秒シーク後の動画画面がどう変わったか（任意・コマ送りの合否ではない）</label>
+<div class="row"><select id="observed"><option value="未確認">未確認</option><option value="異なるフレームを表示">異なるフレームを表示</option><option value="同じフレームのまま">同じフレームのまま</option><option value="不安定 / 不明">不安定 / 不明</option></select><button id="addObservation">目視結果を記録（この画面のみ）</button></div>
+<pre id="log">検証ログ（ブラウザを閉じると消えます）</pre>
+</section>
+<section class="card">
+<h2>既存のChatGPT反省会への引き継ぎ</h2>
+<label for="note">任意メモ</label>
+<textarea id="note" rows="2" placeholder="ここを反省したい"></textarea>
+<div class="row"><button id="copy">現在のURL・時刻をコピー</button><button id="openYt">YouTubeで開く</button></div>
+<textarea id="handoff" rows="4" readonly aria-label="コピーできない場合の引き継ぎテキスト"></textarea>
+<p class="muted"><small>ChatGPTの同じスレッドへの自動送信はしません。コピー後、今までの反省会チャットに貼り付けてください。</small></p>
+</section>
+<footer>検証用ブランチ専用。公開ページにGoogleアクセストークンや限定公開URLは記録しません。YouTube公式プレイヤー以外から映像データを抽出しません。<a href="https://developers.google.com/youtube/terms/developer-policies">YouTube APIポリシー</a></footer>
+<script type="module">
+import { READONLY_SCOPE, MAX_PAGES, FRAME_SECONDS_60, videoIdFromUrl, normalizeUnlisted, clampTime, clock, handoff } from "./phase-b-probe-core.mjs";
+const el = id => document.getElementById(id);
+const state = { token:null, tokenClient:null, videos:[], id:null, player:null, ready:false, lastRequested:null };
+const log = message => {const line = new Date().toLocaleTimeString("ja-JP") + " " + message; el("log").textContent = (line + "\n" + el("log").textContent).slice(0,6500);};
+const status = message => { el("authStatus").textContent = message; };
+const api = async (path, params) => {
+  if (!state.token) throw new Error("OAuthセッションがありません");
+  const url = new URL("https://www.googleapis.com/youtube/v3/" + path);
+  for (const [k,v] of Object.entries(params)) if (v !== undefined && v !== "") url.searchParams.set(k, String(v));
+  const res = await fetch(url, { headers:{ Authorization:"Bearer " + state.token }, cache:"no-store" });
+  if (!res.ok) throw new Error("YouTube API " + res.status + " : " + (await res.text()).slice(0,180));
+  return res.json();
+};
+async function uploaded() {
+  const tokenAtStart=state.token;
+  status("本人アップロード情報を読み込み中…");
+  const ch = await api("channels",{part:"contentDetails",mine:"true",maxResults:50});
+  const ids = (ch.items || []).map(x=>x.contentDetails?.relatedPlaylists?.uploads).filter(Boolean);
+  if (!ids.length) throw new Error("アクセス可能なアップロード用プレイリストがありません。チャンネル・Googleアカウントを確認してください");
+  const rows = []; let incomplete=false;
+  for (const playlistId of ids) {
+    let token="",page=0;
+    do {
+      const resp = await api("playlistItems",{part:"contentDetails",playlistId,maxResults:50,pageToken:token});
+      rows.push(...(resp.items||[]));
+      token = resp.nextPageToken || "";
+      page++;
+      status("一覧取得中：" + rows.length + "件の候補を確認");
+    } while (token && page < MAX_PAGES);
+    if (token) incomplete=true;
+  }
+  const videoIds = [...new Set(rows.map(x=>x.contentDetails?.videoId).filter(x=>/^[A-Za-z0-9_-]{11}$/.test(x||"")))];
+  const details = [];
+  for (let i=0;i<videoIds.length;i+=50) {
+    const resp=await api("videos",{part:"snippet,status,contentDetails",id:videoIds.slice(i,i+50).join(","),maxResults:50});
+    details.push(...(resp.items||[]));
+  }
+  if (state.token !== tokenAtStart) return; // logout must not repopulate private list
+  state.videos=normalizeUnlisted(rows,details);
+  renderList();
+  status("限定公開 " + state.videos.length + "本 / 候補 " + rows.length + "本" + (incomplete?"（取得上限に達したため一部のみ）":"（取得範囲内）"));
+}
+function renderList() {
+  const root=el("library");root.replaceChildren();
+  const term=el("filter").value.trim().toLocaleLowerCase();
+  const videos=state.videos.filter(x=>x.title.toLocaleLowerCase().includes(term));
+  for (const v of videos) {
+    const button=document.createElement("button");
+    button.className="video-item";button.type="button";
+    const img=document.createElement("img");
+    if (/^https:\/\/([A-Za-z0-9.-]+\.)?ytimg\.com\//.test(v.thumbnail)) img.src=v.thumbnail;
+    img.alt="";img.loading="lazy";button.appendChild(img);
+    const title=document.createElement("strong");title.textContent=v.title;button.appendChild(title);
+    const date=document.createElement("small");date.textContent=(v.publishedAt||"日付不明").slice(0,10);button.appendChild(date);
+    button.addEventListener("click",()=>pickVideo(v.id));
+    root.appendChild(button);
+  }
+  if (!videos.length) {
+    const p=document.createElement("p");
+    p.className="muted";p.textContent="表示できる限定公開動画がありません。認証・公開状態・絞り込みを確認してください。";root.appendChild(p);
+  }
+}
+function disconnected() {
+  if (state.token && window.google?.accounts?.oauth2?.revoke) window.google.accounts.oauth2.revoke(state.token,()=>{});
+  state.token=null;state.tokenClient=null;state.videos=[];
+  el("library").replaceChildren();status("連携解除・一覧を消去しました。ブラウザ内にトークンは保存していません。");
+}
+el("disconnect").addEventListener("click",disconnected);
+el("filter").addEventListener("input",renderList);
+el("auth").addEventListener("click",()=>{
+  if (!el("consent").checked) {status("データの扱いを確認し、同意チェックを入れてください");return;}
+  const clientId=el("clientId").value.trim();
+  if (!/^[0-9]+-[A-Za-z0-9_-]+\.apps\.googleusercontent\.com$/.test(clientId)) {status("Google OAuth WebクライアントIDを確認してください");return;}
+  if (!window.google?.accounts?.oauth2?.initTokenClient) {status("Google Identity Servicesを読み込めません。Safariのポップアップ/通信設定を確認してください");return;}
+  state.tokenClient=window.google.accounts.oauth2.initTokenClient({
+    client_id:clientId,scope:READONLY_SCOPE,
+    callback:async response=>{
+      if (response.error || !response.access_token) {status("Google認証失敗・中断：" + (response.error||"不明"));return;}
+      if (!window.google.accounts.oauth2.hasGrantedAllScopes(response,READONLY_SCOPE)) {status("YouTube読み取り権限が未許可です");return;}
+      state.token=response.access_token;
+      try {await uploaded();} catch(e){if(state.token){status("一覧取得失敗：" + e.message);log("B0 エラー：" + e.message);}}
+    }
+  });
+  state.tokenClient.requestAccessToken({prompt:"consent"});
+});
+function apiReady() {return Boolean(window.YT && typeof window.YT.Player==="function");}
+window.onYouTubeIframeAPIReady=()=>{log("YouTube IFrame API準備完了");if(state.id) makePlayer();};
+function makePlayer(){
+  if (!state.id || !apiReady()) return;
+  if (state.player && state.ready) {state.player.cueVideoById(state.id);return;}
+  if (state.player) return;
+  state.player=new window.YT.Player("player",{
+    height:"360",width:"640",videoId:state.id,playerVars:{playsinline:1,origin:location.origin,rel:0},
+    events:{
+      onReady:()=>{state.ready=true;log("IFrameプレイヤー準備完了。再生は手動で開始してください");},
+      onError:e=>log("プレイヤーエラー：" + e.data+"。埋め込み許可・ネットワークを確認")
+    }
+  });
+}
+function pickVideo(id){
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+  state.id=id;state.lastRequested=null;
+  el("selected").textContent="選択動画：" + id;
+  el("manualUrl").value="https://www.youtube.com/watch?v=" + id;
+  if (state.player && state.ready) state.player.cueVideoById(id);
+  else makePlayer();
+  el("handoff").value="";
+}
+el("load").addEventListener("click",()=>{
+  const id=videoIdFromUrl(el("manualUrl").value);
+  if (!id){el("selected").textContent="YouTube動画URLまたは11文字の動画IDを入力してください";return;}
+  pickVideo(id);
+});
+function current(){return state.player && state.ready? Number(state.player.getCurrentTime())||0 : 0;}
+function duration(){return state.player && state.ready? Number(state.player.getDuration())||0 : 0;}
+function seekAt(target, desc){
+  if (!state.player || !state.ready || !state.id) {log("B1 未開始：動画が未選択またはプレイヤー未準備");return;}
+  const now=current(),to=clampTime(0,target,duration());
+  const wasPlaying=state.player.getPlayerState()===window.YT.PlayerState.PLAYING;
+  state.player.pauseVideo();
+  state.player.seekTo(to,true);
+  state.lastRequested=to;
+  const videoIdAtRequest=state.id;
+  log("B1 "+desc+"：直前 "+clock(now)+" → 指定 "+clock(to)+"。"+(wasPlaying?"再生中から一時停止を要求":"停止状態")+"。コマ送りとしての成立は未確認");
+  window.setTimeout(()=>{if(state.id===videoIdAtRequest) log("API報告時刻（約900ms後） "+clock(current())+"。視覚上のフレーム変化は別途確認が必要");},900);
+}
+for (const button of document.querySelectorAll("[data-delta]")) button.addEventListener("click",()=>{
+  const n=Number(button.dataset.delta);seekAt(clampTime(current(),n,duration()),button.textContent);
+});
+function parseTime(value){
+  const s=String(value||"").trim();if (!/^\d+(?::[0-5]?\d){0,2}(?:\.\d{1,3})?$/.test(s))return null;
+  const fields=s.split(":").map(Number);
+  return fields.reduce((acc,t)=>acc*60+t,0);
+}
+el("jump").addEventListener("click",()=>{
+ const t=parseTime(el("target").value);
+ if(t===null){log("B1 時刻の形式が不正：秒数か MM:SS.mmm を入力してください");return;}
+ seekAt(t,"時刻直接指定");
+});
+el("pause").addEventListener("click",()=>{if(state.player&&state.ready)state.player.pauseVideo();});
+for (const [id,rate] of [["slow",0.5],["normal",1]]) {
+ el(id).addEventListener("click",()=>{
+  if(!state.ready){log("再生速度：プレイヤー未準備");return;}
+  const available=state.player.getAvailablePlaybackRates();
+  if (!available.includes(rate)){log("再生速度 "+rate+"倍は動画・端末で利用不可");return;}
+  state.player.setPlaybackRate(rate);
+  log("再生速度："+rate+"倍を要求。現在API値 "+state.player.getPlaybackRate()+"倍");
+ });
+}
+el("addObservation").addEventListener("click",()=>log("利用者の目視結果："+el("observed").value+"（独立した映像認識による検証ではない）"));
+function getHandoff(){
+  if(!state.id){log("引き継ぎ：動画未選択");return null;}
+  const text=handoff(state.id,current(),el("note").value);
+  el("handoff").value=text;
+  return text;
+}
+el("copy").addEventListener("click",async()=>{
+ const text=getHandoff();if(!text)return;
+ try {await navigator.clipboard.writeText(text);log("現在の反省会テキストをコピーしました");}
+ catch {log("コピーできませんでした。下のテキスト欄から手動コピーしてください");el("handoff").focus();el("handoff").select();}
+});
+el("openYt").addEventListener("click",()=>{if(state.id)window.open("https://www.youtube.com/watch?v="+state.id,"_blank","noopener,noreferrer");});
+window.setInterval(()=>{if(state.ready)el("time").textContent="現在位置："+clock(current())+" / "+clock(duration())+"（API時刻。フレーム精度の証拠ではありません）";},350);
+if(!apiReady()){const s=document.createElement("script");s.src="https://www.youtube.com/iframe_api";s.async=true;document.head.appendChild(s);}
+else window.onYouTubeIframeAPIReady();
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>

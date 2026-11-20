@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://accounts.google.com/gsi/client https://www.youtube.com; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; connect-src https://www.googleapis.com https://accounts.google.com/gsi/; img-src https://*.ytimg.com; frame-src https://accounts.google.com/gsi/ https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SF6 Phase B B0 — 本人の限定公開動画一覧検証</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:#0d1727;color:#f5f8ff;color-scheme:dark}
+*{box-sizing:border-box}body{max-width:840px;margin:auto;padding:16px;line-height:1.65}h1{font-size:1.45rem;margin:.2rem 0}
+h2{font-size:1.12rem}p{margin:.45rem 0}.muted{color:#bac8dc}.warn{color:#ffdda5}
+.card{border:1px solid #425676;border-radius:14px;padding:15px;margin:12px 0;background:#19283d}
+button,input{font:inherit;border-radius:9px;padding:11px;color:inherit}
+input{width:100%;background:#0b1523;border:1px solid #8694af}input[type=checkbox]{width:auto}
+button{background:#304d77;border:1px solid #8cabdb;touch-action:manipulation;cursor:pointer}button:disabled{opacity:.55}
+button:focus-visible,input:focus-visible{outline:3px solid #e6ffac;outline-offset:2px}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin:9px 0}.row button{flex:1;min-width:110px}
+#results{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:11px}
+.video{border:1px solid #506789;background:#102139;border-radius:10px;padding:10px;min-width:0}
+.video img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover;background:#314363}
+.video strong{display:block;overflow-wrap:anywhere}.video small{display:block;color:#b6c8e2}
+.video a{color:#bee6ff;overflow-wrap:anywhere}
+.video .b2-action{display:block;width:100%;margin-top:10px;font-size:.85rem;text-align:left}
+[hidden]{display:none!important}
+#b2-video{width:100%;aspect-ratio:16/9;min-height:220px;background:#000;margin:12px 0}
+#b2-video iframe{width:100%;height:100%;min-height:220px;display:block}
+#b2-log{font-size:.79rem;color:#c8daf0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:200px;overflow-y:auto}
+#b2-log>div{padding:5px;border-top:1px solid #425676}
+label{display:block;margin:10px 0 5px}small{font-size:.85rem}
+hr{border:0;border-top:1px solid #425676;margin:15px 0}
+a{color:#b7dfff}#status{min-height:2rem;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<h1>SF6 Phase B — 限定公開一覧の検証</h1>
+<p class="warn">B0専用の試験画面です。YouTube動画のコマ送りはこの画面では行えません。B1は別の <a href="./">Safari動画コマ送り検証</a> です。</p>
+<p>Googleの読み取り専用APIで、<strong>自分のYouTubeチャンネルにアップロードした限定公開動画</strong>をサムネイル・題名・投稿日付きで一覧化できるか試します。</p>
+<section class="card">
+<h2>1. まず安全なデモで画面確認</h2>
+<p>モック2件だけを表示します。本人のYouTube APIや認可は使用しません。ただしページ表示時、Google公式の認証用JavaScriptをGoogleから読み込みます。</p>
+<div class="row"><button id="demo" type="button">モック一覧を表示（認証不要）</button><button id="clear" type="button">一覧・接続を消去</button></div>
+<p id="runtime" class="warn" role="status">JavaScript未起動。この画面が変わらない場合はSafariで開いてください。</p>
+</section>
+<section class="card">
+<h2>2. 本人アカウントのYouTube動画を取得（任意）</h2>
+<p class="warn">Google Cloudにて<strong>Webアプリケーション用OAuth 2.0クライアントID</strong>を新規作成し、Authorized JavaScript originsに <code>https://sashundev.github.io</code> を登録した場合だけ利用してください。本人専用の継続利用アプリとしてOAuthをExternal / In productionにする場合、テストユーザー登録は不要です（未確認アプリの警告が出る場合があります）。</p>
+<p>この検証ではYouTube Data API v3を有効にする必要があります。Google Cloudの請求先アカウントや有料枠の登録は要求しません。クォータと料金設定は利用前に確認してください。 <a href="https://github.com/SashunDev/sf6-b1-safari-probe/blob/main/B0_SETUP.md" target="_blank" rel="noopener noreferrer">Google Cloud・OAuthの設定手順を見る</a>。</p>
+<label for="clientId">Web OAuth クライアントID（公開識別子のみ）</label>
+<input type="text" id="clientId" placeholder="123456789-abcdef.apps.googleusercontent.com" autocomplete="off" spellcheck="false">
+<p class="warn"><small>クライアントシークレット、Googleパスワード、APIキー、アクセストークンは入力しないでください。ページ・URL・GitHubに保存しません。</small></p>
+<label><input id="agree" type="checkbox"> YouTubeのアップロード済み動画ID、タイトル、サムネイル、投稿日、公開状態を、この端末上で読み取ることに同意します。</label>
+<p class="muted"><small>OAuth権限は <code>youtube.readonly</code> のみ。アクセストークンはこのタブのメモリだけに保持し、動画のダウンロード・ファイル送信・ブラウザ永続保存・ChatGPT送信は行いません。本人が明示操作した場合だけ接続します。<a href="./b0-privacy.html" target="_blank" rel="noopener noreferrer">この検証画面のデータ取扱説明</a>／<a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube利用規約</a>／<a href="https://developers.google.com/youtube/terms/developer-policies" target="_blank" rel="noopener noreferrer">APIポリシー</a></small></p>
+<div class="row"><button id="connect" type="button">Googleと連携して限定公開一覧を取得</button><button id="revoke" type="button" disabled>Google側の権限を取り消す</button></div>
+<p class="muted"><small>権限取り消しはGoogle側の許可も削除します。接続だけ終了する場合は「一覧・接続を消去」を利用してください。<a href="https://myaccount.google.com/connections" target="_blank" rel="noopener noreferrer">Googleアカウント側でも管理可能</a></small></p>
+</section>
+<section class="card">
+<h2>3. 一覧結果</h2>
+<p id="status" role="status" aria-live="polite">未接続。最初にモック一覧を試せます。</p>
+<label for="filter">タイトルで絞り込み（端末内で実行）</label>
+<input id="filter" placeholder="例：エド / ランクマ">
+<p id="stats" class="muted"></p>
+<div id="results" aria-label="限定公開動画の一覧"></div>
+<p class="muted"><small>試験用取得上限：最大20ページ×50件（チャンネルごと）。上限に達した場合は一部のみと表示します。非公開・公開はフィルタで除外します。本人の動画だけ、明示的なボタン操作で公式YouTubeプレイヤーの細かい時刻移動を試せますが、これはコマ送り保証ではありません。</small></p>
+
+</section>
+<section id="b2-panel" class="card" hidden>
+<h2>4. 選んだYouTube動画で細かい時刻移動を試す（実験）</h2>
+<p class="warn">これはYouTube公式IFrameプレイヤーの<strong>時刻シーク検証</strong>です。±1/30秒を指定しても<strong>実際のコマ送り・1フレーム単位の表示は保証されません</strong>。YouTube映像を取得・保存・HTML5動画化しません。</p>
+<p class="muted">①公式プレイヤー内で動画を再生 → ②「一時停止」→ ③動きのある画面で「+1/30秒」を数回押す → ④「-1/30秒」を押す。画面が本当に変わるか、同じ絵のままか、飛びすぎるかを目視してください。API時刻だけでは判定しません。</p>
+<div id="b2-video" aria-label="YouTube公式埋め込み動画プレイヤー"></div>
+<div class="row"><button id="b2-pause" type="button" disabled>一時停止</button><button id="b2-minus1" type="button" disabled>-1秒</button><button id="b2-plus1" type="button" disabled>+1秒</button></div>
+<div class="row"><button id="b2-prev" type="button" disabled>-1/30秒（時刻移動）</button><button id="b2-next" type="button" disabled>+1/30秒（時刻移動）</button></div>
+<p id="b2-status" role="status" aria-live="polite">動画未選択</p>
+<div id="b2-log" aria-label="API時刻の診断ログ"></div>
+<div class="row"><button id="b2-close" type="button">公式プレイヤーを閉じる</button></div>
+<p class="muted"><small>YouTube公式動画が埋め込みを許可しない場合は表示できません。選択した動画IDはURLクエリやGitHubへ記録しません。YouTubeへの動画再生通信は行われます。</small></p>
+</section>
+<footer><p class="muted"><small>ページのソースは <a href="https://github.com/SashunDev/sf6-b1-safari-probe" target="_blank" rel="noopener noreferrer">GitHub</a> に公開されています。このWebページのソースにトークン・動画一覧・OAuthクライアントIDは含みません。</small></p></footer>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="module" src="./b0-app.mjs"></script>
+<script type="module" src="./b2-youtube-seek-app.mjs"></script>
+</body>
+</html>

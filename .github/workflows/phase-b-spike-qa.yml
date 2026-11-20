@@ -1,0 +1,80 @@
+name: Phase B B0-B1 spike static QA
+on:
+  pull_request:
+    paths:
+      - "spikes/phase-b-*"
+      - "spikes/local-frame-*"
+      - "spikes/build_local_frame_probe*"
+      - "spikes/build_b1_staging_site*"
+      - "spikes/b0-*"
+      - "spikes/b2-*"
+      - "spikes/phase-b-browser-smoke.mjs"
+      - "spikes/PHASE_B_B0_B1.md"
+      - ".github/workflows/phase-b-spike-qa.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Test library filtering, URL safety and seek calculations
+        run: node --test spikes/phase-b-probe-core.test.mjs spikes/phase-b-html-static.test.mjs spikes/local-frame-probe.test.mjs spikes/build_local_frame_probe.test.mjs spikes/build_b1_staging_site.test.mjs spikes/b0-library-core.test.mjs spikes/b0-page.test.mjs spikes/b2-youtube-seek-core.test.mjs spikes/b2-youtube-seek-page.test.mjs
+      - name: Parse source modules
+        run: |
+          node --check spikes/phase-b-probe-core.mjs
+          node --check spikes/phase-b-probe-core.test.mjs
+          node --check spikes/phase-b-html-static.test.mjs
+          node --check spikes/local-frame-probe-core.mjs
+          node --check spikes/local-frame-probe.test.mjs
+          node --check spikes/build_local_frame_probe.mjs
+          node --check spikes/build_local_frame_probe.test.mjs
+          node --check spikes/build_b1_staging_site.mjs
+          node --check spikes/build_b1_staging_site.test.mjs
+          node --check spikes/b0-library-core.mjs
+          node --check spikes/b0-library-core.test.mjs
+          node --check spikes/b0-app.mjs
+          node --check spikes/b0-page.test.mjs
+          node --check spikes/b0-browser-smoke.mjs
+          node --check spikes/b2-youtube-seek-core.mjs
+          node --check spikes/b2-youtube-seek-core.test.mjs
+          node --check spikes/b2-youtube-seek-app.mjs
+          node --check spikes/b2-youtube-seek-page.test.mjs
+          node --check spikes/phase-b-browser-smoke.mjs
+      - name: Create optional offline self-contained mobile test file
+        run: node spikes/build_local_frame_probe.mjs "${{ runner.temp }}/phase-b-frame-step-offline.html"
+      - name: Upload offline HTML (contains no video or credentials)
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-b-offline-probe-${{ github.run_id }}
+          path: ${{ runner.temp }}/phase-b-frame-step-offline.html
+          if-no-files-found: error
+          retention-days: 3
+      - name: Prepare dedicated GitHub Pages staging source package (DO NOT deploy)
+        run: |
+          set -euo pipefail
+          node spikes/build_b1_staging_site.mjs "${{ runner.temp }}/b1-staging-src"
+          cd "${{ runner.temp }}/b1-staging-src"
+          zip -q -r "${{ runner.temp }}/b1-safari-staging-source.zip" .github public README.md
+      - name: Upload ready-to-publish, no-user-media staging source
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase-b-safari-staging-sources-${{ github.run_id }}
+          path: ${{ runner.temp }}/b1-safari-staging-source.zip
+          if-no-files-found: error
+          retention-days: 3
+      - name: B0 mock library browser smoke (no real Google account)
+        run: node spikes/b0-browser-smoke.mjs
+      - name: Synthetic Chromium paused-frame diagnostic (desktop only)
+        run: |
+          command -v google-chrome
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          node spikes/phase-b-browser-smoke.mjs

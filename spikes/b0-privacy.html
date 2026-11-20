@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; object-src 'none'; form-action 'none'">
+<title>SF6 B0検証ページのデータ取扱説明</title>
+<style>body{background:#101c2e;color:#f3f6fc;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",sans-serif;max-width:760px;margin:auto;padding:18px;line-height:1.8}a{color:#addcff}h1{font-size:1.5rem}h2{font-size:1.12rem}p{margin:.7rem 0}</style>
+</head><body>
+<h1>SF6 B0限定公開動画一覧 — データ取扱説明</h1>
+<p>本ページは本人が管理するYouTube動画一覧を取得できるかを確認するための個人用・検証段階のWebページです。商用サービスや、動画をChatGPTに直接送るアプリではありません。</p>
+<h2>取得対象・利用目的</h2>
+<p>Google OAuth 2.0で本人が明示的に許可した場合だけ、YouTube Data API v3の<code>youtube.readonly</code>を利用して、本人のチャンネルのアップロード済み動画ID・動画タイトル・サムネイル・投稿日時・公開状態を取得します。限定公開の動画だけを一覧表示します。公開・非公開の動画は一覧に表示しません。</p>
+<h2>保存・通信</h2>
+<p>OAuthアクセストークンと動画一覧は開いているブラウザのメモリに限って扱います。ブラウザのlocalStorage、sessionStorage、Cookie、サーバー、GitHubリポジトリには保存しません。Googleの認証基盤とYouTube Data APIへの通信、YouTube公式サムネイルの表示は発生します。この検証ページ独自のサーバーや解析サービスへ個人動画データを送信しません。</p>
+<p>「一覧・接続を消去」で表示中の一覧とページ内トークンを消去します。「Google側の権限を取り消す」でGoogleの認可自体の取消も要求できます。Google側の接続管理は<a href="https://myaccount.google.com/connections" rel="noopener noreferrer">Googleアカウントの接続済みアプリ</a>から確認・取り消しできます。Google側の同意履歴などはGoogleの規約に従って管理されます。</p>
+<h2>デモ・閲覧先</h2>
+<p>認証不要のモック表示では合成データだけを用い、Google APIへ一覧取得のアクセスを行いません。実アカウント表示時の動画リンクはYouTube公式サイトを開きます。YouTube動画の自動ダウンロードや保存、埋め込み動画のコマ送りは行いません。</p>
+<h2>範囲と注意</h2>
+<p>このページは個人の技術検証用です。外部利用者向けの商用提供やGoogle OAuth審査の完了を示すものではありません。使用前に本人のGoogle Cloud OAuth・APIクォータ・課金設定・YouTubeの規約を確認してください。</p>
+<p><a href="./b0.html">B0の限定公開一覧検証へ戻る</a></p>
+<p>関係する公式文書：<a href="https://policies.google.com/privacy" rel="noopener noreferrer">Googleプライバシーポリシー</a>／<a href="https://www.youtube.com/t/terms" rel="noopener noreferrer">YouTube利用規約</a>／<a href="https://developers.google.com/youtube/terms/developer-policies" rel="noopener noreferrer">YouTube APIポリシー</a>。</p>
+</body></html>

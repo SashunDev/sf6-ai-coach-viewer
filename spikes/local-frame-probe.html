@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; media-src blob:; object-src 'none'; connect-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'">
+<title>SF6 Phase B — 端末内動画コマ送り実験</title>
+<style>
+:root{color-scheme:dark;font-family:-apple-system,BlinkMacSystemFont,"Yu Gothic",Meiryo,sans-serif}
+*{box-sizing:border-box}body{background:#111b2a;color:#eef5ff;max-width:750px;margin:auto;padding:16px;line-height:1.6}
+h1{font-size:1.45rem}h2{font-size:1.05rem}p{margin:8px 0}small,.muted{color:#b9c5d6}
+.panel{border:1px solid #44536c;border-radius:14px;background:#1a2940;padding:14px;margin:13px 0}
+.warning{color:#ffdb9b}
+video{display:block;background:#000;width:100%;max-height:60vh;aspect-ratio:16/9}
+input,button,textarea{font:inherit;color:inherit;border-radius:8px;padding:9px}
+input,textarea{background:#0c1522;border:1px solid #7f91aa;max-width:100%;width:100%}
+button{background:#2b466c;border:1px solid #7d9dce;cursor:pointer;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+button:disabled{opacity:.5;cursor:not-allowed}
+button:focus-visible,input:focus-visible{outline:2px solid #d7ff9b;outline-offset:2px}
+.row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.log{white-space:pre-wrap;overflow-wrap:anywhere;max-height:260px;overflow-y:auto;font:12px ui-monospace,SFMono-Regular,monospace;background:#0a1220;padding:10px;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>端末内MP4のコマ送り — 実現性検証</h1>
+<p class="warning">検証専用。YouTube動画を自動取得するものではありません。自分が所有している動画ファイルを任意に選ぶ方式です。YouTubeの限定公開一覧との自動連携・正確なコマ送りは未実装です。</p>
+<p id="runtimeState" role="status" class="warning">JavaScript未起動：iPhoneの「ファイル」プレビューでは操作用JavaScriptが実行されない場合があります。動画を選んでも読み込まれない場合は、このHTMLの再試行を中止してください。</p>
+<noscript><p class="warning">JavaScriptが無効です。端末内HTMLプレビューではこの検証は実行できません。</p></noscript>
+<p>映像の各コマの提示時刻を <code>requestVideoFrameCallback()</code> で観察し、前後のコマに移動できるかを試します。動画のコマとゲーム内の1Fが一致する必要はありません。</p>
+<section class="panel">
+<h2>1. 自分の動画を選択（端末内のみ）</h2>
+<label for="file">自分のMP4などの動画を選択</label>
+<input type="file" id="file" accept="video/mp4,video/quicktime,video/*">
+<div class="row"><button id="sample" hidden type="button">30fps合成テスト動画を開く（本人動画不要）</button><button id="clear" type="button">動画を閉じる／メモリ上の参照を破棄</button></div>
+<p id="fileState" role="status">未選択。端末外への送信・ファイルの永続保存は行いません。</p>
+<video id="video" controls playsinline preload="metadata"></video>
+</section>
+<section class="panel">
+<h2>2. まず数秒再生してから停止</h2>
+<p>再生中に表示されたフレームの提示時刻をサンプリングし、動画の概算コマ間隔を計算します。推定時刻の操作と、表示フレームの移動は別々に確認します。</p>
+<p id="measure" aria-live="polite">表示フレーム取得：未開始</p>
+<div class="row">
+<button id="prev" disabled>前のコマ（実験）</button>
+<button id="next" disabled>次のコマ（実験）</button>
+</div>
+<p class="muted"><small>各ボタンの結果は「成功候補／フレーム飛びの疑い／確認不能／失敗」に分類します。<strong>成功候補は、厳密な1コマずつの移動の保証ではありません。</strong></small></p>
+<label for="memo">気づいたこと（任意・端末内だけで保持）</label>
+<textarea id="memo" rows="2" placeholder="例：前のコマに戻れず、同じ画面が続く"></textarea>
+<div class="row"><button id="copy" disabled>測定結果をコピー</button></div>
+<p id="copyInfo" role="status"></p>
+<pre id="log" class="log">まだ検証していません。</pre>
+</section>
+<section class="panel">
+<h2>判定の注意点</h2>
+<p>この方法はHTML5動画の<code>currentTime</code>シークとフレーム提示メタデータを比較する実験です。ブラウザによってデコードとシークの精度が異なり、ボタンが1度押されても必ず隣のコマが表示されるわけではありません。</p>
+<p>コマ送りが動かない場合も、元動画は転送されません。動画を選ぶ操作が必要なため、「YouTubeの限定公開一覧から直接コマ送り」という最終体験が成立したことにはなりません。</p>
+</section>
+<script type="module">
+import {inferPeriod,targetForFrameStep,assessFrameStep} from "./local-frame-probe-core.mjs";
+const $=id=>document.getElementById(id);
+const video=$("video");
+$("runtimeState").textContent="JavaScript起動確認済み。動画ファイルの選択と再生を検証できます（端末内のみ）。";
+let objectUrl=null, generation=0, frameId=null, samples=[], lastFrame=null, period=null;
+let requestId=0, busy=false, frameWaiters=[];
+let logLines=[];
+const updateButton=()=>{
+  const usable=Boolean(objectUrl && Number.isFinite(period) && lastFrame && video.paused && !video.seeking && !busy &&
+    typeof video.requestVideoFrameCallback==="function");
+  $("prev").disabled=!usable;
+  $("next").disabled=!usable;
+  $("copy").disabled=!objectUrl;
+};
+const report=message=>{
+  logLines.unshift(new Date().toLocaleTimeString("ja-JP")+" "+message);
+  logLines=logLines.slice(0,50);
+  $("log").textContent=logLines.join("\n");
+};
+const showMeasure=()=>{
+  $("measure").textContent=
+    "表示フレーム取得：" + (typeof video.requestVideoFrameCallback==="function" ? "対応" : "非対応") +
+    " / 実測フレーム間隔：" + (period ? (period*1000).toFixed(3)+"ms（推定"+(1/period).toFixed(2)+"fps）" : "未推定（数秒再生してください）") +
+    " / 最後の提示時刻：" + (lastFrame ? lastFrame.mediaTime.toFixed(4)+"秒" : "未取得");
+  updateButton();
+};
+const finishWaiters=frame=>{
+  const waiters=frameWaiters;frameWaiters=[];
+  for (const fn of waiters) fn(frame);
+};
+const observe=(gen,now,meta)=>{
+  if(gen!==generation || !objectUrl) return;
+  const frame={mediaTime:Number(meta.mediaTime),presentedFrames:Number(meta.presentedFrames)};
+  lastFrame=frame;requestId+=1;
+  if (!video.paused && !video.seeking) {
+    samples.push(frame);
+    if(samples.length>90)samples.shift();
+    const estimate=inferPeriod(samples);
+    if(estimate)period=estimate;
+  }
+  finishWaiters(frame);
+  showMeasure();
+  frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
+};
+const reset=()=>{
+  generation+=1;
+  if(frameId!=null && typeof video.cancelVideoFrameCallback==="function")
+    video.cancelVideoFrameCallback(frameId);
+  frameId=null;lastFrame=null;period=null;samples=[];busy=false;requestId=0;
+  finishWaiters(null);
+  video.pause();
+  video.removeAttribute("src");video.load();
+  if(objectUrl){if(objectUrl.startsWith("blob:")) URL.revokeObjectURL(objectUrl);objectUrl=null;}
+  logLines=[];$("log").textContent="動画未選択";$("fileState").textContent="動画なし。端末内のファイルはアップロードしていません。";
+  showMeasure();updateButton();
+};
+$("clear").addEventListener("click",()=>{reset();$("file").value="";});
+const sampleMeta=document.querySelector('meta[name="frame-probe-sample"]');
+if(sampleMeta?.content){
+  // Only a static video served from this site's own origin is eligible.
+  const candidate=new URL(sampleMeta.content,location.href);
+  if(candidate.origin===location.origin && candidate.protocol==="https:"){
+    $("sample").hidden=false;
+    $("sample").addEventListener("click",()=>{
+      reset();$("file").value="";
+      objectUrl=candidate.href;
+      video.src=objectUrl;
+      video.load();
+      const gen=generation;
+      if(typeof video.requestVideoFrameCallback==="function")
+        frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
+      $("fileState").textContent="公開の合成30fpsサンプルを読み込み中。ユーザー動画は送信されません。";
+      report("同一サイトの合成動画を選択しました。読み込み処理を確認します。");
+      showMeasure();
+    });
+  }else{
+    report("検証用サンプルのURLがHTTPS同一オリジンではないため無効化しました。");
+  }
+}
+$("file").addEventListener("change",()=>{
+  // The source file is read after resetting the previous video's internal state.
+  reset();
+  const file=$("file").files?.[0];
+  if(!file){$("fileState").textContent="選択されたファイルがありません";return;}
+  const type=String(file.type||"");
+  const compatibleHint=type.startsWith("video/") || type==="application/octet-stream" ||
+    /\.(mp4|mov|m4v|webm)$/i.test(String(file.name||""));
+  if(!compatibleHint){$("fileState").textContent="動画ファイルか確認できません。端末で撮影したMP4等を指定してください。";return;}
+  try{
+    objectUrl=URL.createObjectURL(file);
+    $("fileState").textContent="選択を受け付けました（"+(file.size/1024/1024).toFixed(1)+"MB、MIME="+(type||"不明")+"）。メタデータ読み込み中…";
+    report("ファイル選択イベントを取得。ブラウザ内でメタデータを読み込み中。");
+    video.src=objectUrl;
+    video.load();
+    const gen=generation;
+    if(typeof video.requestVideoFrameCallback==="function")
+      frameId=video.requestVideoFrameCallback((n,m)=>observe(gen,n,m));
+  }catch(err){
+    $("fileState").textContent="ファイル読み込み処理のエラー："+String(err?.message||err);
+    report("ファイル読み込み処理に失敗（動画データは送信していません）。");
+  }
+  showMeasure();
+});
+video.addEventListener("loadstart",()=>report("動画のloadstartイベントを確認"));
+video.addEventListener("loadedmetadata",()=>{
+  $("fileState").textContent="動画メタデータ読込完了：長さ "+(Number.isFinite(video.duration)?video.duration.toFixed(2)+"秒":"不明")+
+    "。再生ボタンで開始してください。";
+  report("動画メタデータ取得成功。動画コーデックが再生できるか引き続き確認。");
+});
+video.addEventListener("canplay",()=>report("再生準備完了（canplay）。数秒再生してから一時停止してください。"));
+video.addEventListener("pause",showMeasure);
+video.addEventListener("play",showMeasure);
+video.addEventListener("seeked",showMeasure);
+video.addEventListener("seeking",()=>{samples=[];lastFrame=null;showMeasure();});
+video.addEventListener("error",()=>{
+  const error=video.error;
+  $("fileState").textContent="動画読み込みエラー（コード "+(error?.code??"不明")+"）。動画形式・コーデック・保存状態の可能性があります。";
+  report("動画読み込みエラー。コード="+(error?.code??"不明")+"（MEDIA_ERR_DECODE=3、MEDIA_ERR_SRC_NOT_SUPPORTED=4）。");
+});
+function waitForAfterFrame(beforeSeq,gen,ms=1500) {
+  if(requestId>beforeSeq) return Promise.resolve(lastFrame);
+  return new Promise(resolve=>{
+    let complete=false;
+    let timer=null;
+    const done=f=>{if(complete)return;complete=true;clearTimeout(timer);resolve(gen===generation?f:null);};
+    frameWaiters.push(done);
+    timer=setTimeout(()=>{frameWaiters=frameWaiters.filter(x=>x!==done);done(null);},ms);
+  });
+}
+function awaitSeek(gen,ms=2500){
+  return new Promise(resolve=>{
+    let finished=false;let timer=null;
+    const done=ok=>{if(finished)return;finished=true;clearTimeout(timer);video.removeEventListener("seeked",onSeeked);resolve(ok && gen===generation);};
+    const onSeeked=()=>done(true);
+    video.addEventListener("seeked",onSeeked,{once:true});
+    timer=setTimeout(()=>done(false),ms);
+  });
+}
+async function step(direction){
+  if(busy || !video.paused || !objectUrl || !lastFrame || !period) return;
+  const gen=generation;
+  busy=true;updateButton();
+  const before=lastFrame.mediaTime;
+  let result=null;
+  try {
+    const target=targetForFrameStep(before,direction,period,video.duration);
+    if(Math.abs(target-before)<0.00001){report("動画の先頭または末尾のため移動不可");return;}
+    const seekWait=awaitSeek(gen);
+    const oldSeq=requestId;
+    video.currentTime=target;
+    const didSeek=await seekWait;
+    if(!didSeek) {report("シーク完了イベントを確認できませんでした");return;}
+    // A displayed-frame callback MAY arrive for a paused seek, but is not guaranteed.
+    const frame=await waitForAfterFrame(oldSeq,gen);
+    result=assessFrameStep(before,frame?.mediaTime,direction,period,video.paused);
+    report((direction===1?"次のコマ":"前のコマ")+"：表示 "+before.toFixed(4)+"s → "+
+      (frame?frame.mediaTime.toFixed(4)+"s":"取得不能")+" / 指定 "+target.toFixed(4)+"s"+
+      " / "+result.state+"： "+result.detail);
+  } catch(err){report("コマ送り候補の操作エラー："+String(err.message||err));}
+  finally {if(gen===generation){busy=false;showMeasure();}}
+}
+$("prev").addEventListener("click",()=>step(-1));
+$("next").addEventListener("click",()=>step(1));
+$("copy").addEventListener("click",async()=>{
+  const lines=["SF6 Phase B 端末内動画のコマ送り実験",
+   "ブラウザ： "+navigator.userAgent.slice(0,150),
+   "推定コマ間隔："+(period?(period*1000).toFixed(3)+"ms":"未測定"),
+   "注：実コマ送りの精度は未検証／AIは動画未視聴",
+   "メモ："+$("memo").value.trim(),...logLines].join("\n");
+  try{await navigator.clipboard.writeText(lines);$("copyInfo").textContent="テキストをコピーしました";}
+  catch{$("copyInfo").textContent="コピーを許可できませんでした。";report("コピー失敗（端末側の許可を確認）");}
+});
+showMeasure();
+</script>
+</body>
+</html>
