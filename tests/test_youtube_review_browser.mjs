@@ -98,7 +98,13 @@ async function main(){
 
  const library=await ev('({titles:[...document.querySelectorAll("#youtubeList .youtube-card strong")].map(x=>x.textContent),apiCalls:window.__syntheticCalls})');
  if(library.titles.some(x=>x.includes("Private")))throw Error("Private video displayed");
- await ev('document.querySelector("#youtubeQuery").value="Ed";document.querySelector("#youtubeQuery").dispatchEvent(new Event("input",{bubbles:true}));true');
+ // End-to-end filtering in the owner library (without a YouTube search API call).
+ for(const [query,expected] of [["Ed",1],["Ed Match",1],["Match ED",1],["Ed  Match",1],["Ed Alex",0],["   ",2]]){
+   await ev('document.querySelector("#youtubeQuery").value='+JSON.stringify(query)+';document.querySelector("#youtubeQuery").dispatchEvent(new Event("input",{bubbles:true}));true');
+   const count=await ev('document.querySelectorAll("#youtubeList .youtube-card").length');
+   if(count!==expected)throw Error("AND title search failed for "+JSON.stringify(query)+": "+count+" != "+expected);
+ }
+ await ev('document.querySelector("#youtubeQuery").value="Ed Match";document.querySelector("#youtubeQuery").dispatchEvent(new Event("input",{bubbles:true}));true');
  await until(async()=>await ev('document.querySelectorAll("#youtubeList .youtube-card").length===1'));
  await ev('document.querySelector("#youtubeList .youtube-card").click()');
  await until(async()=>await ev('document.querySelector("#youtubeNext").disabled===false'));
