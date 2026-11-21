@@ -2,7 +2,7 @@ import {STUDIO_URL,studioSearchCandidate} from "./youtube-studio-support.mjs";
 import {playbackAction,playbackLabel,seekAnchor,restorePausedSeek} from "./youtube-player-controls.mjs";
 // Issue #18: optional owner-only YouTube review mode.
 // No OAuth secrets or Google access tokens are persisted; no YouTube media extraction.
-import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail} from "./youtube-library-core.mjs";
+import {SCOPE,isClientId,gatherOwnUnlisted,isVideoId,safeThumbnail,filterVideosByTitle} from "./youtube-library-core.mjs";
 import {SEEK_SMALL,targetSeconds,secondsDisplay,classifyReportedSeek} from "./youtube-seek-core.mjs";
 import {readCache,writeCache,removeCache} from "./youtube-library-cache.mjs";
 
@@ -282,8 +282,7 @@ function ensureGoogleScript(){
 }
 function render(){
  const root=$("youtubeList");root.replaceChildren();
- const term=$("youtubeQuery").value.trim().toLocaleLowerCase("ja");
- const matching=state.videos.filter(v=>v.title.toLocaleLowerCase("ja").includes(term));
+ const matching=filterVideosByTitle(state.videos,$("youtubeQuery").value);
  $("youtubeCount").textContent=state.videos.length
   ?(state.cachedView?"前回保存 ":"限定公開 ")+state.videos.length+"件（絞り込み："+matching.length+"件）"+(state.partial?" / 上限到達：一部のみ":"")
   :"限定公開動画の一覧は未取得です。";
