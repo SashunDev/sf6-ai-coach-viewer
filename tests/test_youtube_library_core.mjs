@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {SCOPE,MAX_PAGES_PER_CHANNEL,isVideoId,isClientId,safeThumbnail,
-  unlistedFromUploads,gatherOwnUnlisted,mockCollection} from "../youtube-library-core.mjs";
+  unlistedFromUploads,gatherOwnUnlisted,mockCollection,filterVideosByTitle} from "../youtube-library-core.mjs";
 
 test("only youtube.readonly and valid web OAuth client IDs",()=>{
  assert.equal(SCOPE,"https://www.googleapis.com/auth/youtube.readonly");
@@ -77,4 +77,25 @@ test("no uploads playlist returns an explicit absence, not mock data",async()=>{
 test("invalid response fails closed",async()=>{
  const api=async()=>({error:{message:"invalid"}});
  await assert.rejects(gatherOwnUnlisted(api),/channels response invalid/);
+});
+
+test("ASCII space-separated title keywords use case-insensitive, order-independent AND search",()=>{
+ const videos=[
+  {id:"a",title:"2026-11-21 Ed vs Cammy"},
+  {id:"b",title:"エド vs 豪鬼"},
+  {id:"c",title:"Cammy vs Alex"}
+ ];
+ const ids=q=>filterVideosByTitle(videos,q).map(v=>v.id);
+ assert.deepEqual(ids(""),["a","b","c"]);
+ assert.deepEqual(ids("    "),["a","b","c"]);
+ assert.deepEqual(ids("ed"),["a"]);
+ assert.deepEqual(ids("ED   cAMMy"),["a"]);
+ assert.deepEqual(ids("   Cammy  ED  "),["a"]);
+ assert.deepEqual(ids("エド 豪鬼"),["b"]);
+ assert.deepEqual(ids("Cammy"),["a","c"]);
+ assert.deepEqual(ids("ED ED"),["a"]);
+ assert.deepEqual(ids("ed Alex"),[]);
+ assert.deepEqual(ids("エド キャミィ"),[]);
+ assert.deepEqual(ids("Ed\tCammy"),[]); // only ASCII spaces divide keywords
+ assert.deepEqual(videos.map(v=>v.title),["2026-11-21 Ed vs Cammy","エド vs 豪鬼","Cammy vs Alex"]);
 });
