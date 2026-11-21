@@ -67,6 +67,14 @@ export async function gatherOwnUnlisted(api,{maxPages=MAX_PAGES_PER_CHANNEL,onPr
   const items=unlistedFromUploads(rows,details);
   return {items,candidateCount:rows.length,uniqueCount:ids.length,partial,requests:calls,channelCount:uploads.length};
 }
+// Filter already loaded, owner-owned video titles locally. ASCII spaces separate AND terms.
+export function filterVideosByTitle(videos,query){
+  const terms=String(query??"").trim().toLocaleLowerCase("ja").split(/ +/).filter(Boolean);
+  return (videos||[]).filter(video=>{
+    const title=String(video?.title??"").toLocaleLowerCase("ja");
+    return terms.every(term=>title.includes(term));
+  });
+}
 export function mockCollection(){
   const id1="AAAAAAAAAAA",id2="BBBBBBBBBBB",id3="CCCCCCCCCCC";
   const rows=[{contentDetails:{videoId:id1}},{contentDetails:{videoId:id2}},{contentDetails:{videoId:id3}}];
